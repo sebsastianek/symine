@@ -1,0 +1,89 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\DataFixtures;
+
+use App\Entity\RolesManagedRole;
+use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface;
+use Doctrine\Persistence\ObjectManager;
+
+class RolesManagedRoleFixtures extends Fixture implements DependentFixtureInterface
+{
+    public function load(ObjectManager $manager): void
+    {
+        // Manager can manage Developer role
+        $managedRole1 = new RolesManagedRole();
+        $managedRole1->setRole($this->getReference('role-manager', \App\Entity\Role::class));
+        $managedRole1->setManagedRole($this->getReference('role-developer', \App\Entity\Role::class));
+        
+        $manager->persist($managedRole1);
+        $this->addReference('managed-role-manager-developer', $managedRole1);
+
+        // Manager can manage Tester role
+        $managedRole2 = new RolesManagedRole();
+        $managedRole2->setRole($this->getReference('role-manager', \App\Entity\Role::class));
+        $managedRole2->setManagedRole($this->getReference('role-tester', \App\Entity\Role::class));
+        
+        $manager->persist($managedRole2);
+        $this->addReference('managed-role-manager-tester', $managedRole2);
+
+        // Manager can manage Reporter role
+        $managedRole3 = new RolesManagedRole();
+        $managedRole3->setRole($this->getReference('role-manager', \App\Entity\Role::class));
+        $managedRole3->setManagedRole($this->getReference('role-reporter', \App\Entity\Role::class));
+        
+        $manager->persist($managedRole3);
+        $this->addReference('managed-role-manager-reporter', $managedRole3);
+
+        // Admin can manage Manager role
+        $managedRole4 = new RolesManagedRole();
+        $managedRole4->setRole($this->getReference('role-admin', \App\Entity\Role::class));
+        $managedRole4->setManagedRole($this->getReference('role-manager', \App\Entity\Role::class));
+        
+        $manager->persist($managedRole4);
+        $this->addReference('managed-role-admin-manager', $managedRole4);
+
+        // Admin can manage Developer role
+        $managedRole5 = new RolesManagedRole();
+        $managedRole5->setRole($this->getReference('role-admin', \App\Entity\Role::class));
+        $managedRole5->setManagedRole($this->getReference('role-developer', \App\Entity\Role::class));
+        
+        $manager->persist($managedRole5);
+        $this->addReference('managed-role-admin-developer', $managedRole5);
+
+        // Admin can manage Tester role
+        $managedRole6 = new RolesManagedRole();
+        $managedRole6->setRole($this->getReference('role-admin', \App\Entity\Role::class));
+        $managedRole6->setManagedRole($this->getReference('role-tester', \App\Entity\Role::class));
+        
+        $manager->persist($managedRole6);
+        $this->addReference('managed-role-admin-tester', $managedRole6);
+
+        // Admin can manage Reporter role
+        $managedRole7 = new RolesManagedRole();
+        $managedRole7->setRole($this->getReference('role-admin', \App\Entity\Role::class));
+        $managedRole7->setManagedRole($this->getReference('role-reporter', \App\Entity\Role::class));
+        
+        $manager->persist($managedRole7);
+        $this->addReference('managed-role-admin-reporter', $managedRole7);
+
+        // Developer can manage Reporter role (in some cases, senior devs can assign reporter roles)
+        $managedRole8 = new RolesManagedRole();
+        $managedRole8->setRole($this->getReference('role-developer', \App\Entity\Role::class));
+        $managedRole8->setManagedRole($this->getReference('role-reporter', \App\Entity\Role::class));
+        
+        $manager->persist($managedRole8);
+        $this->addReference('managed-role-developer-reporter', $managedRole8);
+
+        $manager->flush();
+    }
+
+    public function getDependencies(): array
+    {
+        return [
+            RoleFixtures::class,
+        ];
+    }
+}

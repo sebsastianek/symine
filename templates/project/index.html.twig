@@ -1,0 +1,105 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Projects - Redmine{% endblock %}
+
+{% block main %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="md:flex md:items-center md:justify-between mb-8">
+            <div class="flex-1 min-w-0">
+                <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
+                    Projects
+                </h1>
+                <p class="mt-1 text-sm text-gray-500">
+                    Manage your projects and track their progress
+                </p>
+            </div>
+            {% if is_granted('global_project_create') %}
+                <div class="mt-4 flex md:mt-0 md:ml-4">
+                    <a href="{{ path('project_new') }}" 
+                       class="btn-primary hover-lift">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                        </svg>
+                        New Project
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Projects Grid -->
+        {% if projects %}
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {% for project in projects %}
+                    <div class="card p-6 hover-lift fade-in">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-medium text-gray-900">
+                                <a href="{{ path('project_show', {id: project.id}) }}" 
+                                   class="hover:text-blue-600 transition duration-200">
+                                    {{ project.name }}
+                                </a>
+                            </h3>
+                            {% if project.isPublic %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    Public
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                    Private
+                                </span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if project.description %}
+                            <p class="text-sm text-gray-600 mb-4 line-clamp-3">
+                                {{ project.description|slice(0, 120) }}
+                                {% if project.description|length > 120 %}...{% endif %}
+                            </p>
+                        {% endif %}
+                        
+                        <div class="flex items-center justify-between text-sm text-gray-500">
+                            <span>
+                                Created {{ project.createdOn ? project.createdOn|date('M j, Y') : 'Unknown' }}
+                            </span>
+                            {% if project.homepage %}
+                                <a href="{{ project.homepage }}" 
+                                   target="_blank" 
+                                   class="text-blue-600 hover:text-blue-500 transition duration-200">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                    </svg>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-12">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+                <h3 class="mt-4 text-lg font-medium text-gray-900">No projects found</h3>
+                <p class="mt-2 text-sm text-gray-500">
+                    {% if is_granted('global_project_create') %}
+                        Get started by creating your first project.
+                    {% else %}
+                        You don't have access to any projects yet.
+                    {% endif %}
+                </p>
+                {% if is_granted('global_project_create') %}
+                    <div class="mt-6">
+                        <a href="{{ path('project_new') }}" 
+                           class="btn-primary">
+                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            Create New Project
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

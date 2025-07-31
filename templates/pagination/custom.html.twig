@@ -1,0 +1,86 @@
+{#
+    This template can be customized to match your style.
+    Available variables:
+    - paginationPath - route for pagination
+    - query - query parameters
+    - pageCount - number of pages
+    - current - current page number
+    - pagesInRange - array of page numbers to show
+    - first - first page number (usually 1)
+    - last - last page number
+    - next - next page number
+    - previous - previous page number
+#}
+
+{% if pageCount > 1 %}
+<nav class="flex items-center justify-between">
+    <div class="flex items-center space-x-2">
+        {# Previous page #}
+        {% if previous is defined %}
+            <a href="{{ paginationPath(previous) }}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Previous
+            </a>
+        {% else %}
+            <span class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-300 bg-gray-100 border border-gray-300 rounded-lg cursor-not-allowed">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Previous
+            </span>
+        {% endif %}
+
+        {# Page numbers #}
+        <div class="hidden sm:flex items-center space-x-1">
+            {% if first is defined and first != pagesInRange[0] %}
+                <a href="{{ paginationPath(first) }}" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700">
+                    {{ first }}
+                </a>
+                {% if first + 1 < pagesInRange[0] %}
+                    <span class="px-2 py-2 text-sm text-gray-500">...</span>
+                {% endif %}
+            {% endif %}
+
+            {% for page in pagesInRange %}
+                {% if page == current %}
+                    <span class="px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-lg">
+                        {{ page }}
+                    </span>
+                {% else %}
+                    <a href="{{ paginationPath(page) }}" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700">
+                        {{ page }}
+                    </a>
+                {% endif %}
+            {% endfor %}
+
+            {% if last is defined and last != pagesInRange[-1] %}
+                {% if last - 1 > pagesInRange[-1] %}
+                    <span class="px-2 py-2 text-sm text-gray-500">...</span>
+                {% endif %}
+                <a href="{{ paginationPath(last) }}" class="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700">
+                    {{ last }}
+                </a>
+            {% endif %}
+        </div>
+
+        {# Next page #}
+        {% if next is defined %}
+            <a href="{{ paginationPath(next) }}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-700">
+                Next
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        {% else %}
+            <span class="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-300 bg-gray-100 border border-gray-300 rounded-lg cursor-not-allowed">
+                Next
+                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </span>
+        {% endif %}
+    </div>
+</nav>
+{% endif %}

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Redmine{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>🔧</text></svg>">
+
+    
+
+
+    <!-- AssetMapper imports -->
+    {% block stylesheets %}
+        {{ importmap('app') }}
+    {% endblock %}
+
+    <!-- Meta tags for better SEO and UX -->
+    <meta name="description" content="{% block meta_description %}Redmine - Project Management Tool{% endblock %}">
+    <meta name="author" content="Redmine Team">
+
+    <!-- PWA support -->
+    <meta name="theme-color" content="#667eea">
+
+    {% block head %}{% endblock %}
+</head>
+<body class="h-full {% block body_class %}{% endblock %}">
+    {% block body %}
+        <!-- Header Navigation -->
+        {% if app.user %}
+            {% block header %}
+                <nav class="bg-white shadow-sm border-b border-gray-200">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="flex justify-between h-16">
+                            <div class="flex items-center">
+                                <!-- Logo -->
+                                <div class="flex-shrink-0">
+                                    <a href="{{ path('project_index') }}" class="flex items-center">
+                                        <img src="/images/logo.png" alt="symmine logo" class="h-8 w-auto">
+                                        <span class="ml-2 text-xl font-bold text-gray-900">symmine</span>
+                                    </a>
+                                </div>
+
+                                <!-- Main Navigation -->
+                                <div class="hidden md:ml-6 md:flex md:space-x-8">
+                                    <a href="{{ path('project_index') }}" class="text-gray-900 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+                                        Projects
+                                    </a>
+                                    {% if is_granted('global_project_create') %}
+                                        <a href="{{ path('project_new') }}" class="text-gray-500 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">
+                                            New Project
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- User Menu -->
+                            <div class="flex items-center">
+                                <div class="flex items-center space-x-4">
+                                    <!-- User Info -->
+                                    <span class="text-sm text-gray-700">
+                                        Welcome, <strong>{{ app.user.fullName }}</strong>
+                                    </span>
+
+                                    <!-- Logout -->
+                                    <a href="{{ path('logout') }}"
+                                       class="bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-md text-sm font-medium transition duration-200">
+                                        Logout
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            {% endblock %}
+        {% endif %}
+
+        <!-- Flash Messages -->
+        {% block flash_messages %}
+            <div class="flash-messages">
+                {% for type, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ type }} mb-4 mx-4 mt-4 p-4 rounded-lg border {% if type == 'error' %}bg-red-50 border-red-200 text-red-700{% elseif type == 'success' %}bg-green-50 border-green-200 text-green-700{% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %}">
+                            <div class="flex">
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium">{{ message }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        {% endblock %}
+
+        <!-- Main Content -->
+        <main class="{% block main_class %}{% if app.user %}py-6{% endif %}{% endblock %}">
+            {% block main %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        {% if app.user %}
+            {% block footer %}
+                <footer class="bg-gray-50 border-t border-gray-200 mt-auto">
+                    <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+                        <div class="flex justify-between items-center">
+                            <p class="text-sm text-gray-500">
+                                © {{ "now"|date("Y") }} Redmine. Powered by Symfony.
+                            </p>
+                            <div class="flex space-x-4 text-sm text-gray-500">
+                                <span>Version 1.0.0</span>
+                                {% if app.user and app.user.admin %}
+                                    <a href="#" class="hover:text-gray-700">Admin</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </footer>
+            {% endblock %}
+        {% endif %}
+    {% endblock %}
+
+    {% block javascripts %}
+        <!-- Alpine.js for interactive components -->
+        <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    {% endblock %}
+</body>
+</html>

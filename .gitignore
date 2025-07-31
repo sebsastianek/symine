@@ -1,0 +1,49 @@
+
+###> symfony/framework-bundle ###
+/.env.local
+/.env.local.php
+/.env.*.local
+/config/secrets/prod/prod.decrypt.private.php
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
+
+/node_modules
+
+###> symfony/asset-mapper ###
+/public/assets/
+/assets/vendor/
+/assets/styles/app.tailwind.css
+###< symfony/asset-mapper ###
+
+# Environment files
+/.env.test
+
+# PHPUnit
+/.phpunit.cache/
+/phpunit.dist.xml
+
+# IDE and OS files
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Uploads and user-generated content
+/uploads/
+/public/images/
+
+# Drivers and temporary files
+/drivers/
+*.log
+*.tmp
+
+# Test files and coverage
+/tests/
+/coverage/
+
+# Build artifacts
+/build/
+/dist/

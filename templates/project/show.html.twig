@@ -1,0 +1,202 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ project.name }} - Redmine{% endblock %}
+
+{% block main %}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Project Header -->
+        <div class="bg-white shadow rounded-lg p-6 mb-6">
+            <div class="md:flex md:items-center md:justify-between">
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center">
+                        <h1 class="text-2xl font-bold text-gray-900">
+                            {{ project.name }}
+                        </h1>
+                        {% if project.isPublic %}
+                            <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Public
+                            </span>
+                        {% else %}
+                            <span class="ml-3 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                Private
+                            </span>
+                        {% endif %}
+                    </div>
+                    {% if project.description %}
+                        <p class="mt-2 text-gray-600">{{ project.description }}</p>
+                    {% endif %}
+                    {% if project.homepage %}
+                        <a href="{{ project.homepage }}" target="_blank" 
+                           class="mt-2 inline-flex items-center text-sm text-blue-600 hover:text-blue-500">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                            </svg>
+                            Visit Homepage
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="mt-4 flex space-x-3 md:mt-0 md:ml-4">
+                    {% if can_edit %}
+                        <a href="{{ path('project_edit', {id: project.id}) }}" 
+                           class="btn-secondary">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Edit
+                        </a>
+                    {% endif %}
+                    {% if can_manage_members %}
+                        <a href="{{ path('project_members', {id: project.id}) }}" 
+                           class="btn-secondary">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+                            </svg>
+                            Members
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Project Navigation -->
+        <div class="mb-6">
+            <nav class="flex space-x-8" aria-label="Tabs">
+                <a href="#" class="border-b-2 border-blue-500 py-2 px-1 text-sm font-medium text-blue-600">
+                    Overview
+                </a>
+                <a href="{{ path('issue_index', {projectId: project.id}) }}" 
+                   class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    Issues
+                </a>
+                <a href="#" class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    Wiki
+                </a>
+                <a href="#" class="border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    Files
+                </a>
+            </nav>
+        </div>
+
+        <!-- Project Content Grid -->
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <!-- Main Content -->
+            <div class="lg:col-span-2">
+                <!-- Latest Activity -->
+                <div class="card p-6 mb-6">
+                    <h2 class="text-lg font-medium text-gray-900 mb-4">Latest Activity</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-3">
+                            <div class="flex-shrink-0">
+                                <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <svg class="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm text-gray-900">
+                                    <strong>Project created</strong>
+                                </p>
+                                <p class="text-sm text-gray-500">
+                                    {{ project.createdOn ? project.createdOn|date('M j, Y \\a\\t g:i A') : 'Unknown time' }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card p-6">
+                    <h2 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
+                    <div class="grid grid-cols-2 gap-4">
+                        <a href="{{ path('issue_new', {projectId: project.id}) }}" 
+                           class="group relative bg-white p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition duration-200">
+                            <div>
+                                <span class="rounded-lg inline-flex p-3 bg-blue-50 group-hover:bg-blue-100">
+                                    <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="mt-4">
+                                <h3 class="text-sm font-medium text-gray-900">
+                                    New Issue
+                                </h3>
+                                <p class="mt-1 text-sm text-gray-500">
+                                    Create a new issue or task
+                                </p>
+                            </div>
+                        </a>
+
+                        <a href="#" class="group relative bg-white p-4 border border-gray-200 rounded-lg hover:border-green-300 transition duration-200">
+                            <div>
+                                <span class="rounded-lg inline-flex p-3 bg-green-50 group-hover:bg-green-100">
+                                    <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                </span>
+                            </div>
+                            <div class="mt-4">
+                                <h3 class="text-sm font-medium text-gray-900">
+                                    Upload File
+                                </h3>
+                                <p class="mt-1 text-sm text-gray-500">
+                                    Add files to the project
+                                </p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <!-- Project Info -->
+                <div class="card p-6 mb-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Project Information</h3>
+                    <dl class="space-y-3">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Created</dt>
+                            <dd class="text-sm text-gray-900">
+                                {{ project.createdOn ? project.createdOn|date('F j, Y') : 'Unknown' }}
+                            </dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500">Visibility</dt>
+                            <dd class="text-sm text-gray-900">
+                                {{ project.isPublic ? 'Public' : 'Private' }}
+                            </dd>
+                        </div>
+                        {% if project.identifier %}
+                            <div>
+                                <dt class="text-sm font-medium text-gray-500">Identifier</dt>
+                                <dd class="text-sm text-gray-900 font-mono">
+                                    {{ project.identifier }}
+                                </dd>
+                            </div>
+                        {% endif %}
+                    </dl>
+                </div>
+
+                <!-- Project Stats -->
+                <div class="card p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Statistics</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-500">Open Issues</span>
+                            <span class="text-sm font-medium text-gray-900">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-500">Closed Issues</span>
+                            <span class="text-sm font-medium text-gray-900">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-500">Members</span>
+                            <span class="text-sm font-medium text-gray-900">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

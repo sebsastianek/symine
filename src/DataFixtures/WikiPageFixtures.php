@@ -1,0 +1,239 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\DataFixtures;
+
+use App\Entity\WikiPage;
+use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Common\DataFixtures\DependentFixtureInterface;
+use Doctrine\Persistence\ObjectManager;
+
+class WikiPageFixtures extends Fixture implements DependentFixtureInterface
+{
+    public function load(ObjectManager $manager): void
+    {
+        // Documentation Wiki Pages
+        // Main documentation home page
+        $docsHome = new WikiPage();
+        $docsHome->setWiki($this->getReference('wiki-docs', \App\Entity\Wiki::class));
+        $docsHome->setTitle('Documentation Home');
+        $docsHome->setCreatedOn(new \DateTime('2024-01-15 10:00:00'));
+        $docsHome->setProtected(0);
+        $docsHome->setParent(null);
+        
+        $manager->persist($docsHome);
+        $this->addReference('wiki-page-docs-home', $docsHome);
+
+        // Technical Specifications page
+        $techSpecs = new WikiPage();
+        $techSpecs->setWiki($this->getReference('wiki-docs', \App\Entity\Wiki::class));
+        $techSpecs->setTitle('Technical Specifications');
+        $techSpecs->setCreatedOn(new \DateTime('2024-01-16 14:30:00'));
+        $techSpecs->setProtected(1); // Protected page
+        $techSpecs->setParent($docsHome);
+        
+        $manager->persist($techSpecs);
+        $this->addReference('wiki-page-tech-specs', $techSpecs);
+
+        // User Guide page
+        $userGuide = new WikiPage();
+        $userGuide->setWiki($this->getReference('wiki-docs', \App\Entity\Wiki::class));
+        $userGuide->setTitle('User Guide');
+        $userGuide->setCreatedOn(new \DateTime('2024-01-17 09:15:00'));
+        $userGuide->setProtected(0);
+        $userGuide->setParent($docsHome);
+        
+        $manager->persist($userGuide);
+        $this->addReference('wiki-page-user-guide', $userGuide);
+
+        // Installation Guide sub-page
+        $installGuide = new WikiPage();
+        $installGuide->setWiki($this->getReference('wiki-docs', \App\Entity\Wiki::class));
+        $installGuide->setTitle('Installation Guide');
+        $installGuide->setCreatedOn(new \DateTime('2024-01-17 11:00:00'));
+        $installGuide->setProtected(0);
+        $installGuide->setParent($userGuide);
+        
+        $manager->persist($installGuide);
+        $this->addReference('wiki-page-install-guide', $installGuide);
+
+        // Configuration Guide sub-page
+        $configGuide = new WikiPage();
+        $configGuide->setWiki($this->getReference('wiki-docs', \App\Entity\Wiki::class));
+        $configGuide->setTitle('Configuration Guide');
+        $configGuide->setCreatedOn(new \DateTime('2024-01-17 15:30:00'));
+        $configGuide->setProtected(0);
+        $configGuide->setParent($userGuide);
+        
+        $manager->persist($configGuide);
+        $this->addReference('wiki-page-config-guide', $configGuide);
+
+        // E-commerce Wiki Pages
+        // E-commerce project home
+        $ecommerceHome = new WikiPage();
+        $ecommerceHome->setWiki($this->getReference('wiki-ecommerce', \App\Entity\Wiki::class));
+        $ecommerceHome->setTitle('E-commerce Project');
+        $ecommerceHome->setCreatedOn(new \DateTime('2024-01-20 08:00:00'));
+        $ecommerceHome->setProtected(0);
+        $ecommerceHome->setParent(null);
+        
+        $manager->persist($ecommerceHome);
+        $this->addReference('wiki-page-ecommerce-home', $ecommerceHome);
+
+        // Setup Guide for E-commerce
+        $setupGuide = new WikiPage();
+        $setupGuide->setWiki($this->getReference('wiki-ecommerce', \App\Entity\Wiki::class));
+        $setupGuide->setTitle('Setup Guide');
+        $setupGuide->setCreatedOn(new \DateTime('2024-01-20 10:30:00'));
+        $setupGuide->setProtected(0);
+        $setupGuide->setParent($ecommerceHome);
+        
+        $manager->persist($setupGuide);
+        $this->addReference('wiki-page-setup-guide', $setupGuide);
+
+        // API Documentation
+        $apiDocs = new WikiPage();
+        $apiDocs->setWiki($this->getReference('wiki-ecommerce', \App\Entity\Wiki::class));
+        $apiDocs->setTitle('API Documentation');
+        $apiDocs->setCreatedOn(new \DateTime('2024-01-22 13:45:00'));
+        $apiDocs->setProtected(1); // Protected technical documentation
+        $apiDocs->setParent($ecommerceHome);
+        
+        $manager->persist($apiDocs);
+        $this->addReference('wiki-page-api-docs', $apiDocs);
+
+        // Database Schema page
+        $dbSchema = new WikiPage();
+        $dbSchema->setWiki($this->getReference('wiki-ecommerce', \App\Entity\Wiki::class));
+        $dbSchema->setTitle('Database Schema');
+        $dbSchema->setCreatedOn(new \DateTime('2024-01-23 16:20:00'));
+        $dbSchema->setProtected(1); // Protected technical documentation
+        $dbSchema->setParent($apiDocs);
+        
+        $manager->persist($dbSchema);
+        $this->addReference('wiki-page-db-schema', $dbSchema);
+
+        // Deployment Guide
+        $deployGuide = new WikiPage();
+        $deployGuide->setWiki($this->getReference('wiki-ecommerce', \App\Entity\Wiki::class));
+        $deployGuide->setTitle('Deployment Guide');
+        $deployGuide->setCreatedOn(new \DateTime('2024-01-25 12:00:00'));
+        $deployGuide->setProtected(1); // Protected deployment info
+        $deployGuide->setParent($ecommerceHome);
+        
+        $manager->persist($deployGuide);
+        $this->addReference('wiki-page-deploy-guide', $deployGuide);
+
+        // CRM Wiki Pages
+        // CRM project home
+        $crmHome = new WikiPage();
+        $crmHome->setWiki($this->getReference('wiki-crm', \App\Entity\Wiki::class));
+        $crmHome->setTitle('CRM System Overview');
+        $crmHome->setCreatedOn(new \DateTime('2024-02-01 09:00:00'));
+        $crmHome->setProtected(0);
+        $crmHome->setParent(null);
+        
+        $manager->persist($crmHome);
+        $this->addReference('wiki-page-crm-home', $crmHome);
+
+        // Business Requirements
+        $bizReqs = new WikiPage();
+        $bizReqs->setWiki($this->getReference('wiki-crm', \App\Entity\Wiki::class));
+        $bizReqs->setTitle('Business Requirements');
+        $bizReqs->setCreatedOn(new \DateTime('2024-02-02 14:15:00'));
+        $bizReqs->setProtected(0);
+        $bizReqs->setParent($crmHome);
+        
+        $manager->persist($bizReqs);
+        $this->addReference('wiki-page-biz-reqs', $bizReqs);
+
+        // Feature Specifications
+        $featureSpecs = new WikiPage();
+        $featureSpecs->setWiki($this->getReference('wiki-crm', \App\Entity\Wiki::class));
+        $featureSpecs->setTitle('Feature Specifications');
+        $featureSpecs->setCreatedOn(new \DateTime('2024-02-03 11:30:00'));
+        $featureSpecs->setProtected(0);
+        $featureSpecs->setParent($crmHome);
+        
+        $manager->persist($featureSpecs);
+        $this->addReference('wiki-page-feature-specs', $featureSpecs);
+
+        // Mobile Wiki Pages
+        // Mobile app home
+        $mobileHome = new WikiPage();
+        $mobileHome->setWiki($this->getReference('wiki-mobile', \App\Entity\Wiki::class));
+        $mobileHome->setTitle('Mobile App Development');
+        $mobileHome->setCreatedOn(new \DateTime('2024-02-05 10:45:00'));
+        $mobileHome->setProtected(0);
+        $mobileHome->setParent(null);
+        
+        $manager->persist($mobileHome);
+        $this->addReference('wiki-page-mobile-home', $mobileHome);
+
+        // Platform Guidelines
+        $platformGuide = new WikiPage();
+        $platformGuide->setWiki($this->getReference('wiki-mobile', \App\Entity\Wiki::class));
+        $platformGuide->setTitle('Platform Guidelines');
+        $platformGuide->setCreatedOn(new \DateTime('2024-02-06 13:20:00'));
+        $platformGuide->setProtected(0);
+        $platformGuide->setParent($mobileHome);
+        
+        $manager->persist($platformGuide);
+        $this->addReference('wiki-page-platform-guide', $platformGuide);
+
+        // Testing Procedures
+        $testingProcs = new WikiPage();
+        $testingProcs->setWiki($this->getReference('wiki-mobile', \App\Entity\Wiki::class));
+        $testingProcs->setTitle('Testing Procedures');
+        $testingProcs->setCreatedOn(new \DateTime('2024-02-07 16:00:00'));
+        $testingProcs->setProtected(1); // Protected testing guidelines
+        $testingProcs->setParent($mobileHome);
+        
+        $manager->persist($testingProcs);
+        $this->addReference('wiki-page-testing-procs', $testingProcs);
+
+        // Analytics Wiki Pages
+        // Analytics home
+        $analyticsHome = new WikiPage();
+        $analyticsHome->setWiki($this->getReference('wiki-analytics', \App\Entity\Wiki::class));
+        $analyticsHome->setTitle('Analytics Dashboard');
+        $analyticsHome->setCreatedOn(new \DateTime('2024-02-10 08:30:00'));
+        $analyticsHome->setProtected(0);
+        $analyticsHome->setParent(null);
+        
+        $manager->persist($analyticsHome);
+        $this->addReference('wiki-page-analytics-home', $analyticsHome);
+
+        // Data Sources
+        $dataSources = new WikiPage();
+        $dataSources->setWiki($this->getReference('wiki-analytics', \App\Entity\Wiki::class));
+        $dataSources->setTitle('Data Sources');
+        $dataSources->setCreatedOn(new \DateTime('2024-02-11 12:45:00'));
+        $dataSources->setProtected(1); // Protected data information
+        $dataSources->setParent($analyticsHome);
+        
+        $manager->persist($dataSources);
+        $this->addReference('wiki-page-data-sources', $dataSources);
+
+        // Report Templates
+        $reportTemplates = new WikiPage();
+        $reportTemplates->setWiki($this->getReference('wiki-analytics', \App\Entity\Wiki::class));
+        $reportTemplates->setTitle('Report Templates');
+        $reportTemplates->setCreatedOn(new \DateTime('2024-02-12 15:30:00'));
+        $reportTemplates->setProtected(0);
+        $reportTemplates->setParent($analyticsHome);
+        
+        $manager->persist($reportTemplates);
+        $this->addReference('wiki-page-report-templates', $reportTemplates);
+
+        $manager->flush();
+    }
+
+    public function getDependencies(): array
+    {
+        return [
+            WikiFixtures::class,
+        ];
+    }
+}

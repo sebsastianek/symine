@@ -1,0 +1,53 @@
+security:
+    # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
+    password_hashers:
+        App\Entity\User:
+            algorithm: auto
+            # For compatibility with Redmine's SHA1+salt passwords
+            # You might need a custom password hasher for legacy passwords
+
+    # https://symfony.com/doc/current/security/providers.html
+    providers:
+        redmine_user_provider:
+            id: App\Security\RedmineUserProvider
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        main:
+            lazy: true
+            provider: redmine_user_provider
+            # Configure your authentication method here
+            # For now, we'll use form_login as an example
+            form_login:
+                login_path: login
+                check_path: login
+                default_target_path: /
+            logout:
+                path: logout
+                target: /
+
+    # Easy way to control access for large sections of your site
+    # Note: Only the *first* access control that matches will be used
+    access_control:
+        # Admin routes require admin role
+        - { path: ^/admin, roles: ROLE_ADMIN }
+        # Most routes require authentication
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/logout, roles: PUBLIC_ACCESS }
+        # Allow anonymous access to public projects (will be handled by voters)
+        - { path: ^/, roles: PUBLIC_ACCESS }
+
+when@test:
+    security:
+        password_hashers:
+            # By default, password hashers are resource intensive and take time. This is
+            # important to generate secure password hashes. In tests however, secure hashes
+            # are not important, waste resources and increase test times. The following
+            # reduces the work factor to the lowest possible values.
+            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+                algorithm: auto
+                cost: 4 # Lowest possible value for bcrypt
+                time_cost: 3 # Lowest possible value for argon
+                memory_cost: 10 # Lowest possible value for argon
