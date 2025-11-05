@@ -97,11 +97,87 @@
                 {% endif %}
             </div>
 
-            {# Activity / Comments Placeholder #}
+            {# Activity / Journals #}
             <div class="bg-white shadow-sm rounded-lg p-6">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">Activity</h2>
-                <p class="text-gray-500 italic">Journal entries and comments will appear here.</p>
-                {# TODO: Implement journal/comment functionality in next phase #}
+
+                {% if journals is empty %}
+                    <p class="text-gray-500 italic mb-6">No activity yet.</p>
+                {% else %}
+                    <div class="space-y-4 mb-6">
+                        {% for journal in journals %}
+                            <div class="border-l-4 border-gray-200 pl-4 py-2">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex-1">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="font-medium text-gray-900">
+                                                {{ journal.user.firstname }} {{ journal.user.lastname }}
+                                            </span>
+                                            <span class="text-sm text-gray-500">
+                                                {{ journal.createdOn|date('Y-m-d H:i') }}
+                                            </span>
+                                            {% if journal.privateNotes %}
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                    🔒 Private
+                                                </span>
+                                            {% endif %}
+                                        </div>
+
+                                        {# Display changes #}
+                                        {% set changes = journal_details[journal.id] ?? [] %}
+                                        {% if changes is not empty %}
+                                            <ul class="mt-2 text-sm text-gray-600 space-y-1">
+                                                {% for detail in changes %}
+                                                    <li>
+                                                        <span class="font-medium">{{ detail.propKey|replace({'_': ' '})|title }}:</span>
+                                                        changed from
+                                                        <span class="line-through">{{ detail.oldValue ?? 'empty' }}</span>
+                                                        to
+                                                        <span class="font-medium">{{ detail.newValue ?? 'empty' }}</span>
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+                                        {% endif %}
+
+                                        {# Display notes/comment #}
+                                        {% if journal.notes %}
+                                            <div class="mt-2 text-gray-700">
+                                                {{ journal.notes|nl2br }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {# Add Comment Form #}
+                {% if comment_form is not null %}
+                    <div class="pt-6 border-t border-gray-200">
+                        <h3 class="text-md font-semibold text-gray-900 mb-3">Add a Comment</h3>
+                        {{ form_start(comment_form, {'attr': {'class': 'space-y-4'}}) }}
+                            <div>
+                                {{ form_widget(comment_form.notes) }}
+                                {{ form_errors(comment_form.notes) }}
+                            </div>
+
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center">
+                                    {{ form_widget(comment_form.privateNotes) }}
+                                    <label for="{{ comment_form.privateNotes.vars.id }}" class="ml-2 text-sm text-gray-700">
+                                        {{ form_label(comment_form.privateNotes) }}
+                                    </label>
+                                </div>
+
+                                <button type="submit"
+                                        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                    Add Comment
+                                </button>
+                            </div>
+                        {{ form_end(comment_form) }}
+                    </div>
+                {% endif %}
             </div>
         </div>
 
