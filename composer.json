@@ -81,6 +81,8 @@
         "doctrine/doctrine-fixtures-bundle": "^4.1",
         "eprofos/reverse-engineering-bundle": "^0.1.0",
         "stof/doctrine-extensions-bundle": "^1.14",
-        "symfony/maker-bundle": "^1.64"
+        "symfony/maker-bundle": "^1.64",
+        "symfony/panther": "^2.2",
+        "symfony/phpunit-bridge": "^7.3"
     }
 }
