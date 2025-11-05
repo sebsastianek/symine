@@ -5,8 +5,12 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\Project;
+use App\Entity\Member;
+use App\Entity\MemberRole;
 use App\Form\ProjectType;
+use App\Form\MemberType;
 use App\Repository\ProjectRepository;
+use App\Repository\MemberRepository;
 use App\Security\Voter\ProjectVoter;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,6 +24,7 @@ class ProjectController extends AbstractController
 {
     public function __construct(
         private ProjectRepository $projectRepository,
+        private MemberRepository $memberRepository,
         private EntityManagerInterface $entityManager
     ) {
     }
@@ -80,14 +85,82 @@ class ProjectController extends AbstractController
     }
     
     #[Route('/{id}/members', name: 'project_members', requirements: ['id' => '\d+'])]
-    public function members(Project $project): Response
+    public function members(Request $request, Project $project): Response
     {
         // Check if user can manage members
         $this->denyAccessUnlessGranted(ProjectVoter::MANAGE_MEMBERS, $project);
-        
-        return $this->render('project/members.html.twig', [
+
+        // Get all existing members
+        $members = $this->memberRepository->findBy(['project' => $project]);
+
+        // Create form for adding new member
+        $member = new Member();
+        $member->setProject($project);
+        $member->setCreatedOn(new \DateTime());
+
+        $form = $this->createForm(MemberType::class, $member, [
             'project' => $project,
         ]);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            // Get selected roles from form
+            $roles = $form->get('roles')->getData();
+
+            // Create MemberRole for each selected role
+            foreach ($roles as $role) {
+                $memberRole = new MemberRole();
+                $memberRole->setMember($member);
+                $memberRole->setRole($role);
+                $member->addMemberRole($memberRole);
+            }
+
+            $this->entityManager->persist($member);
+            $this->entityManager->flush();
+
+            $this->addFlash('success', sprintf('User "%s %s" added to project successfully.',
+                $member->getUser()->getFirstname(),
+                $member->getUser()->getLastname()
+            ));
+
+            return $this->redirectToRoute('project_members', ['id' => $project->getId()]);
+        }
+
+        return $this->render('project/members.html.twig', [
+            'project' => $project,
+            'members' => $members,
+            'form' => $form,
+        ]);
+    }
+
+    #[Route('/{id}/members/{memberId}/remove', name: 'project_member_remove', requirements: ['id' => '\d+', 'memberId' => '\d+'], methods: ['POST'])]
+    public function removeMember(Request $request, Project $project, int $memberId): Response
+    {
+        // Check if user can manage members
+        $this->denyAccessUnlessGranted(ProjectVoter::MANAGE_MEMBERS, $project);
+
+        $member = $this->memberRepository->find($memberId);
+
+        if (!$member || $member->getProject()->getId() !== $project->getId()) {
+            $this->addFlash('error', 'Member not found or does not belong to this project.');
+            return $this->redirectToRoute('project_members', ['id' => $project->getId()]);
+        }
+
+        // Verify CSRF token
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('remove_member_' . $memberId, $token)) {
+            $this->addFlash('error', 'Invalid CSRF token.');
+            return $this->redirectToRoute('project_members', ['id' => $project->getId()]);
+        }
+
+        $userName = sprintf('%s %s', $member->getUser()->getFirstname(), $member->getUser()->getLastname());
+
+        $this->entityManager->remove($member);
+        $this->entityManager->flush();
+
+        $this->addFlash('success', sprintf('User "%s" removed from project successfully.', $userName));
+
+        return $this->redirectToRoute('project_members', ['id' => $project->getId()]);
     }
     
     #[Route('/new', name: 'project_new')]

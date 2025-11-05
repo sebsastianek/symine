@@ -15,6 +15,7 @@ use App\Repository\MemberRepository;
  */
 #[ORM\Entity(repositoryClass: MemberRepository::class)]
 #[ORM\Table(name: 'members')]
+#[ORM\HasLifecycleCallbacks]
 class Member
 {
     /**
@@ -175,6 +176,17 @@ class Member
         }
 
         return $this;
+    }
+
+    /**
+     * Lifecycle callback: before persist (create)
+     */
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        if ($this->createdOn === null) {
+            $this->createdOn = new \DateTime();
+        }
     }
 
 }
