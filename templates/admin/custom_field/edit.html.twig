@@ -1,0 +1,288 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Edit {{ type_label }} - {{ custom_field.name }}{% endblock %}
+{% block page_title %}Edit {{ type_label }}{% endblock %}
+
+{% block body %}
+<div class="max-w-4xl">
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="post" action="{{ path('admin_custom_field_edit', {id: custom_field.id}) }}" class="space-y-6">
+            <!-- Basic Information -->
+            <div class="border-b border-gray-200 pb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2">
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                            Name <span class="text-red-500">*</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            required
+                            value="{{ custom_field.name }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Enter field name"
+                        >
+                    </div>
+
+                    <div class="col-span-2">
+                        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                            Description
+                        </label>
+                        <textarea
+                            id="description"
+                            name="description"
+                            rows="3"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="Optional description"
+                        >{{ custom_field.description }}</textarea>
+                    </div>
+
+                    <div>
+                        <label for="field_format" class="block text-sm font-medium text-gray-700 mb-2">
+                            Format <span class="text-red-500">*</span>
+                        </label>
+                        <select
+                            id="field_format"
+                            name="field_format"
+                            required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onchange="toggleFormatOptions()"
+                        >
+                            <option value="string" {{ custom_field.fieldFormat == 'string' ? 'selected' : '' }}>String</option>
+                            <option value="text" {{ custom_field.fieldFormat == 'text' ? 'selected' : '' }}>Text (Long)</option>
+                            <option value="int" {{ custom_field.fieldFormat == 'int' ? 'selected' : '' }}>Integer</option>
+                            <option value="float" {{ custom_field.fieldFormat == 'float' ? 'selected' : '' }}>Float</option>
+                            <option value="list" {{ custom_field.fieldFormat == 'list' ? 'selected' : '' }}>List</option>
+                            <option value="date" {{ custom_field.fieldFormat == 'date' ? 'selected' : '' }}>Date</option>
+                            <option value="bool" {{ custom_field.fieldFormat == 'bool' ? 'selected' : '' }}>Boolean</option>
+                            <option value="user" {{ custom_field.fieldFormat == 'user' ? 'selected' : '' }}>User</option>
+                            <option value="version" {{ custom_field.fieldFormat == 'version' ? 'selected' : '' }}>Version</option>
+                            <option value="link" {{ custom_field.fieldFormat == 'link' ? 'selected' : '' }}>Link (URL)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="position" class="block text-sm font-medium text-gray-700 mb-2">
+                            Position
+                        </label>
+                        <input
+                            type="number"
+                            id="position"
+                            name="position"
+                            value="{{ custom_field.position ?? 1 }}"
+                            min="1"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                        <p class="mt-1 text-sm text-gray-500">Display order</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Format-Specific Options -->
+            <div class="border-b border-gray-200 pb-6" id="format_options">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Format Options</h3>
+
+                <!-- For string/text fields -->
+                <div class="format-option string text space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="min_length" class="block text-sm font-medium text-gray-700 mb-2">
+                                Minimum Length
+                            </label>
+                            <input
+                                type="number"
+                                id="min_length"
+                                name="min_length"
+                                value="{{ custom_field.minLength }}"
+                                min="0"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="No minimum"
+                            >
+                        </div>
+
+                        <div>
+                            <label for="max_length" class="block text-sm font-medium text-gray-700 mb-2">
+                                Maximum Length
+                            </label>
+                            <input
+                                type="number"
+                                id="max_length"
+                                name="max_length"
+                                value="{{ custom_field.maxLength }}"
+                                min="0"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="No maximum"
+                            >
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="regexp" class="block text-sm font-medium text-gray-700 mb-2">
+                            Regular Expression
+                        </label>
+                        <input
+                            type="text"
+                            id="regexp"
+                            name="regexp"
+                            value="{{ custom_field.regexp }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="e.g., ^[A-Z]{3}-[0-9]+$"
+                        >
+                        <p class="mt-1 text-sm text-gray-500">Optional validation pattern</p>
+                    </div>
+                </div>
+
+                <!-- For list fields -->
+                <div class="format-option list hidden">
+                    <label for="possible_values" class="block text-sm font-medium text-gray-700 mb-2">
+                        Possible Values <span class="text-red-500">*</span>
+                    </label>
+                    <textarea
+                        id="possible_values"
+                        name="possible_values"
+                        rows="5"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter one value per line"
+                    >{{ custom_field.possibleValues }}</textarea>
+                    <p class="mt-1 text-sm text-gray-500">Enter one value per line</p>
+                </div>
+            </div>
+
+            <!-- Field Options -->
+            <div class="border-b border-gray-200 pb-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Field Options</h3>
+
+                <div class="space-y-3">
+                    <div class="flex items-center">
+                        <input
+                            type="checkbox"
+                            id="is_required"
+                            name="is_required"
+                            {{ custom_field.isRequired ? 'checked' : '' }}
+                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        >
+                        <label for="is_required" class="ml-2 block text-sm text-gray-700">
+                            Required field
+                        </label>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input
+                            type="checkbox"
+                            id="is_for_all"
+                            name="is_for_all"
+                            {{ custom_field.isForAll ? 'checked' : '' }}
+                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        >
+                        <label for="is_for_all" class="ml-2 block text-sm text-gray-700">
+                            For all {{ custom_field.type == 'IssueCustomField' ? 'trackers/projects' : 'projects' }}
+                        </label>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input
+                            type="checkbox"
+                            id="searchable"
+                            name="searchable"
+                            {{ custom_field.searchable ? 'checked' : '' }}
+                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        >
+                        <label for="searchable" class="ml-2 block text-sm text-gray-700">
+                            Searchable
+                        </label>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input
+                            type="checkbox"
+                            id="visible"
+                            name="visible"
+                            {{ custom_field.visible ? 'checked' : '' }}
+                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        >
+                        <label for="visible" class="ml-2 block text-sm text-gray-700">
+                            Visible
+                        </label>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input
+                            type="checkbox"
+                            id="editable"
+                            name="editable"
+                            {{ custom_field.editable ? 'checked' : '' }}
+                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        >
+                        <label for="editable" class="ml-2 block text-sm text-gray-700">
+                            Editable
+                        </label>
+                    </div>
+
+                    <div class="flex items-center">
+                        <input
+                            type="checkbox"
+                            id="multiple"
+                            name="multiple"
+                            {{ custom_field.multiple ? 'checked' : '' }}
+                            class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        >
+                        <label for="multiple" class="ml-2 block text-sm text-gray-700">
+                            Multiple values (for list fields)
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Default Value -->
+            <div>
+                <label for="default_value" class="block text-sm font-medium text-gray-700 mb-2">
+                    Default Value
+                </label>
+                <input
+                    type="text"
+                    id="default_value"
+                    name="default_value"
+                    value="{{ custom_field.defaultValue }}"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Optional default value"
+                >
+            </div>
+
+            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                <a href="{{ path(custom_field.type == 'IssueCustomField' ? 'admin_custom_field_issues' : 'admin_custom_field_projects') }}" class="text-gray-600 hover:text-gray-900">
+                    Cancel
+                </a>
+                <button
+                    type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleFormatOptions() {
+    const format = document.getElementById('field_format').value;
+    const options = document.querySelectorAll('.format-option');
+
+    options.forEach(opt => {
+        opt.classList.add('hidden');
+    });
+
+    if (format === 'string' || format === 'text') {
+        document.querySelector('.format-option.string').classList.remove('hidden');
+    } else if (format === 'list') {
+        document.querySelector('.format-option.list').classList.remove('hidden');
+    }
+}
+
+// Initialize on page load
+toggleFormatOptions();
+</script>
+{% endblock %}
