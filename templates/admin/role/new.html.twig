@@ -1,0 +1,133 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}New Role{% endblock %}
+{% block page_title %}New Role{% endblock %}
+
+{% block body %}
+<div class="max-w-3xl">
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="post" action="{{ path('admin_role_new') }}" class="space-y-6">
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                    Name <span class="text-red-500">*</span>
+                </label>
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter role name"
+                >
+            </div>
+
+            <div>
+                <label for="position" class="block text-sm font-medium text-gray-700 mb-2">
+                    Position
+                </label>
+                <input
+                    type="number"
+                    id="position"
+                    name="position"
+                    value="1"
+                    min="1"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                <p class="mt-1 text-sm text-gray-500">Display order position (lower numbers appear first)</p>
+            </div>
+
+            <div class="flex items-center">
+                <input
+                    type="checkbox"
+                    id="assignable"
+                    name="assignable"
+                    checked
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                >
+                <label for="assignable" class="ml-2 block text-sm text-gray-700">
+                    Role can be assigned to members
+                </label>
+            </div>
+
+            <div class="border-t border-gray-200 pt-4">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Visibility Settings</h3>
+
+                <div class="space-y-4">
+                    <div>
+                        <label for="issues_visibility" class="block text-sm font-medium text-gray-700 mb-2">
+                            Issues Visibility
+                        </label>
+                        <select
+                            id="issues_visibility"
+                            name="issues_visibility"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="default">Default</option>
+                            <option value="all">All issues</option>
+                            <option value="own">Issues created by or assigned to the user</option>
+                        </select>
+                        <p class="mt-1 text-sm text-gray-500">Defines which issues are visible to users with this role</p>
+                    </div>
+
+                    <div>
+                        <label for="users_visibility" class="block text-sm font-medium text-gray-700 mb-2">
+                            Users Visibility
+                        </label>
+                        <select
+                            id="users_visibility"
+                            name="users_visibility"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="members_of_visible_projects" selected>Members of visible projects</option>
+                            <option value="all">All active users</option>
+                        </select>
+                        <p class="mt-1 text-sm text-gray-500">Defines which users are visible to users with this role</p>
+                    </div>
+
+                    <div>
+                        <label for="time_entries_visibility" class="block text-sm font-medium text-gray-700 mb-2">
+                            Time Entries Visibility
+                        </label>
+                        <select
+                            id="time_entries_visibility"
+                            name="time_entries_visibility"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="all" selected>All time entries</option>
+                            <option value="own">Own time entries only</option>
+                        </select>
+                        <p class="mt-1 text-sm text-gray-500">Defines which time entries are visible to users with this role</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 pt-4">
+                <div class="flex items-center">
+                    <input
+                        type="checkbox"
+                        id="all_roles_managed"
+                        name="all_roles_managed"
+                        checked
+                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    >
+                    <label for="all_roles_managed" class="ml-2 block text-sm text-gray-700">
+                        All roles managed (can manage members with all roles)
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                <a href="{{ path('admin_role_index') }}" class="text-gray-600 hover:text-gray-900">
+                    Cancel
+                </a>
+                <button
+                    type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    Create Role
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
