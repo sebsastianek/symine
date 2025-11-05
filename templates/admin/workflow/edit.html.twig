@@ -1,0 +1,134 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Edit Workflow - {{ tracker.name }} / {{ role.name }}{% endblock %}
+{% block page_title %}Edit Workflow{% endblock %}
+
+{% block body %}
+<div class="max-w-6xl">
+    <div class="mb-6">
+        <h3 class="text-lg font-semibold text-gray-900">
+            Workflow: <span class="text-blue-600">{{ tracker.name }}</span> /
+            <span class="text-green-600">{{ role.name }}</span>
+        </h3>
+        <p class="text-sm text-gray-600 mt-1">
+            Check the boxes to allow status transitions. Rows represent current status, columns represent new status.
+        </p>
+    </div>
+
+    <!-- Tracker and Role Selector -->
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <form method="get" action="{{ path('admin_workflow_edit') }}" class="flex items-end gap-4">
+            <div class="flex-1">
+                <label for="tracker_id" class="block text-sm font-medium text-gray-700 mb-1">
+                    Tracker
+                </label>
+                <select
+                    id="tracker_id"
+                    name="tracker_id"
+                    onchange="this.form.submit()"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    {% for t in trackers %}
+                        <option value="{{ t.id }}" {{ t.id == tracker.id ? 'selected' : '' }}>
+                            {{ t.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="flex-1">
+                <label for="role_id" class="block text-sm font-medium text-gray-700 mb-1">
+                    Role
+                </label>
+                <select
+                    id="role_id"
+                    name="role_id"
+                    onchange="this.form.submit()"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    {% for r in roles %}
+                        <option value="{{ r.id }}" {{ r.id == role.id ? 'selected' : '' }}>
+                            {{ r.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div>
+                <a href="{{ path('admin_workflow_index') }}" class="inline-block px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md">
+                    Back to Workflow
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Transition Matrix -->
+    <div class="bg-white rounded-lg shadow overflow-x-auto">
+        <form method="post" action="{{ path('admin_workflow_edit', {tracker_id: tracker.id, role_id: role.id}) }}">
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50">
+                            Current Status →<br>New Status ↓
+                        </th>
+                        {% for status in statuses %}
+                            <th scope="col" class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                <div class="transform -rotate-45 origin-left whitespace-nowrap" style="width: 100px;">
+                                    {{ status.name }}
+                                </div>
+                            </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for oldStatus in statuses %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3 text-sm font-medium text-gray-900 whitespace-nowrap sticky left-0 bg-white">
+                                {{ oldStatus.name }}
+                                {% if oldStatus.isClosed %}
+                                    <span class="ml-1 text-xs text-gray-500">(closed)</span>
+                                {% endif %}
+                            </td>
+                            {% for newStatus in statuses %}
+                                <td class="px-3 py-3 text-center">
+                                    <input
+                                        type="checkbox"
+                                        name="transitions[{{ oldStatus.id }}][{{ newStatus.id }}]"
+                                        value="1"
+                                        {{ matrix[oldStatus.id][newStatus.id] is defined ? 'checked' : '' }}
+                                        class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    >
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between items-center">
+                <div class="text-sm text-gray-600">
+                    <p><strong>Tip:</strong> A checked box means users with the "{{ role.name }}" role can move issues from the row status to the column status.</p>
+                </div>
+                <button
+                    type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    Save Workflow
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Helper Information -->
+    <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h4 class="text-sm font-semibold text-blue-900 mb-2">About Workflows</h4>
+        <ul class="text-sm text-blue-800 space-y-1 list-disc list-inside">
+            <li>Workflows control which status transitions are allowed for issues</li>
+            <li>Each tracker (issue type) can have different workflows</li>
+            <li>Each role can have different permissions to transition issues</li>
+            <li>Diagonal checkboxes allow keeping the same status (e.g., for updating other fields)</li>
+            <li>Use the "Copy Workflow" feature on the main page to duplicate workflows across trackers/roles</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}
