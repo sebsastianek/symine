@@ -16,6 +16,23 @@ This is a modern reimplementation of Redmine project management software using:
 
 ## Getting Started
 
+### Option 1: Docker (Recommended)
+
+The easiest way to get started is using Docker:
+
+```bash
+# Initialize Docker environment
+./docker-init.sh
+
+# Access the application
+# http://localhost:8080
+# Login: admin / admin
+```
+
+For more Docker commands, see [DOCKER.md](DOCKER.md)
+
+### Option 2: Manual Setup
+
 ```bash
 # Install dependencies
 composer install
@@ -31,6 +48,18 @@ bin/console doctrine:fixtures:load
 # Start development server
 symfony server:start
 ```
+
+## Testing
+
+```bash
+# Using Docker
+./docker-test.sh
+
+# Manual
+vendor/bin/phpunit tests/E2E
+```
+
+See [tests/README.md](tests/README.md) for detailed testing documentation.
 
 ## License
 
