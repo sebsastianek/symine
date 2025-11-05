@@ -1,0 +1,157 @@
+{{ form_start(form, {'attr': {'class': 'space-y-6'}}) }}
+
+<div class="bg-white shadow-sm rounded-lg p-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {# Left Column #}
+        <div class="space-y-4">
+            {# Subject - Full Width #}
+            <div class="lg:col-span-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form_label(form.subject) }}
+                    <span class="text-red-500">*</span>
+                </label>
+                {{ form_widget(form.subject) }}
+                {{ form_errors(form.subject) }}
+            </div>
+
+            {# Tracker #}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form_label(form.tracker) }}
+                    <span class="text-red-500">*</span>
+                </label>
+                {{ form_widget(form.tracker) }}
+                {{ form_errors(form.tracker) }}
+            </div>
+
+            {# Status #}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form_label(form.status) }}
+                    <span class="text-red-500">*</span>
+                </label>
+                {{ form_widget(form.status) }}
+                {{ form_errors(form.status) }}
+            </div>
+
+            {# Priority #}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form_label(form.priority) }}
+                    <span class="text-red-500">*</span>
+                </label>
+                {{ form_widget(form.priority) }}
+                {{ form_errors(form.priority) }}
+            </div>
+
+            {# Assigned To #}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form_label(form.assignedTo) }}
+                </label>
+                {{ form_widget(form.assignedTo) }}
+                {{ form_errors(form.assignedTo) }}
+            </div>
+
+            {# Category #}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form_label(form.category) }}
+                </label>
+                {{ form_widget(form.category) }}
+                {{ form_errors(form.category) }}
+            </div>
+
+            {# Target Version #}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form_label(form.fixedVersion) }}
+                </label>
+                {{ form_widget(form.fixedVersion) }}
+                {{ form_errors(form.fixedVersion) }}
+            </div>
+        </div>
+
+        {# Right Column #}
+        <div class="space-y-4">
+            {# Start Date #}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form_label(form.startDate) }}
+                </label>
+                {{ form_widget(form.startDate) }}
+                {{ form_errors(form.startDate) }}
+            </div>
+
+            {# Due Date #}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form_label(form.dueDate) }}
+                </label>
+                {{ form_widget(form.dueDate) }}
+                {{ form_errors(form.dueDate) }}
+            </div>
+
+            {# Estimated Hours #}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form_label(form.estimatedHours) }}
+                </label>
+                {{ form_widget(form.estimatedHours) }}
+                {{ form_errors(form.estimatedHours) }}
+            </div>
+
+            {# Done Ratio #}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form_label(form.doneRatio) }}
+                </label>
+                {{ form_widget(form.doneRatio) }}
+                {{ form_errors(form.doneRatio) }}
+            </div>
+
+            {# Parent Issue (if exists) #}
+            {% if form.parent is defined %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        {{ form_label(form.parent) }}
+                    </label>
+                    {{ form_widget(form.parent) }}
+                    {{ form_errors(form.parent) }}
+                </div>
+            {% endif %}
+
+            {# Private Checkbox #}
+            <div class="flex items-center">
+                {{ form_widget(form.isPrivate) }}
+                <label for="{{ form.isPrivate.vars.id }}" class="ml-2 text-sm text-gray-700">
+                    {{ form_label(form.isPrivate) }}
+                </label>
+                {{ form_errors(form.isPrivate) }}
+            </div>
+        </div>
+    </div>
+
+    {# Description - Full Width #}
+    <div class="mt-6">
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+            {{ form_label(form.description) }}
+        </label>
+        {{ form_widget(form.description) }}
+        {{ form_errors(form.description) }}
+    </div>
+</div>
+
+{# Form Actions #}
+<div class="flex items-center justify-end space-x-3 mt-6">
+    <a href="{{ app.request.headers.get('referer') ?: path('issue_index', {'projectId': project.id}) }}"
+       class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        Cancel
+    </a>
+    <button type="submit"
+            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+        {% if issue.id is defined and issue.id %}Update Issue{% else %}Create Issue{% endif %}
+    </button>
+</div>
+
+{{ form_end(form) }}
