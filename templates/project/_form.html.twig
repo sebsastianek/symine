@@ -1,0 +1,101 @@
+<div class="space-y-6">
+    {{ form_start(form) }}
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {# Left column #}
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form_label(form.name) }}
+                </label>
+                {{ form_widget(form.name) }}
+                {{ form_errors(form.name) }}
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form_label(form.description) }}
+                </label>
+                {{ form_widget(form.description) }}
+                {{ form_errors(form.description) }}
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form_label(form.identifier) }}
+                </label>
+                {{ form_widget(form.identifier) }}
+                {{ form_errors(form.identifier) }}
+                {% if form.identifier.vars.help %}
+                    <p class="mt-1 text-sm text-gray-500">{{ form.identifier.vars.help }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form_label(form.homepage) }}
+                </label>
+                {{ form_widget(form.homepage) }}
+                {{ form_errors(form.homepage) }}
+            </div>
+        </div>
+
+        {# Right column #}
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form_label(form.parent) }}
+                </label>
+                {{ form_widget(form.parent) }}
+                {{ form_errors(form.parent) }}
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">
+                    {{ form_label(form.status) }}
+                </label>
+                {{ form_widget(form.status) }}
+                {{ form_errors(form.status) }}
+            </div>
+
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    {{ form_widget(form.isPublic) }}
+                </div>
+                <div class="ml-3 text-sm">
+                    <label for="{{ form.isPublic.vars.id }}" class="font-medium text-gray-700">
+                        {{ form.isPublic.vars.label }}
+                    </label>
+                    {% if form.isPublic.vars.help %}
+                        <p class="text-gray-500">{{ form.isPublic.vars.help }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    {{ form_widget(form.inheritMembers) }}
+                </div>
+                <div class="ml-3 text-sm">
+                    <label for="{{ form.inheritMembers.vars.id }}" class="font-medium text-gray-700">
+                        {{ form.inheritMembers.vars.label }}
+                    </label>
+                    {% if form.inheritMembers.vars.help %}
+                        <p class="text-gray-500">{{ form.inheritMembers.vars.help }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex justify-end space-x-3 pt-4 border-t">
+        <a href="{{ path('project_index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+            Cancel
+        </a>
+        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium">
+            Save Project
+        </button>
+    </div>
+
+    {{ form_end(form) }}
+</div>

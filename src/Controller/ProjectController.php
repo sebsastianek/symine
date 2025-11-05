@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\Project;
+use App\Form\ProjectType;
 use App\Repository\ProjectRepository;
 use App\Security\Voter\ProjectVoter;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -16,7 +19,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class ProjectController extends AbstractController
 {
     public function __construct(
-        private ProjectRepository $projectRepository
+        private ProjectRepository $projectRepository,
+        private EntityManagerInterface $entityManager
     ) {
     }
     
@@ -53,13 +57,25 @@ class ProjectController extends AbstractController
     }
     
     #[Route('/{id}/edit', name: 'project_edit', requirements: ['id' => '\d+'])]
-    public function edit(Project $project): Response
+    public function edit(Request $request, Project $project): Response
     {
         // Check if user can edit this project
         $this->denyAccessUnlessGranted(ProjectVoter::EDIT, $project);
-        
+
+        $form = $this->createForm(ProjectType::class, $project);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->entityManager->flush();
+
+            $this->addFlash('success', 'Project updated successfully.');
+
+            return $this->redirectToRoute('project_show', ['id' => $project->getId()]);
+        }
+
         return $this->render('project/edit.html.twig', [
             'project' => $project,
+            'form' => $form,
         ]);
     }
     
@@ -76,9 +92,48 @@ class ProjectController extends AbstractController
     
     #[Route('/new', name: 'project_new')]
     #[IsGranted('global_project_create')]
-    public function new(): Response
+    public function new(Request $request): Response
     {
         // User needs global project creation permission
-        return $this->render('project/new.html.twig');
+        $project = new Project();
+
+        $form = $this->createForm(ProjectType::class, $project);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $this->entityManager->persist($project);
+            $this->entityManager->flush();
+
+            $this->addFlash('success', 'Project created successfully.');
+
+            return $this->redirectToRoute('project_show', ['id' => $project->getId()]);
+        }
+
+        return $this->render('project/new.html.twig', [
+            'form' => $form,
+        ]);
+    }
+
+    #[Route('/{id}/delete', name: 'project_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function delete(Request $request, Project $project): Response
+    {
+        // Check if user can delete this project
+        $this->denyAccessUnlessGranted(ProjectVoter::DELETE, $project);
+
+        // Verify CSRF token
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('delete_project_' . $project->getId(), $token)) {
+            $this->addFlash('error', 'Invalid CSRF token.');
+            return $this->redirectToRoute('project_show', ['id' => $project->getId()]);
+        }
+
+        $projectName = $project->getName();
+
+        $this->entityManager->remove($project);
+        $this->entityManager->flush();
+
+        $this->addFlash('success', sprintf('Project "%s" deleted successfully.', $projectName));
+
+        return $this->redirectToRoute('project_index');
     }
 }
