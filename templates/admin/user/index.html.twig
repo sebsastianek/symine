@@ -1,0 +1,141 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Users{% endblock %}
+{% block page_title %}Users{% endblock %}
+
+{% block body %}
+<div class="flex justify-between items-center mb-6">
+    <div>
+        <h3 class="text-lg font-semibold text-gray-900">Manage Users</h3>
+        <div class="mt-2 flex space-x-2">
+            <a href="{{ path('admin_user_index', {status: 'active'}) }}"
+               class="px-3 py-1 rounded {{ current_status == 'active' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
+                Active
+            </a>
+            <a href="{{ path('admin_user_index', {status: 'registered'}) }}"
+               class="px-3 py-1 rounded {{ current_status == 'registered' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
+                Registered
+            </a>
+            <a href="{{ path('admin_user_index', {status: 'locked'}) }}"
+               class="px-3 py-1 rounded {{ current_status == 'locked' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
+                Locked
+            </a>
+            <a href="{{ path('admin_user_index', {status: 'all'}) }}"
+               class="px-3 py-1 rounded {{ current_status == 'all' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300' }}">
+                All
+            </a>
+        </div>
+    </div>
+    <a href="{{ path('admin_user_new') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md inline-flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        New User
+    </a>
+</div>
+
+{% if users is empty %}
+    <div class="bg-white rounded-lg shadow p-8 text-center">
+        <p class="text-gray-500">No users found with status: {{ current_status }}.</p>
+        <a href="{{ path('admin_user_new') }}" class="mt-4 inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+            Create First User
+        </a>
+    </div>
+{% else %}
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Login
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Admin
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Last Login
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for user in users %}
+                    <tr class="hover:bg-gray-50 {{ user.status == 3 ? 'opacity-60' : '' }}">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">
+                                {{ user.login }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">
+                                {{ user.fullName }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            {% if user.admin %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                    Yes
+                                </span>
+                            {% else %}
+                                <span class="text-gray-400">No</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            {% if user.status == 1 %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                    Active
+                                </span>
+                            {% elseif user.status == 2 %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    Registered
+                                </span>
+                            {% elseif user.status == 3 %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                    Locked
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ user.lastLoginOn ? user.lastLoginOn|date('Y-m-d H:i') : 'Never' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <a href="{{ path('admin_user_edit', {id: user.id}) }}" class="text-blue-600 hover:text-blue-900 mr-3">
+                                Edit
+                            </a>
+                            {% if user.status == 3 %}
+                                <form method="post" action="{{ path('admin_user_unlock', {id: user.id}) }}" class="inline">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('unlock_user_' ~ user.id) }}">
+                                    <button type="submit" class="text-green-600 hover:text-green-900 mr-3">
+                                        Unlock
+                                    </button>
+                                </form>
+                            {% else %}
+                                <form method="post" action="{{ path('admin_user_lock', {id: user.id}) }}" onsubmit="return confirm('Are you sure you want to lock this user?');" class="inline">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('lock_user_' ~ user.id) }}">
+                                    <button type="submit" class="text-yellow-600 hover:text-yellow-900 mr-3">
+                                        Lock
+                                    </button>
+                                </form>
+                            {% endif %}
+                            <form method="post" action="{{ path('admin_user_delete', {id: user.id}) }}" onsubmit="return confirm('Are you sure you want to permanently delete this user? This action cannot be undone.');" class="inline">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_user_' ~ user.id) }}">
+                                <button type="submit" class="text-red-600 hover:text-red-900">
+                                    Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+{% endblock %}

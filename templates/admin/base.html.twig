@@ -51,7 +51,7 @@
                 <a href="{{ path('admin_role_index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ app.request.get('_route') starts with 'admin_role' ? 'bg-gray-700' : '' }}">
                     Roles & Permissions
                 </a>
-                <a href="#" class="block px-4 py-2 hover:bg-gray-700 text-gray-500">
+                <a href="{{ path('admin_user_index') }}" class="block px-4 py-2 hover:bg-gray-700 {{ app.request.get('_route') starts with 'admin_user' ? 'bg-gray-700' : '' }}">
                     Users
                 </a>
                 <a href="#" class="block px-4 py-2 hover:bg-gray-700 text-gray-500">
