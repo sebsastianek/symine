@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use App\Repository\ProjectRepository;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Project.
@@ -15,6 +16,7 @@ use App\Repository\ProjectRepository;
  */
 #[ORM\Entity(repositoryClass: ProjectRepository::class)]
 #[ORM\Table(name: 'projects')]
+#[ORM\HasLifecycleCallbacks]
 class Project
 {
     public function __construct()
@@ -33,6 +35,8 @@ class Project
      * Property name
      */
     #[ORM\Column(type: 'string', length: 255, options: ['default' => ''])]
+    #[Assert\NotBlank(message: 'Project name is required')]
+    #[Assert\Length(max: 255, maxMessage: 'Project name cannot be longer than {{ limit }} characters')]
     private string $name = '';
 
     /**
@@ -45,6 +49,7 @@ class Project
      * Property homepage
      */
     #[ORM\Column(type: 'string', length: 255, nullable: true, options: ['default' => ''])]
+    #[Assert\Url(message: 'Please enter a valid URL')]
     private ?string $homepage = '';
 
     /**
@@ -82,6 +87,8 @@ class Project
      * Property identifier
      */
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[Assert\Length(max: 255, maxMessage: 'Identifier cannot be longer than {{ limit }} characters')]
+    #[Assert\Regex(pattern: '/^[a-z0-9\-_]+$/i', message: 'Identifier can only contain letters, numbers, dashes and underscores')]
     private ?string $identifier = NULL;
 
     /**
@@ -422,6 +429,30 @@ class Project
     {
         $this->defaultIssueQuery = $defaultIssueQuery;
         return $this;
+    }
+
+    /**
+     * Lifecycle callback: before persist (create)
+     */
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        $now = new \DateTime();
+        if ($this->createdOn === null) {
+            $this->createdOn = $now;
+        }
+        if ($this->updatedOn === null) {
+            $this->updatedOn = $now;
+        }
+    }
+
+    /**
+     * Lifecycle callback: before update
+     */
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updatedOn = new \DateTime();
     }
 
 }

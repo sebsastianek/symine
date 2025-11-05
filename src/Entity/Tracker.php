@@ -44,8 +44,8 @@ class Tracker
     /**
      * Property isInRoadmap
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '1'])]
-    private int $isInRoadmap = 1;
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $isInRoadmap = true;
 
     /**
      * Property fieldsBits
@@ -126,14 +126,15 @@ class Tracker
     /**
      * Getter for isInRoadmap
      */
-    public function getIsInRoadmap(): int    {
+    public function getIsInRoadmap(): bool
+    {
         return $this->isInRoadmap;
     }
 
     /**
      * Setter for isInRoadmap
      */
-    public function setIsInRoadmap(int $isInRoadmap): static
+    public function setIsInRoadmap(bool $isInRoadmap): static
     {
         $this->isInRoadmap = $isInRoadmap;
         return $this;

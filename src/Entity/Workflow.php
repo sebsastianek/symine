@@ -54,14 +54,14 @@ class Workflow
     /**
      * Property assignee
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    private int $assignee = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $assignee = false;
 
     /**
      * Property author
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    private int $author = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $author = false;
 
     /**
      * Property type
@@ -168,14 +168,15 @@ class Workflow
     /**
      * Getter for assignee
      */
-    public function getAssignee(): int    {
+    public function getAssignee(): bool
+    {
         return $this->assignee;
     }
 
     /**
      * Setter for assignee
      */
-    public function setAssignee(int $assignee): static
+    public function setAssignee(bool $assignee): static
     {
         $this->assignee = $assignee;
         return $this;
@@ -184,14 +185,15 @@ class Workflow
     /**
      * Getter for author
      */
-    public function getAuthor(): int    {
+    public function getAuthor(): bool
+    {
         return $this->author;
     }
 
     /**
      * Setter for author
      */
-    public function setAuthor(int $author): static
+    public function setAuthor(bool $author): static
     {
         $this->author = $author;
         return $this;

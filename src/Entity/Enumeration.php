@@ -38,8 +38,8 @@ class Enumeration
     /**
      * Property isDefault
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    private int $isDefault = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isDefault = false;
 
     /**
      * Property type
@@ -50,8 +50,8 @@ class Enumeration
     /**
      * Property active
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '1'])]
-    private int $active = 1;
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $active = true;
 
     /**
      * Property projectId
@@ -122,14 +122,15 @@ class Enumeration
     /**
      * Getter for isDefault
      */
-    public function getIsDefault(): int    {
+    public function getIsDefault(): bool
+    {
         return $this->isDefault;
     }
 
     /**
      * Setter for isDefault
      */
-    public function setIsDefault(int $isDefault): static
+    public function setIsDefault(bool $isDefault): static
     {
         $this->isDefault = $isDefault;
         return $this;
@@ -154,14 +155,15 @@ class Enumeration
     /**
      * Getter for active
      */
-    public function getActive(): int    {
+    public function getActive(): bool
+    {
         return $this->active;
     }
 
     /**
      * Setter for active
      */
-    public function setActive(int $active): static
+    public function setActive(bool $active): static
     {
         $this->active = $active;
         return $this;
