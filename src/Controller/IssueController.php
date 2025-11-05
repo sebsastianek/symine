@@ -9,8 +9,10 @@ use App\Entity\Project;
 use App\Form\CommentType;
 use App\Form\IssueType;
 use App\Repository\IssueRepository;
+use App\Repository\IssueStatusRepository;
 use App\Security\Voter\IssueVoter;
 use App\Security\Voter\ProjectVoter;
+use App\Security\Service\WorkflowService;
 use App\Service\JournalService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,7 +26,9 @@ class IssueController extends AbstractController
     public function __construct(
         private IssueRepository $issueRepository,
         private EntityManagerInterface $entityManager,
-        private JournalService $journalService
+        private JournalService $journalService,
+        private WorkflowService $workflowService,
+        private IssueStatusRepository $issueStatusRepository
     ) {
     }
 
@@ -169,8 +173,9 @@ class IssueController extends AbstractController
         $this->denyAccessUnlessGranted(IssueVoter::EDIT, $issue);
 
         // Capture original data before changes
+        $originalStatus = $issue->getStatus();
         $originalData = [
-            'status' => $issue->getStatus()->getId(),
+            'status' => $originalStatus->getId(),
             'priority' => $issue->getPriority()->getId(),
             'assigned_to' => $issue->getAssignedTo()?->getId(),
             'subject' => $issue->getSubject(),
@@ -189,6 +194,36 @@ class IssueController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $newStatus = $issue->getStatus();
+
+            // Validate status transition if status changed
+            if ($newStatus->getId() !== $originalStatus->getId()) {
+                if (!$this->workflowService->canTransitionStatus($this->getUser(), $issue, $newStatus)) {
+                    // Revert status to original
+                    $issue->setStatus($originalStatus);
+
+                    $this->addFlash('error', sprintf(
+                        'Status transition from "%s" to "%s" is not allowed by workflow rules.',
+                        $originalStatus->getName(),
+                        $newStatus->getName()
+                    ));
+
+                    return $this->render('issue/edit.html.twig', [
+                        'project' => $project,
+                        'issue' => $issue,
+                        'form' => $form->createView(),
+                    ]);
+                }
+
+                // Log the transition
+                $this->workflowService->logTransition(
+                    $this->getUser(),
+                    $issue,
+                    $originalStatus,
+                    $newStatus
+                );
+            }
+
             // Update timestamp
             $issue->setUpdatedOn(new \DateTime());
 
