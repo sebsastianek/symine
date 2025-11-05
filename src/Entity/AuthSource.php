@@ -92,14 +92,14 @@ class AuthSource
     /**
      * Property ontheflyRegister
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    private int $ontheflyRegister = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $ontheflyRegister = false;
 
     /**
      * Property tls
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    private int $tls = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $tls = false;
 
     /**
      * Property filter
@@ -116,8 +116,8 @@ class AuthSource
     /**
      * Property verifyPeer
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '1'])]
-    private int $verifyPeer = 1;
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $verifyPeer = true;
 
     /**
      * Getter for id
@@ -314,14 +314,15 @@ class AuthSource
     /**
      * Getter for ontheflyRegister
      */
-    public function getOntheflyRegister(): int    {
+    public function getOntheflyRegister(): bool
+    {
         return $this->ontheflyRegister;
     }
 
     /**
      * Setter for ontheflyRegister
      */
-    public function setOntheflyRegister(int $ontheflyRegister): static
+    public function setOntheflyRegister(bool $ontheflyRegister): static
     {
         $this->ontheflyRegister = $ontheflyRegister;
         return $this;
@@ -330,14 +331,15 @@ class AuthSource
     /**
      * Getter for tls
      */
-    public function getTls(): int    {
+    public function getTls(): bool
+    {
         return $this->tls;
     }
 
     /**
      * Setter for tls
      */
-    public function setTls(int $tls): static
+    public function setTls(bool $tls): static
     {
         $this->tls = $tls;
         return $this;
@@ -378,14 +380,15 @@ class AuthSource
     /**
      * Getter for verifyPeer
      */
-    public function getVerifyPeer(): int    {
+    public function getVerifyPeer(): bool
+    {
         return $this->verifyPeer;
     }
 
     /**
      * Setter for verifyPeer
      */
-    public function setVerifyPeer(int $verifyPeer): static
+    public function setVerifyPeer(bool $verifyPeer): static
     {
         $this->verifyPeer = $verifyPeer;
         return $this;

@@ -60,8 +60,8 @@ abstract class Principal
     /**
      * Property admin
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    protected int $admin = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    protected bool $admin = false;
 
     /**
      * Property status
@@ -174,12 +174,12 @@ abstract class Principal
 
     public function getAdmin(): bool
     {
-        return (bool) $this->admin;
+        return $this->admin;
     }
 
     public function setAdmin(bool $admin): self
     {
-        $this->admin = $admin ? 1 : 0;
+        $this->admin = $admin;
         return $this;
     }
 

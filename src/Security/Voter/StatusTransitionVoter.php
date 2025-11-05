@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Security\Voter;
 
 use App\Entity\Issue;
-use App\Entity\IssueStatuse;
+use App\Entity\IssueStatus;
 use App\Security\Service\WorkflowService;
 use App\Security\Service\PermissionService;
 use App\Security\Service\AnonymousUserService;
@@ -33,7 +33,7 @@ class StatusTransitionVoter extends BaseRedmineVoter
                isset($subject['issue']) && 
                isset($subject['new_status']) &&
                $subject['issue'] instanceof Issue &&
-               $subject['new_status'] instanceof IssueStatuse;
+               $subject['new_status'] instanceof IssueStatus;
     }
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool

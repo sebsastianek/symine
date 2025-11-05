@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New Issue - {{ project.name }} - Redmine{% endblock %}
+
+{% block main %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    {# Breadcrumb #}
+    <nav class="flex mb-6" aria-label="Breadcrumb">
+        <ol class="flex items-center space-x-2 text-sm">
+            <li>
+                <a href="{{ path('project_index') }}" class="text-gray-500 hover:text-gray-700">Projects</a>
+            </li>
+            <li>
+                <span class="text-gray-400">/</span>
+            </li>
+            <li>
+                <a href="{{ path('project_show', {'id': project.id}) }}" class="text-gray-500 hover:text-gray-700">
+                    {{ project.name }}
+                </a>
+            </li>
+            <li>
+                <span class="text-gray-400">/</span>
+            </li>
+            <li>
+                <a href="{{ path('issue_index', {'projectId': project.id}) }}" class="text-gray-500 hover:text-gray-700">
+                    Issues
+                </a>
+            </li>
+            <li>
+                <span class="text-gray-400">/</span>
+            </li>
+            <li class="text-gray-900 font-medium">New Issue</li>
+        </ol>
+    </nav>
+
+    {# Page Header #}
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">New Issue</h1>
+        <p class="mt-1 text-sm text-gray-500">
+            Create a new issue in <strong>{{ project.name }}</strong>
+        </p>
+    </div>
+
+    {# Form #}
+    {% set issue = form.vars.data %}
+    {% include 'issue/_form.html.twig' %}
+</div>
+{% endblock %}

@@ -8,7 +8,7 @@ use App\Entity\User;
 use App\Entity\Issue;
 use App\Entity\Project;
 use App\Entity\Workflow;
-use App\Entity\IssueStatuse;
+use App\Entity\IssueStatus;
 use App\Entity\Tracker;
 use App\Repository\WorkflowRepository;
 use App\Security\Service\PermissionService;
@@ -32,7 +32,7 @@ class WorkflowService
     /**
      * Check if user can transition issue from current status to new status
      */
-    public function canTransitionStatus(User $user, Issue $issue, IssueStatuse $newStatus): bool
+    public function canTransitionStatus(User $user, Issue $issue, IssueStatus $newStatus): bool
     {
         $project = $issue->getProject();
         $tracker = $issue->getTracker();
@@ -137,7 +137,7 @@ class WorkflowService
     /**
      * Get required fields for status transition
      */
-    public function getRequiredFieldsForTransition(User $user, Issue $issue, IssueStatuse $newStatus): array
+    public function getRequiredFieldsForTransition(User $user, Issue $issue, IssueStatus $newStatus): array
     {
         $project = $issue->getProject();
         $tracker = $issue->getTracker();
@@ -215,7 +215,7 @@ class WorkflowService
      */
     private function getAllStatusesForTracker($tracker): array
     {
-        // This would typically query IssueStatuse repository
+        // This would typically query IssueStatus repository
         // For now, return empty array as placeholder
         return [];
     }

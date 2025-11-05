@@ -131,7 +131,7 @@ Admin');
         $message4->setSticky(0);
         
         $manager->persist($message4);
-        $this->addReference('message-welcome', $message4);
+        $this->addReference('message-welcome-2', $message4);
 
         // Message 5: Reply to welcome message from Alice
         $message5 = new Message();
@@ -241,7 +241,7 @@ Sarah');
 
         // Message 9: Announcement in Announcements board
         $message9 = new Message();
-        $message9->setBoard($this->getReference('board-announcements', \App\Entity\Board::class));
+        $message9->setBoard($this->getReference('board-general', \App\Entity\Board::class));
         $message9->setParent(null);
         $message9->setSubject('System maintenance scheduled for this weekend');
         $message9->setContent('Dear team,

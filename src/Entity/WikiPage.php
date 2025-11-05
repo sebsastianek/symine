@@ -48,8 +48,8 @@ class WikiPage
     /**
      * Property protected
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    private int $protected = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $protected = false;
 
     /**
      * Property parent
@@ -136,14 +136,15 @@ class WikiPage
     /**
      * Getter for protected
      */
-    public function getProtected(): int    {
+    public function getProtected(): bool
+    {
         return $this->protected;
     }
 
     /**
      * Setter for protected
      */
-    public function setProtected(int $protected): static
+    public function setProtected(bool $protected): static
     {
         $this->protected = $protected;
         return $this;

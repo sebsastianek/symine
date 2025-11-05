@@ -4,26 +4,26 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\IssueStatuse;
+use App\Entity\IssueStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * Repository for entity IssueStatuse.
- * 
- * @extends ServiceEntityRepository<IssueStatuse>
+ * Repository for entity IssueStatus.
+ *
+ * @extends ServiceEntityRepository<IssueStatus>
  */
-class IssueStatuseRepository extends ServiceEntityRepository
+class IssueStatusRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, IssueStatuse::class);
+        parent::__construct($registry, IssueStatus::class);
     }
 
     /**
      * Finds an entity by its ID.
      */
-    public function find($id, $lockMode = null, $lockVersion = null): ?IssueStatuse
+    public function find($id, $lockMode = null, $lockVersion = null): ?IssueStatus
     {
         return parent::find($id, $lockMode, $lockVersion);
     }
@@ -31,7 +31,7 @@ class IssueStatuseRepository extends ServiceEntityRepository
     /**
      * Finds all entities.
      *
-     * @return IssueStatuse[]
+     * @return IssueStatus[]
      */
     public function findAll(): array
     {
@@ -41,7 +41,7 @@ class IssueStatuseRepository extends ServiceEntityRepository
     /**
      * Finds entities by criteria.
      *
-     * @return IssueStatuse[]
+     * @return IssueStatus[]
      */
     public function findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null): array
     {
@@ -51,7 +51,7 @@ class IssueStatuseRepository extends ServiceEntityRepository
     /**
      * Finds one entity by criteria.
      */
-    public function findOneBy(array $criteria, array $orderBy = null): ?IssueStatuse
+    public function findOneBy(array $criteria, array $orderBy = null): ?IssueStatus
     {
         return parent::findOneBy($criteria, $orderBy);
     }
@@ -59,7 +59,7 @@ class IssueStatuseRepository extends ServiceEntityRepository
     /**
      * Saves an entity.
      */
-    public function save(IssueStatuse $entity, bool $flush = false): void
+    public function save(IssueStatus $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);
 
@@ -71,7 +71,7 @@ class IssueStatuseRepository extends ServiceEntityRepository
     /**
      * Removes an entity.
      */
-    public function remove(IssueStatuse $entity, bool $flush = false): void
+    public function remove(IssueStatus $entity, bool $flush = false): void
     {
         $this->getEntityManager()->remove($entity);
 

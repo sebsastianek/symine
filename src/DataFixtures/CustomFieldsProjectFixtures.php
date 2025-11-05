@@ -60,53 +60,53 @@ class CustomFieldsProjectFixtures extends Fixture implements DependentFixtureInt
         // Budget custom field for Analytics project
         $cfProject6 = new CustomFieldsProject();
         $cfProject6->setCustomField($this->getReference('custom-field-budget', \App\Entity\CustomField::class));
-        $cfProject6->setProject($this->getReference('project-analytics', \App\Entity\Project::class));
+        $cfProject6->setProject($this->getReference('project-frontend', \App\Entity\Project::class));
         
         $manager->persist($cfProject6);
-        $this->addReference('cf-project-analytics-budget', $cfProject6);
+        $this->addReference('cf-project-frontend-budget', $cfProject6);
 
         // Environment custom field for Analytics project
         $cfProject7 = new CustomFieldsProject();
         $cfProject7->setCustomField($this->getReference('custom-field-environment', \App\Entity\CustomField::class));
-        $cfProject7->setProject($this->getReference('project-analytics', \App\Entity\Project::class));
+        $cfProject7->setProject($this->getReference('project-frontend', \App\Entity\Project::class));
         
         $manager->persist($cfProject7);
-        $this->addReference('cf-project-analytics-environment', $cfProject7);
+        $this->addReference('cf-project-frontend-environment', $cfProject7);
 
         // Website project custom fields
         // Environment custom field for Website project
         $cfProject8 = new CustomFieldsProject();
         $cfProject8->setCustomField($this->getReference('custom-field-environment', \App\Entity\CustomField::class));
-        $cfProject8->setProject($this->getReference('project-website', \App\Entity\Project::class));
+        $cfProject8->setProject($this->getReference('project-backend', \App\Entity\Project::class));
         
         $manager->persist($cfProject8);
-        $this->addReference('cf-project-website-environment', $cfProject8);
+        $this->addReference('cf-project-backend-environment', $cfProject8);
 
         // Infrastructure project custom fields
         // Budget custom field for Infrastructure project
         $cfProject9 = new CustomFieldsProject();
         $cfProject9->setCustomField($this->getReference('custom-field-budget', \App\Entity\CustomField::class));
-        $cfProject9->setProject($this->getReference('project-infrastructure', \App\Entity\Project::class));
+        $cfProject9->setProject($this->getReference('project-tools', \App\Entity\Project::class));
         
         $manager->persist($cfProject9);
-        $this->addReference('cf-project-infrastructure-budget', $cfProject9);
+        $this->addReference('cf-project-tools-budget', $cfProject9);
 
         // Environment custom field for Infrastructure project
         $cfProject10 = new CustomFieldsProject();
         $cfProject10->setCustomField($this->getReference('custom-field-environment', \App\Entity\CustomField::class));
-        $cfProject10->setProject($this->getReference('project-infrastructure', \App\Entity\Project::class));
+        $cfProject10->setProject($this->getReference('project-tools', \App\Entity\Project::class));
         
         $manager->persist($cfProject10);
-        $this->addReference('cf-project-infrastructure-environment', $cfProject10);
+        $this->addReference('cf-project-tools-environment', $cfProject10);
 
         // Research project custom fields
         // Budget custom field for Research project
         $cfProject11 = new CustomFieldsProject();
         $cfProject11->setCustomField($this->getReference('custom-field-budget', \App\Entity\CustomField::class));
-        $cfProject11->setProject($this->getReference('project-research', \App\Entity\Project::class));
+        $cfProject11->setProject($this->getReference('project-docs', \App\Entity\Project::class));
         
         $manager->persist($cfProject11);
-        $this->addReference('cf-project-research-budget', $cfProject11);
+        $this->addReference('cf-project-docs-budget', $cfProject11);
 
         $manager->flush();
     }

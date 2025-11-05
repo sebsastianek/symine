@@ -47,6 +47,10 @@ class User extends Principal implements UserInterface, PasswordAuthenticatedUser
         return $this->hashedPassword;
     }
 
+    public function setPassword(string $hashedPassword): void {
+        $this->hashedPassword = $hashedPassword;
+    }
+
     public function getSalt(): ?string
     {
         // Redmine uses SHA1 with salt, but for Symfony compatibility

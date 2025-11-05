@@ -15,14 +15,14 @@ class QueriesRoleFixtures extends Fixture implements DependentFixtureInterface
     {
         // High Priority Issues query - accessible by Manager and Developer roles
         $queryRole1 = new QueriesRole();
-        $queryRole1->setQuery($this->getReference('query-high-priority', \App\Entity\Query::class));
+        $queryRole1->setQuery($this->getReference('query-high-priority-bugs', \App\Entity\Query::class));
         $queryRole1->setRole($this->getReference('role-manager', \App\Entity\Role::class));
         
         $manager->persist($queryRole1);
         $this->addReference('query-role-high-priority-manager', $queryRole1);
 
         $queryRole2 = new QueriesRole();
-        $queryRole2->setQuery($this->getReference('query-high-priority', \App\Entity\Query::class));
+        $queryRole2->setQuery($this->getReference('query-high-priority-bugs', \App\Entity\Query::class));
         $queryRole2->setRole($this->getReference('role-developer', \App\Entity\Role::class));
         
         $manager->persist($queryRole2);
@@ -30,21 +30,21 @@ class QueriesRoleFixtures extends Fixture implements DependentFixtureInterface
 
         // Open Bugs query - accessible by Manager, Developer, and Tester roles
         $queryRole3 = new QueriesRole();
-        $queryRole3->setQuery($this->getReference('query-open-bugs', \App\Entity\Query::class));
+        $queryRole3->setQuery($this->getReference('query-my-open-issues', \App\Entity\Query::class));
         $queryRole3->setRole($this->getReference('role-manager', \App\Entity\Role::class));
         
         $manager->persist($queryRole3);
         $this->addReference('query-role-open-bugs-manager', $queryRole3);
 
         $queryRole4 = new QueriesRole();
-        $queryRole4->setQuery($this->getReference('query-open-bugs', \App\Entity\Query::class));
+        $queryRole4->setQuery($this->getReference('query-my-open-issues', \App\Entity\Query::class));
         $queryRole4->setRole($this->getReference('role-developer', \App\Entity\Role::class));
         
         $manager->persist($queryRole4);
         $this->addReference('query-role-open-bugs-developer', $queryRole4);
 
         $queryRole5 = new QueriesRole();
-        $queryRole5->setQuery($this->getReference('query-open-bugs', \App\Entity\Query::class));
+        $queryRole5->setQuery($this->getReference('query-my-open-issues', \App\Entity\Query::class));
         $queryRole5->setRole($this->getReference('role-tester', \App\Entity\Role::class));
         
         $manager->persist($queryRole5);
@@ -52,28 +52,28 @@ class QueriesRoleFixtures extends Fixture implements DependentFixtureInterface
 
         // My Assigned Issues query - accessible by all roles
         $queryRole6 = new QueriesRole();
-        $queryRole6->setQuery($this->getReference('query-my-assigned', \App\Entity\Query::class));
+        $queryRole6->setQuery($this->getReference('query-my-open-issues', \App\Entity\Query::class));
         $queryRole6->setRole($this->getReference('role-manager', \App\Entity\Role::class));
         
         $manager->persist($queryRole6);
         $this->addReference('query-role-my-assigned-manager', $queryRole6);
 
         $queryRole7 = new QueriesRole();
-        $queryRole7->setQuery($this->getReference('query-my-assigned', \App\Entity\Query::class));
+        $queryRole7->setQuery($this->getReference('query-my-open-issues', \App\Entity\Query::class));
         $queryRole7->setRole($this->getReference('role-developer', \App\Entity\Role::class));
         
         $manager->persist($queryRole7);
         $this->addReference('query-role-my-assigned-developer', $queryRole7);
 
         $queryRole8 = new QueriesRole();
-        $queryRole8->setQuery($this->getReference('query-my-assigned', \App\Entity\Query::class));
+        $queryRole8->setQuery($this->getReference('query-my-open-issues', \App\Entity\Query::class));
         $queryRole8->setRole($this->getReference('role-tester', \App\Entity\Role::class));
         
         $manager->persist($queryRole8);
         $this->addReference('query-role-my-assigned-tester', $queryRole8);
 
         $queryRole9 = new QueriesRole();
-        $queryRole9->setQuery($this->getReference('query-my-assigned', \App\Entity\Query::class));
+        $queryRole9->setQuery($this->getReference('query-my-open-issues', \App\Entity\Query::class));
         $queryRole9->setRole($this->getReference('role-reporter', \App\Entity\Role::class));
         
         $manager->persist($queryRole9);

@@ -19,7 +19,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue1->setDescription('Implement user authentication with login, logout, and session management. Include password hashing and security features.');
         $issue1->setProject($this->getReference('project-backend', \App\Entity\Project::class));
         $issue1->setTracker($this->getReference('tracker-feature', \App\Entity\Tracker::class));
-        $issue1->setStatus($this->getReference('status-resolved', \App\Entity\IssueStatuse::class));
+        $issue1->setStatus($this->getReference('status-resolved', \App\Entity\IssueStatus::class));
         $issue1->setPriority($this->getReference('priority-high', \App\Entity\Enumeration::class));
         $issue1->setAuthor($this->getReference('user-jsmith', \App\Entity\User::class));
         $issue1->setAssignedTo($this->getReference('user-mjohnson', \App\Entity\User::class));
@@ -27,13 +27,14 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue1->setDueDate(new \DateTime('2024-01-25'));
         $issue1->setEstimatedHours(40.0);
         $issue1->setDoneRatio(100);
-        $issue1->setIsPrivate(0);
+        $issue1->setIsPrivate(false);
         $issue1->setCreatedOn(new \DateTime('2024-01-08 09:30:00'));
         $issue1->setUpdatedOn(new \DateTime('2024-01-25 16:45:00'));
         $issue1->setClosedOn(new \DateTime('2024-01-25 16:45:00'));
         
         $manager->persist($issue1);
         $this->addReference('issue-auth', $issue1);
+        $this->addReference('issue-1', $issue1);
 
         // Issue 2: Design responsive frontend layout
         $issue2 = new Issue();
@@ -41,7 +42,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue2->setDescription('Create a mobile-responsive layout for the main application interface. Include navigation, sidebar, and content areas.');
         $issue2->setProject($this->getReference('project-frontend', \App\Entity\Project::class));
         $issue2->setTracker($this->getReference('tracker-task', \App\Entity\Tracker::class));
-        $issue2->setStatus($this->getReference('status-in-progress', \App\Entity\IssueStatuse::class));
+        $issue2->setStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $issue2->setPriority($this->getReference('priority-normal', \App\Entity\Enumeration::class));
         $issue2->setAuthor($this->getReference('user-jsmith', \App\Entity\User::class));
         $issue2->setAssignedTo($this->getReference('user-sgarcia', \App\Entity\User::class));
@@ -49,12 +50,13 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue2->setDueDate(new \DateTime('2024-02-20'));
         $issue2->setEstimatedHours(32.0);
         $issue2->setDoneRatio(45);
-        $issue2->setIsPrivate(0);
+        $issue2->setIsPrivate(false);
         $issue2->setCreatedOn(new \DateTime('2024-01-28 14:20:00'));
         $issue2->setUpdatedOn(new \DateTime());
         
         $manager->persist($issue2);
         $this->addReference('issue-frontend-layout', $issue2);
+        $this->addReference('issue-2', $issue2);
 
         // Issue 3: Bug - Login form validation not working
         $issue3 = new Issue();
@@ -62,7 +64,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue3->setDescription('The client-side validation for the login form is not functioning correctly. Empty fields are allowed to be submitted.');
         $issue3->setProject($this->getReference('project-frontend', \App\Entity\Project::class));
         $issue3->setTracker($this->getReference('tracker-bug', \App\Entity\Tracker::class));
-        $issue3->setStatus($this->getReference('status-testing', \App\Entity\IssueStatuse::class));
+        $issue3->setStatus($this->getReference('status-testing', \App\Entity\IssueStatus::class));
         $issue3->setPriority($this->getReference('priority-urgent', \App\Entity\Enumeration::class));
         $issue3->setAuthor($this->getReference('user-dbrown', \App\Entity\User::class));
         $issue3->setAssignedTo($this->getReference('user-sgarcia', \App\Entity\User::class));
@@ -70,12 +72,13 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue3->setDueDate(new \DateTime('2024-02-18'));
         $issue3->setEstimatedHours(8.0);
         $issue3->setDoneRatio(80);
-        $issue3->setIsPrivate(0);
+        $issue3->setIsPrivate(false);
         $issue3->setCreatedOn(new \DateTime('2024-02-14 11:15:00'));
         $issue3->setUpdatedOn(new \DateTime());
         
         $manager->persist($issue3);
         $this->addReference('issue-login-bug', $issue3);
+        $this->addReference('issue-3', $issue3);
 
         // Issue 4: Parent issue - Mobile app development
         $issue4 = new Issue();
@@ -83,7 +86,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue4->setDescription('Create a cross-platform mobile application for iOS and Android using React Native.');
         $issue4->setProject($this->getReference('project-mobile', \App\Entity\Project::class));
         $issue4->setTracker($this->getReference('tracker-feature', \App\Entity\Tracker::class));
-        $issue4->setStatus($this->getReference('status-in-progress', \App\Entity\IssueStatuse::class));
+        $issue4->setStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $issue4->setPriority($this->getReference('priority-high', \App\Entity\Enumeration::class));
         $issue4->setAuthor($this->getReference('user-jsmith', \App\Entity\User::class));
         $issue4->setAssignedTo($this->getReference('user-mjohnson', \App\Entity\User::class));
@@ -91,12 +94,13 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue4->setDueDate(new \DateTime('2024-04-30'));
         $issue4->setEstimatedHours(200.0);
         $issue4->setDoneRatio(25);
-        $issue4->setIsPrivate(0);
+        $issue4->setIsPrivate(false);
         $issue4->setCreatedOn(new \DateTime('2024-01-30 10:00:00'));
         $issue4->setUpdatedOn(new \DateTime());
         
         $manager->persist($issue4);
         $this->addReference('issue-mobile-parent', $issue4);
+        $this->addReference('issue-4', $issue4);
 
         // Issue 5: Child issue - Setup React Native project
         $issue5 = new Issue();
@@ -104,7 +108,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue5->setDescription('Initialize React Native project with proper folder structure, navigation, and basic components.');
         $issue5->setProject($this->getReference('project-mobile', \App\Entity\Project::class));
         $issue5->setTracker($this->getReference('tracker-task', \App\Entity\Tracker::class));
-        $issue5->setStatus($this->getReference('status-resolved', \App\Entity\IssueStatuse::class));
+        $issue5->setStatus($this->getReference('status-resolved', \App\Entity\IssueStatus::class));
         $issue5->setPriority($this->getReference('priority-normal', \App\Entity\Enumeration::class));
         $issue5->setAuthor($this->getReference('user-mjohnson', \App\Entity\User::class));
         $issue5->setAssignedTo($this->getReference('user-mjohnson', \App\Entity\User::class));
@@ -113,13 +117,14 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue5->setDueDate(new \DateTime('2024-02-10'));
         $issue5->setEstimatedHours(16.0);
         $issue5->setDoneRatio(100);
-        $issue5->setIsPrivate(0);
+        $issue5->setIsPrivate(false);
         $issue5->setCreatedOn(new \DateTime('2024-02-01 09:00:00'));
         $issue5->setUpdatedOn(new \DateTime('2024-02-10 17:30:00'));
         $issue5->setClosedOn(new \DateTime('2024-02-10 17:30:00'));
         
         $manager->persist($issue5);
         $this->addReference('issue-mobile-setup', $issue5);
+        $this->addReference('issue-5', $issue5);
 
         // Issue 6: CRM System feature
         $issue6 = new Issue();
@@ -127,7 +132,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue6->setDescription('Create interface for managing customer contacts with CRUD operations, search, and filtering capabilities.');
         $issue6->setProject($this->getReference('project-crm', \App\Entity\Project::class));
         $issue6->setTracker($this->getReference('tracker-feature', \App\Entity\Tracker::class));
-        $issue6->setStatus($this->getReference('status-new', \App\Entity\IssueStatuse::class));
+        $issue6->setStatus($this->getReference('status-new', \App\Entity\IssueStatus::class));
         $issue6->setPriority($this->getReference('priority-normal', \App\Entity\Enumeration::class));
         $issue6->setAuthor($this->getReference('user-alee', \App\Entity\User::class));
         $issue6->setAssignedTo($this->getReference('user-sgarcia', \App\Entity\User::class));
@@ -135,12 +140,13 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue6->setDueDate(new \DateTime('2024-03-20'));
         $issue6->setEstimatedHours(50.0);
         $issue6->setDoneRatio(0);
-        $issue6->setIsPrivate(0);
+        $issue6->setIsPrivate(false);
         $issue6->setCreatedOn(new \DateTime('2024-02-25 13:45:00'));
         $issue6->setUpdatedOn(new \DateTime());
         
         $manager->persist($issue6);
         $this->addReference('issue-crm-contacts', $issue6);
+        $this->addReference('issue-6', $issue6);
 
         // Issue 7: Documentation task
         $issue7 = new Issue();
@@ -148,7 +154,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue7->setDescription('Document all REST API endpoints with examples, request/response formats, and authentication requirements.');
         $issue7->setProject($this->getReference('project-docs', \App\Entity\Project::class));
         $issue7->setTracker($this->getReference('tracker-documentation', \App\Entity\Tracker::class));
-        $issue7->setStatus($this->getReference('status-under-review', \App\Entity\IssueStatuse::class));
+        $issue7->setStatus($this->getReference('status-under-review', \App\Entity\IssueStatus::class));
         $issue7->setPriority($this->getReference('priority-normal', \App\Entity\Enumeration::class));
         $issue7->setAuthor($this->getReference('user-jsmith', \App\Entity\User::class));
         $issue7->setAssignedTo($this->getReference('user-mjohnson', \App\Entity\User::class));
@@ -156,12 +162,13 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue7->setDueDate(new \DateTime('2024-03-10'));
         $issue7->setEstimatedHours(24.0);
         $issue7->setDoneRatio(70);
-        $issue7->setIsPrivate(0);
+        $issue7->setIsPrivate(false);
         $issue7->setCreatedOn(new \DateTime('2024-02-18 16:00:00'));
         $issue7->setUpdatedOn(new \DateTime());
         
         $manager->persist($issue7);
         $this->addReference('issue-api-docs', $issue7);
+        $this->addReference('issue-7', $issue7);
 
         // Issue 8: Private issue
         $issue8 = new Issue();
@@ -169,7 +176,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue8->setDescription('Conduct security assessment of the authentication system and identify potential vulnerabilities.');
         $issue8->setProject($this->getReference('project-backend', \App\Entity\Project::class));
         $issue8->setTracker($this->getReference('tracker-research', \App\Entity\Tracker::class));
-        $issue8->setStatus($this->getReference('status-in-progress', \App\Entity\IssueStatuse::class));
+        $issue8->setStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $issue8->setPriority($this->getReference('priority-urgent', \App\Entity\Enumeration::class));
         $issue8->setAuthor($this->getReference('user-admin', \App\Entity\User::class));
         $issue8->setAssignedTo($this->getReference('user-jsmith', \App\Entity\User::class));
@@ -177,12 +184,13 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue8->setDueDate(new \DateTime('2024-03-05'));
         $issue8->setEstimatedHours(16.0);
         $issue8->setDoneRatio(30);
-        $issue8->setIsPrivate(1); // Private issue
+        $issue8->setIsPrivate(true); // Private issue
         $issue8->setCreatedOn(new \DateTime('2024-02-22 08:30:00'));
         $issue8->setUpdatedOn(new \DateTime());
         
         $manager->persist($issue8);
         $this->addReference('issue-security-private', $issue8);
+        $this->addReference('issue-8', $issue8);
 
         // Issue 9: Support request
         $issue9 = new Issue();
@@ -190,7 +198,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue9->setDescription('Customer reports they cannot log in with their credentials. Need to investigate account status and password reset functionality.');
         $issue9->setProject($this->getReference('project-ecommerce', \App\Entity\Project::class));
         $issue9->setTracker($this->getReference('tracker-support', \App\Entity\Tracker::class));
-        $issue9->setStatus($this->getReference('status-needs-info', \App\Entity\IssueStatuse::class));
+        $issue9->setStatus($this->getReference('status-needs-info', \App\Entity\IssueStatus::class));
         $issue9->setPriority($this->getReference('priority-high', \App\Entity\Enumeration::class));
         $issue9->setAuthor($this->getReference('user-alee', \App\Entity\User::class));
         $issue9->setAssignedTo($this->getReference('user-dbrown', \App\Entity\User::class));
@@ -198,12 +206,13 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue9->setDueDate(new \DateTime('2024-03-01'));
         $issue9->setEstimatedHours(4.0);
         $issue9->setDoneRatio(20);
-        $issue9->setIsPrivate(0);
+        $issue9->setIsPrivate(false);
         $issue9->setCreatedOn(new \DateTime('2024-02-28 14:30:00'));
         $issue9->setUpdatedOn(new \DateTime());
         
         $manager->persist($issue9);
         $this->addReference('issue-support-login', $issue9);
+        $this->addReference('issue-9', $issue9);
 
         // Issue 10: On hold issue
         $issue10 = new Issue();
@@ -211,7 +220,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue10->setDescription('Integrate Stripe payment gateway for processing customer payments. Waiting for API access approval.');
         $issue10->setProject($this->getReference('project-ecommerce', \App\Entity\Project::class));
         $issue10->setTracker($this->getReference('tracker-feature', \App\Entity\Tracker::class));
-        $issue10->setStatus($this->getReference('status-on-hold', \App\Entity\IssueStatuse::class));
+        $issue10->setStatus($this->getReference('status-on-hold', \App\Entity\IssueStatus::class));
         $issue10->setPriority($this->getReference('priority-high', \App\Entity\Enumeration::class));
         $issue10->setAuthor($this->getReference('user-jsmith', \App\Entity\User::class));
         $issue10->setAssignedTo($this->getReference('user-mjohnson', \App\Entity\User::class));
@@ -219,12 +228,80 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue10->setDueDate(new \DateTime('2024-03-25'));
         $issue10->setEstimatedHours(60.0);
         $issue10->setDoneRatio(10);
-        $issue10->setIsPrivate(0);
+        $issue10->setIsPrivate(false);
         $issue10->setCreatedOn(new \DateTime('2024-02-20 11:00:00'));
         $issue10->setUpdatedOn(new \DateTime());
         
         $manager->persist($issue10);
         $this->addReference('issue-payment-gateway', $issue10);
+        $this->addReference('issue-10', $issue10);
+
+        // Issue 11: Performance improvement
+        $issue11 = new Issue();
+        $issue11->setSubject('Optimize database queries');
+        $issue11->setDescription('Improve performance of product listing page by optimizing database queries and adding proper indexes.');
+        $issue11->setProject($this->getReference('project-backend', \App\Entity\Project::class));
+        $issue11->setTracker($this->getReference('tracker-feature', \App\Entity\Tracker::class));
+        $issue11->setStatus($this->getReference('status-resolved', \App\Entity\IssueStatus::class));
+        $issue11->setPriority($this->getReference('priority-normal', \App\Entity\Enumeration::class));
+        $issue11->setAuthor($this->getReference('user-sgarcia', \App\Entity\User::class));
+        $issue11->setAssignedTo($this->getReference('user-sgarcia', \App\Entity\User::class));
+        $issue11->setStartDate(new \DateTime('2024-02-01'));
+        $issue11->setDueDate(new \DateTime('2024-02-08'));
+        $issue11->setEstimatedHours(16.0);
+        $issue11->setDoneRatio(100);
+        $issue11->setIsPrivate(false);
+        $issue11->setCreatedOn(new \DateTime('2024-01-30 10:00:00'));
+        $issue11->setUpdatedOn(new \DateTime('2024-02-08 16:00:00'));
+        $issue11->setClosedOn(new \DateTime('2024-02-08 16:00:00'));
+
+        $manager->persist($issue11);
+        $this->addReference('issue-performance', $issue11);
+        $this->addReference('issue-11', $issue11);
+
+        // Issue 12: Feature enhancement
+        $issue12 = new Issue();
+        $issue12->setSubject('Add customer dashboard');
+        $issue12->setDescription('Create a dashboard for customers to view their orders, track shipments, and manage their profile.');
+        $issue12->setProject($this->getReference('project-frontend', \App\Entity\Project::class));
+        $issue12->setTracker($this->getReference('tracker-feature', \App\Entity\Tracker::class));
+        $issue12->setStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
+        $issue12->setPriority($this->getReference('priority-high', \App\Entity\Enumeration::class));
+        $issue12->setAuthor($this->getReference('user-jsmith', \App\Entity\User::class));
+        $issue12->setAssignedTo($this->getReference('user-sgarcia', \App\Entity\User::class));
+        $issue12->setStartDate(new \DateTime('2024-02-05'));
+        $issue12->setDueDate(new \DateTime('2024-02-28'));
+        $issue12->setEstimatedHours(48.0);
+        $issue12->setDoneRatio(60);
+        $issue12->setIsPrivate(false);
+        $issue12->setCreatedOn(new \DateTime('2024-02-03 09:00:00'));
+        $issue12->setUpdatedOn(new \DateTime());
+
+        $manager->persist($issue12);
+        $this->addReference('issue-dashboard', $issue12);
+        $this->addReference('issue-12', $issue12);
+
+        // Issue 13: Bug fix
+        $issue13 = new Issue();
+        $issue13->setSubject('Fix email notification duplicates');
+        $issue13->setDescription('Customers are receiving duplicate email notifications for order confirmations. Need to fix the email sending logic.');
+        $issue13->setProject($this->getReference('project-backend', \App\Entity\Project::class));
+        $issue13->setTracker($this->getReference('tracker-bug', \App\Entity\Tracker::class));
+        $issue13->setStatus($this->getReference('status-new', \App\Entity\IssueStatus::class));
+        $issue13->setPriority($this->getReference('priority-urgent', \App\Entity\Enumeration::class));
+        $issue13->setAuthor($this->getReference('user-alee', \App\Entity\User::class));
+        $issue13->setAssignedTo($this->getReference('user-mjohnson', \App\Entity\User::class));
+        $issue13->setStartDate(new \DateTime('2024-03-01'));
+        $issue13->setDueDate(new \DateTime('2024-03-05'));
+        $issue13->setEstimatedHours(8.0);
+        $issue13->setDoneRatio(0);
+        $issue13->setIsPrivate(false);
+        $issue13->setCreatedOn(new \DateTime('2024-02-28 15:30:00'));
+        $issue13->setUpdatedOn(new \DateTime());
+
+        $manager->persist($issue13);
+        $this->addReference('issue-email-bug', $issue13);
+        $this->addReference('issue-13', $issue13);
 
         $manager->flush();
 

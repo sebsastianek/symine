@@ -3,7 +3,7 @@
 namespace App\Form;
 
 use App\Entity\Project;
-use App\Entity\IssueStatuse;
+use App\Entity\IssueStatus;
 use App\Entity\Tracker;
 use App\Entity\User;
 use App\Entity\Enumeration;
@@ -50,7 +50,7 @@ class IssueFilterType extends AbstractType
                 'attr' => ['class' => 'form-select'],
             ])
             ->add('status', EntityType::class, [
-                'class' => IssueStatuse::class,
+                'class' => IssueStatus::class,
                 'choice_label' => 'name',
                 'required' => false,
                 'placeholder' => 'All Statuses',

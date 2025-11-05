@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use App\Repository\IssueRepository;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Issue.
@@ -15,6 +16,7 @@ use App\Repository\IssueRepository;
  */
 #[ORM\Entity(repositoryClass: IssueRepository::class)]
 #[ORM\Table(name: 'issues')]
+#[ORM\HasLifecycleCallbacks]
 class Issue
 {
     /**
@@ -43,6 +45,8 @@ class Issue
      * Property subject
      */
     #[ORM\Column(type: 'string', length: 255, options: ['default' => ''])]
+    #[Assert\NotBlank(message: 'Subject is required')]
+    #[Assert\Length(max: 255, maxMessage: 'Subject cannot be longer than {{ limit }} characters')]
     private string $subject = '';
 
     /**
@@ -67,9 +71,9 @@ class Issue
     /**
      * Property status
      */
-    #[ORM\ManyToOne(targetEntity: IssueStatuse::class)]
+    #[ORM\ManyToOne(targetEntity: IssueStatus::class)]
     #[ORM\JoinColumn(name: 'status_id', referencedColumnName: 'id', nullable: false)]
-    private IssueStatuse $status;
+    private IssueStatus $status;
 
     /**
      * Property assignedTo
@@ -127,12 +131,14 @@ class Issue
      * Property doneRatio
      */
     #[ORM\Column(type: 'integer', options: ['default' => '0'])]
+    #[Assert\Range(min: 0, max: 100, notInRangeMessage: 'Done ratio must be between {{ min }}% and {{ max }}%')]
     private int $doneRatio = 0;
 
     /**
      * Property estimatedHours
      */
     #[ORM\Column(type: 'float', nullable: true)]
+    #[Assert\PositiveOrZero(message: 'Estimated hours must be zero or positive')]
     private ?float $estimatedHours = NULL;
 
     /**
@@ -164,8 +170,8 @@ class Issue
     /**
      * Property isPrivate
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    private int $isPrivate = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isPrivate = false;
 
     /**
      * Property closedOn
@@ -302,7 +308,7 @@ class Issue
     /**
      * Getter for status
      */
-    public function getStatus(): IssueStatuse
+    public function getStatus(): IssueStatus
     {
         return $this->status;
     }
@@ -310,7 +316,7 @@ class Issue
     /**
      * Setter for status
      */
-    public function setStatus(IssueStatuse $status): static
+    public function setStatus(IssueStatus $status): static
     {
         $this->status = $status;
         return $this;
@@ -549,14 +555,15 @@ class Issue
     /**
      * Getter for isPrivate
      */
-    public function getIsPrivate(): int    {
+    public function getIsPrivate(): bool
+    {
         return $this->isPrivate;
     }
 
     /**
      * Setter for isPrivate
      */
-    public function setIsPrivate(int $isPrivate): static
+    public function setIsPrivate(bool $isPrivate): static
     {
         $this->isPrivate = $isPrivate;
         return $this;
@@ -609,6 +616,30 @@ class Issue
             }
         }
         return $this;
+    }
+
+    /**
+     * Lifecycle callback: before persist (create)
+     */
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        $now = new \DateTime();
+        if ($this->createdOn === null) {
+            $this->createdOn = $now;
+        }
+        if ($this->updatedOn === null) {
+            $this->updatedOn = $now;
+        }
+    }
+
+    /**
+     * Lifecycle callback: before update
+     */
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updatedOn = new \DateTime();
     }
 
 }

@@ -1,0 +1,137 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}Admin Dashboard{% endblock %}
+
+{% block body %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {# Issue Tracking #}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Issue Tracking</h3>
+        <ul class="space-y-2">
+            <li>
+                <a href="{{ path('admin_tracker_index') }}" class="text-blue-600 hover:text-blue-800">
+                    Trackers (Issue Types)
+                </a>
+            </li>
+            <li>
+                <a href="{{ path('admin_issue_status_index') }}" class="text-blue-600 hover:text-blue-800">
+                    Issue Statuses
+                </a>
+            </li>
+            <li>
+                <a href="#" class="text-gray-400">
+                    Workflows
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+    {# Enumerations #}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Enumerations</h3>
+        <ul class="space-y-2">
+            <li>
+                <a href="#" class="text-gray-400">
+                    Issue Priorities
+                </a>
+            </li>
+            <li>
+                <a href="#" class="text-gray-400">
+                    Time Entry Activities
+                </a>
+            </li>
+            <li>
+                <a href="#" class="text-gray-400">
+                    Document Categories
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+    {# Users & Permissions #}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Users & Permissions</h3>
+        <ul class="space-y-2">
+            <li>
+                <a href="#" class="text-gray-400">
+                    Roles & Permissions
+                </a>
+            </li>
+            <li>
+                <a href="#" class="text-gray-400">
+                    Users
+                </a>
+            </li>
+            <li>
+                <a href="#" class="text-gray-400">
+                    Groups
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+    {# Custom Fields #}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Custom Fields</h3>
+        <ul class="space-y-2">
+            <li>
+                <a href="#" class="text-gray-400">
+                    Issue Custom Fields
+                </a>
+            </li>
+            <li>
+                <a href="#" class="text-gray-400">
+                    Project Custom Fields
+                </a>
+            </li>
+            <li>
+                <a href="#" class="text-gray-400">
+                    User Custom Fields
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+    {# Settings #}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Settings</h3>
+        <ul class="space-y-2">
+            <li>
+                <a href="#" class="text-gray-400">
+                    General Settings
+                </a>
+            </li>
+            <li>
+                <a href="#" class="text-gray-400">
+                    Authentication
+                </a>
+            </li>
+            <li>
+                <a href="#" class="text-gray-400">
+                    Email Notifications
+                </a>
+            </li>
+        </ul>
+    </div>
+    
+    {# Information #}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">System Information</h3>
+        <dl class="space-y-2 text-sm">
+            <div>
+                <dt class="text-gray-500">Application</dt>
+                <dd class="font-medium">Symine</dd>
+            </div>
+            <div>
+                <dt class="text-gray-500">Version</dt>
+                <dd class="font-medium">1.0.0-dev</dd>
+            </div>
+            <div>
+                <dt class="text-gray-500">Environment</dt>
+                <dd class="font-medium">{{ app.environment }}</dd>
+            </div>
+        </dl>
+    </div>
+</div>
+{% endblock %}

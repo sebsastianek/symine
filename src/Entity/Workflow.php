@@ -33,16 +33,16 @@ class Workflow
     /**
      * Property oldStatus
      */
-    #[ORM\ManyToOne(targetEntity: IssueStatuse::class)]
+    #[ORM\ManyToOne(targetEntity: IssueStatus::class)]
     #[ORM\JoinColumn(name: 'old_status_id', referencedColumnName: 'id', nullable: false)]
-    private IssueStatuse $oldStatus;
+    private IssueStatus $oldStatus;
 
     /**
      * Property newStatus
      */
-    #[ORM\ManyToOne(targetEntity: IssueStatuse::class)]
+    #[ORM\ManyToOne(targetEntity: IssueStatus::class)]
     #[ORM\JoinColumn(name: 'new_status_id', referencedColumnName: 'id', nullable: false)]
-    private IssueStatuse $newStatus;
+    private IssueStatus $newStatus;
 
     /**
      * Property role
@@ -54,14 +54,14 @@ class Workflow
     /**
      * Property assignee
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    private int $assignee = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $assignee = false;
 
     /**
      * Property author
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    private int $author = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $author = false;
 
     /**
      * Property type
@@ -117,7 +117,7 @@ class Workflow
     /**
      * Getter for oldStatus
      */
-    public function getOldStatus(): IssueStatuse
+    public function getOldStatus(): IssueStatus
     {
         return $this->oldStatus;
     }
@@ -125,7 +125,7 @@ class Workflow
     /**
      * Setter for oldStatus
      */
-    public function setOldStatus(IssueStatuse $oldStatus): static
+    public function setOldStatus(IssueStatus $oldStatus): static
     {
         $this->oldStatus = $oldStatus;
         return $this;
@@ -134,7 +134,7 @@ class Workflow
     /**
      * Getter for newStatus
      */
-    public function getNewStatus(): IssueStatuse
+    public function getNewStatus(): IssueStatus
     {
         return $this->newStatus;
     }
@@ -142,7 +142,7 @@ class Workflow
     /**
      * Setter for newStatus
      */
-    public function setNewStatus(IssueStatuse $newStatus): static
+    public function setNewStatus(IssueStatus $newStatus): static
     {
         $this->newStatus = $newStatus;
         return $this;
@@ -168,14 +168,15 @@ class Workflow
     /**
      * Getter for assignee
      */
-    public function getAssignee(): int    {
+    public function getAssignee(): bool
+    {
         return $this->assignee;
     }
 
     /**
      * Setter for assignee
      */
-    public function setAssignee(int $assignee): static
+    public function setAssignee(bool $assignee): static
     {
         $this->assignee = $assignee;
         return $this;
@@ -184,14 +185,15 @@ class Workflow
     /**
      * Getter for author
      */
-    public function getAuthor(): int    {
+    public function getAuthor(): bool
+    {
         return $this->author;
     }
 
     /**
      * Setter for author
      */
-    public function setAuthor(int $author): static
+    public function setAuthor(bool $author): static
     {
         $this->author = $author;
         return $this;

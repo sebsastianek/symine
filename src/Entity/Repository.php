@@ -87,8 +87,8 @@ class Repository
     /**
      * Property isDefault
      */
-    #[ORM\Column(type: 'boolean', nullable: true, options: ['default' => '0'])]
-    private ?int $isDefault = 0;
+    #[ORM\Column(type: 'boolean', nullable: true, options: ['default' => false])]
+    private ?bool $isDefault = false;
 
     /**
      * Property createdOn
@@ -275,14 +275,15 @@ class Repository
     /**
      * Getter for isDefault
      */
-    public function getIsDefault(): ?int    {
+    public function getIsDefault(): ?bool
+    {
         return $this->isDefault;
     }
 
     /**
      * Setter for isDefault
      */
-    public function setIsDefault(?int $isDefault): static
+    public function setIsDefault(?bool $isDefault): static
     {
         $this->isDefault = $isDefault;
         return $this;

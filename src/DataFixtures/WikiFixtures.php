@@ -27,7 +27,7 @@ class WikiFixtures extends Fixture implements DependentFixtureInterface
         $page1 = new WikiPage();
         $page1->setWiki($wiki1);
         $page1->setTitle('Home');
-        $page1->setProtected(0);
+        $page1->setProtected(false);
         $page1->setParent(null);
         $page1->setCreatedOn(new \DateTime('2024-01-02 10:30:00'));
         
@@ -38,7 +38,7 @@ class WikiFixtures extends Fixture implements DependentFixtureInterface
         $page2 = new WikiPage();
         $page2->setWiki($wiki1);
         $page2->setTitle('Setup Guide');
-        $page2->setProtected(0);
+        $page2->setProtected(false);
         $page2->setParent($page1);
         $page2->setCreatedOn(new \DateTime('2024-01-05 14:00:00'));
         
@@ -49,7 +49,7 @@ class WikiFixtures extends Fixture implements DependentFixtureInterface
         $page3 = new WikiPage();
         $page3->setWiki($wiki1);
         $page3->setTitle('API Documentation');
-        $page3->setProtected(1); // Protected page
+        $page3->setProtected(true); // Protected page
         $page3->setParent($page1);
         $page3->setCreatedOn(new \DateTime('2024-01-10 16:20:00'));
         
@@ -69,7 +69,7 @@ class WikiFixtures extends Fixture implements DependentFixtureInterface
         $page4 = new WikiPage();
         $page4->setWiki($wiki2);
         $page4->setTitle('Documentation Home');
-        $page4->setProtected(0);
+        $page4->setProtected(false);
         $page4->setParent(null);
         $page4->setCreatedOn(new \DateTime('2024-02-10 17:00:00'));
         
@@ -80,7 +80,7 @@ class WikiFixtures extends Fixture implements DependentFixtureInterface
         $page5 = new WikiPage();
         $page5->setWiki($wiki2);
         $page5->setTitle('User Guide');
-        $page5->setProtected(0);
+        $page5->setProtected(false);
         $page5->setParent($page4);
         $page5->setCreatedOn(new \DateTime('2024-02-12 10:15:00'));
         
@@ -91,7 +91,7 @@ class WikiFixtures extends Fixture implements DependentFixtureInterface
         $page6 = new WikiPage();
         $page6->setWiki($wiki2);
         $page6->setTitle('Technical Specifications');
-        $page6->setProtected(1); // Protected page
+        $page6->setProtected(true); // Protected page
         $page6->setParent($page4);
         $page6->setCreatedOn(new \DateTime('2024-02-15 13:45:00'));
         
@@ -111,7 +111,7 @@ class WikiFixtures extends Fixture implements DependentFixtureInterface
         $page7 = new WikiPage();
         $page7->setWiki($wiki3);
         $page7->setTitle('CRM Home');
-        $page7->setProtected(0);
+        $page7->setProtected(false);
         $page7->setParent(null);
         $page7->setCreatedOn(new \DateTime('2024-01-16 09:30:00'));
         
