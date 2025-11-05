@@ -164,8 +164,8 @@ class Issue
     /**
      * Property isPrivate
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    private int $isPrivate = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isPrivate = false;
 
     /**
      * Property closedOn
@@ -549,14 +549,15 @@ class Issue
     /**
      * Getter for isPrivate
      */
-    public function getIsPrivate(): int    {
+    public function getIsPrivate(): bool
+    {
         return $this->isPrivate;
     }
 
     /**
      * Setter for isPrivate
      */
-    public function setIsPrivate(int $isPrivate): static
+    public function setIsPrivate(bool $isPrivate): static
     {
         $this->isPrivate = $isPrivate;
         return $this;

@@ -50,8 +50,8 @@ class Project
     /**
      * Property isPublic
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '1'])]
-    private int $isPublic = 1;
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $isPublic = true;
 
     /**
      * Property parent
@@ -105,8 +105,8 @@ class Project
     /**
      * Property inheritMembers
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    private int $inheritMembers = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $inheritMembers = false;
 
     /**
      * Property defaultVersion
@@ -196,14 +196,15 @@ class Project
     /**
      * Getter for isPublic
      */
-    public function getIsPublic(): int    {
+    public function getIsPublic(): bool
+    {
         return $this->isPublic;
     }
 
     /**
      * Setter for isPublic
      */
-    public function setIsPublic(int $isPublic): static
+    public function setIsPublic(bool $isPublic): static
     {
         $this->isPublic = $isPublic;
         return $this;
@@ -358,14 +359,15 @@ class Project
     /**
      * Getter for inheritMembers
      */
-    public function getInheritMembers(): int    {
+    public function getInheritMembers(): bool
+    {
         return $this->inheritMembers;
     }
 
     /**
      * Setter for inheritMembers
      */
-    public function setInheritMembers(int $inheritMembers): static
+    public function setInheritMembers(bool $inheritMembers): static
     {
         $this->inheritMembers = $inheritMembers;
         return $this;

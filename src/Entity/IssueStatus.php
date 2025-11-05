@@ -38,8 +38,8 @@ class IssueStatus
     /**
      * Property isClosed
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    private int $isClosed = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isClosed = false;
 
     /**
      * Property position
@@ -104,14 +104,15 @@ class IssueStatus
     /**
      * Getter for isClosed
      */
-    public function getIsClosed(): int    {
+    public function getIsClosed(): bool
+    {
         return $this->isClosed;
     }
 
     /**
      * Setter for isClosed
      */
-    public function setIsClosed(int $isClosed): static
+    public function setIsClosed(bool $isClosed): static
     {
         $this->isClosed = $isClosed;
         return $this;
