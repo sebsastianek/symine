@@ -1,0 +1,86 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Trackers{% endblock %}
+{% block page_title %}Trackers{% endblock %}
+
+{% block body %}
+<div class="flex justify-between items-center mb-6">
+    <h3 class="text-lg font-semibold text-gray-900">Manage Trackers (Issue Types)</h3>
+    <a href="{{ path('admin_tracker_new') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md inline-flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        New Tracker
+    </a>
+</div>
+
+{% if trackers is empty %}
+    <div class="bg-white rounded-lg shadow p-8 text-center">
+        <p class="text-gray-500">No trackers defined yet. Create the first tracker.</p>
+        <a href="{{ path('admin_tracker_new') }}" class="mt-4 inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+            Create First Tracker
+        </a>
+    </div>
+{% else %}
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Position
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Name
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Description
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        In Roadmap
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for tracker in trackers %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ tracker.position ?? '-' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">
+                                {{ tracker.name }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-500">
+                                {{ tracker.description|length > 80 ? tracker.description|slice(0, 80) ~ '...' : tracker.description }}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            {% if tracker.isInRoadmap %}
+                                <span class="text-green-600">Yes</span>
+                            {% else %}
+                                <span class="text-gray-400">No</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <a href="{{ path('admin_tracker_edit', {id: tracker.id}) }}" class="text-blue-600 hover:text-blue-900 mr-3">
+                                Edit
+                            </a>
+                            <form method="post" action="{{ path('admin_tracker_delete', {id: tracker.id}) }}" onsubmit="return confirm('Are you sure you want to delete this tracker?');" class="inline">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_tracker_' ~ tracker.id) }}">
+                                <button type="submit" class="text-red-600 hover:text-red-900">
+                                    Delete
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+{% endblock %}
