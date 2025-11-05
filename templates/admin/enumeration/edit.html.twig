@@ -1,0 +1,81 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Edit {{ type_label }}{% endblock %}
+{% block page_title %}Edit {{ type_label }}{% endblock %}
+
+{% block body %}
+<div class="max-w-2xl">
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="post" action="{{ path('admin_enumeration_edit', {id: enumeration.id}) }}" class="space-y-6">
+            <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+                    Name <span class="text-red-500">*</span>
+                </label>
+                <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    required
+                    value="{{ enumeration.name }}"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter name"
+                >
+            </div>
+
+            <div>
+                <label for="position" class="block text-sm font-medium text-gray-700 mb-2">
+                    Position
+                </label>
+                <input
+                    type="number"
+                    id="position"
+                    name="position"
+                    value="{{ enumeration.position ?? 1 }}"
+                    min="1"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                <p class="mt-1 text-sm text-gray-500">Display order position (lower numbers appear first)</p>
+            </div>
+
+            <div class="flex items-center">
+                <input
+                    type="checkbox"
+                    id="is_default"
+                    name="is_default"
+                    {{ enumeration.isDefault ? 'checked' : '' }}
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                >
+                <label for="is_default" class="ml-2 block text-sm text-gray-700">
+                    Default value
+                </label>
+            </div>
+
+            <div class="flex items-center">
+                <input
+                    type="checkbox"
+                    id="active"
+                    name="active"
+                    {{ enumeration.active ? 'checked' : '' }}
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                >
+                <label for="active" class="ml-2 block text-sm text-gray-700">
+                    Active
+                </label>
+            </div>
+
+            <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                <a href="{{ path('admin_enumeration_' ~ enumeration.type|lower|replace({'issuepriority': 'priorities', 'timeentryactivity': 'activities', 'documentcategory': 'document_categories'})) }}"
+                   class="text-gray-600 hover:text-gray-900">
+                    Cancel
+                </a>
+                <button
+                    type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
