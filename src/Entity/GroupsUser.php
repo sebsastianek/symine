@@ -16,12 +16,12 @@ use App\Repository\GroupsUserRepository;
 class GroupsUser
 {
     /**
-     * Property group (references User entity since groups are also users in Redmine)
+     * Property group
      */
     #[ORM\Id]
-    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\ManyToOne(targetEntity: Group::class, inversedBy: 'groupsUsers')]
     #[ORM\JoinColumn(name: 'group_id', referencedColumnName: 'id', nullable: false)]
-    private User $group;
+    private Group $group;
 
     /**
      * Property user
@@ -34,7 +34,7 @@ class GroupsUser
     /**
      * Getter for group
      */
-    public function getGroup(): User
+    public function getGroup(): Group
     {
         return $this->group;
     }
@@ -42,7 +42,7 @@ class GroupsUser
     /**
      * Setter for group
      */
-    public function setGroup(User $group): static
+    public function setGroup(Group $group): static
     {
         $this->group = $group;
         return $this;

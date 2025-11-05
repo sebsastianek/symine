@@ -18,12 +18,12 @@ class CustomFieldFixtures extends Fixture
         $customField1->setName('Business Priority');
         $customField1->setFieldFormat('list');
         $customField1->setPossibleValues("Low\nMedium\nHigh\nCritical");
-        $customField1->setIsRequired(0);
-        $customField1->setIsForAll(1);
-        $customField1->setIsFilter(1);
-        $customField1->setSearchable(1);
-        $customField1->setVisible(1);
-        $customField1->setEditable(1);
+        $customField1->setIsRequired(false);
+        $customField1->setIsForAll(true);
+        $customField1->setIsFilter(true);
+        $customField1->setSearchable(true);
+        $customField1->setVisible(true);
+        $customField1->setEditable(true);
         $customField1->setPosition(1);
         
         $manager->persist($customField1);
@@ -34,12 +34,12 @@ class CustomFieldFixtures extends Fixture
         $customField2->setType('IssueCustomField');
         $customField2->setName('Estimated Effort (days)');
         $customField2->setFieldFormat('float');
-        $customField2->setIsRequired(0);
-        $customField2->setIsForAll(1);
-        $customField2->setIsFilter(1);
-        $customField2->setSearchable(1);
-        $customField2->setVisible(1);
-        $customField2->setEditable(1);
+        $customField2->setIsRequired(false);
+        $customField2->setIsForAll(true);
+        $customField2->setIsFilter(true);
+        $customField2->setSearchable(true);
+        $customField2->setVisible(true);
+        $customField2->setEditable(true);
         $customField2->setPosition(2);
         $customField2->setMinLength(null);
         $customField2->setMaxLength(null);
@@ -52,12 +52,12 @@ class CustomFieldFixtures extends Fixture
         $customField3->setType('IssueCustomField');
         $customField3->setName('Customer Contact');
         $customField3->setFieldFormat('string');
-        $customField3->setIsRequired(0);
-        $customField3->setIsForAll(0);
-        $customField3->setIsFilter(1);
-        $customField3->setSearchable(1);
-        $customField3->setVisible(1);
-        $customField3->setEditable(1);
+        $customField3->setIsRequired(false);
+        $customField3->setIsForAll(false);
+        $customField3->setIsFilter(true);
+        $customField3->setSearchable(true);
+        $customField3->setVisible(true);
+        $customField3->setEditable(true);
         $customField3->setPosition(3);
         $customField3->setMaxLength(255);
         
@@ -70,12 +70,12 @@ class CustomFieldFixtures extends Fixture
         $customField4->setName('Code Review Status');
         $customField4->setFieldFormat('list');
         $customField4->setPossibleValues("Pending\nIn Review\nApproved\nRejected\nNot Required");
-        $customField4->setIsRequired(0);
-        $customField4->setIsForAll(1);
-        $customField4->setIsFilter(1);
-        $customField4->setSearchable(1);
-        $customField4->setVisible(1);
-        $customField4->setEditable(1);
+        $customField4->setIsRequired(false);
+        $customField4->setIsForAll(true);
+        $customField4->setIsFilter(true);
+        $customField4->setSearchable(true);
+        $customField4->setVisible(true);
+        $customField4->setEditable(true);
         $customField4->setPosition(4);
         
         $manager->persist($customField4);
@@ -87,12 +87,12 @@ class CustomFieldFixtures extends Fixture
         $customField5->setName('Department');
         $customField5->setFieldFormat('list');
         $customField5->setPossibleValues("Development\nQA\nProduct Management\nDesign\nMarketing\nSales");
-        $customField5->setIsRequired(0);
-        $customField5->setIsForAll(1);
-        $customField5->setIsFilter(1);
-        $customField5->setSearchable(1);
-        $customField5->setVisible(1);
-        $customField5->setEditable(1);
+        $customField5->setIsRequired(false);
+        $customField5->setIsForAll(true);
+        $customField5->setIsFilter(true);
+        $customField5->setSearchable(true);
+        $customField5->setVisible(true);
+        $customField5->setEditable(true);
         $customField5->setPosition(1);
         
         $manager->persist($customField5);
@@ -104,12 +104,12 @@ class CustomFieldFixtures extends Fixture
         $customField6->setName('Phone Number');
         $customField6->setFieldFormat('string');
         $customField6->setRegexp('^[\+]?[0-9\-\(\)\s]+$');
-        $customField6->setIsRequired(0);
-        $customField6->setIsForAll(1);
-        $customField6->setIsFilter(0);
-        $customField6->setSearchable(1);
-        $customField6->setVisible(1);
-        $customField6->setEditable(1);
+        $customField6->setIsRequired(false);
+        $customField6->setIsForAll(true);
+        $customField6->setIsFilter(false);
+        $customField6->setSearchable(true);
+        $customField6->setVisible(true);
+        $customField6->setEditable(true);
         $customField6->setPosition(2);
         $customField6->setMaxLength(50);
         
@@ -121,12 +121,12 @@ class CustomFieldFixtures extends Fixture
         $customField7->setType('ProjectCustomField');
         $customField7->setName('Budget (USD)');
         $customField7->setFieldFormat('float');
-        $customField7->setIsRequired(0);
-        $customField7->setIsForAll(1);
-        $customField7->setIsFilter(1);
-        $customField7->setSearchable(1);
-        $customField7->setVisible(1);
-        $customField7->setEditable(1);
+        $customField7->setIsRequired(false);
+        $customField7->setIsForAll(true);
+        $customField7->setIsFilter(true);
+        $customField7->setSearchable(true);
+        $customField7->setVisible(true);
+        $customField7->setEditable(true);
         $customField7->setPosition(1);
         
         $manager->persist($customField7);
@@ -138,12 +138,12 @@ class CustomFieldFixtures extends Fixture
         $customField8->setName('Client Type');
         $customField8->setFieldFormat('list');
         $customField8->setPossibleValues("Internal\nExternal - Enterprise\nExternal - SMB\nExternal - Startup\nOSS Project");
-        $customField8->setIsRequired(0);
-        $customField8->setIsForAll(1);
-        $customField8->setIsFilter(1);
-        $customField8->setSearchable(1);
-        $customField8->setVisible(1);
-        $customField8->setEditable(1);
+        $customField8->setIsRequired(false);
+        $customField8->setIsForAll(true);
+        $customField8->setIsFilter(true);
+        $customField8->setSearchable(true);
+        $customField8->setVisible(true);
+        $customField8->setEditable(true);
         $customField8->setPosition(2);
         
         $manager->persist($customField8);
@@ -154,12 +154,12 @@ class CustomFieldFixtures extends Fixture
         $customField9->setType('IssueCustomField');
         $customField9->setName('Testing Notes');
         $customField9->setFieldFormat('text');
-        $customField9->setIsRequired(0);
-        $customField9->setIsForAll(0);
-        $customField9->setIsFilter(0);
-        $customField9->setSearchable(1);
-        $customField9->setVisible(1);
-        $customField9->setEditable(1);
+        $customField9->setIsRequired(false);
+        $customField9->setIsForAll(false);
+        $customField9->setIsFilter(false);
+        $customField9->setSearchable(true);
+        $customField9->setVisible(true);
+        $customField9->setEditable(true);
         $customField9->setPosition(5);
         
         $manager->persist($customField9);
@@ -170,16 +170,96 @@ class CustomFieldFixtures extends Fixture
         $customField10->setType('IssueCustomField');
         $customField10->setName('Version Affected');
         $customField10->setFieldFormat('version');
-        $customField10->setIsRequired(0);
-        $customField10->setIsForAll(1);
-        $customField10->setIsFilter(1);
-        $customField10->setSearchable(1);
-        $customField10->setVisible(1);
-        $customField10->setEditable(1);
+        $customField10->setIsRequired(false);
+        $customField10->setIsForAll(true);
+        $customField10->setIsFilter(true);
+        $customField10->setSearchable(true);
+        $customField10->setVisible(true);
+        $customField10->setEditable(true);
         $customField10->setPosition(6);
         
         $manager->persist($customField10);
         $this->addReference('custom-field-version-affected', $customField10);
+
+        // Custom Field 11: Severity Level (Issue)
+        $customField11 = new CustomField();
+        $customField11->setType('IssueCustomField');
+        $customField11->setName('Severity Level');
+        $customField11->setFieldFormat('list');
+        $customField11->setIsRequired(false);
+        $customField11->setIsForAll(true);
+        $customField11->setIsFilter(true);
+        $customField11->setSearchable(true);
+        $customField11->setVisible(true);
+        $customField11->setEditable(true);
+        $customField11->setPosition(7);
+
+        $manager->persist($customField11);
+        $this->addReference('custom-field-severity-level', $customField11);
+
+        // Custom Field 12: Testing Phase (Issue)
+        $customField12 = new CustomField();
+        $customField12->setType('IssueCustomField');
+        $customField12->setName('Testing Phase');
+        $customField12->setFieldFormat('list');
+        $customField12->setIsRequired(false);
+        $customField12->setIsForAll(true);
+        $customField12->setIsFilter(true);
+        $customField12->setSearchable(true);
+        $customField12->setVisible(true);
+        $customField12->setEditable(true);
+        $customField12->setPosition(8);
+
+        $manager->persist($customField12);
+        $this->addReference('custom-field-testing-phase', $customField12);
+
+        // Custom Field 13: Resolution Type (Issue)
+        $customField13 = new CustomField();
+        $customField13->setType('IssueCustomField');
+        $customField13->setName('Resolution Type');
+        $customField13->setFieldFormat('list');
+        $customField13->setIsRequired(false);
+        $customField13->setIsForAll(true);
+        $customField13->setIsFilter(true);
+        $customField13->setSearchable(true);
+        $customField13->setVisible(true);
+        $customField13->setEditable(true);
+        $customField13->setPosition(9);
+
+        $manager->persist($customField13);
+        $this->addReference('custom-field-resolution-type', $customField13);
+
+        // Custom Field 14: Preferred Component (User)
+        $customField14 = new CustomField();
+        $customField14->setType('UserCustomField');
+        $customField14->setName('Preferred Component');
+        $customField14->setFieldFormat('list');
+        $customField14->setIsRequired(false);
+        $customField14->setIsForAll(true);
+        $customField14->setIsFilter(false);
+        $customField14->setSearchable(false);
+        $customField14->setVisible(true);
+        $customField14->setEditable(true);
+        $customField14->setPosition(1);
+
+        $manager->persist($customField14);
+        $this->addReference('custom-field-preferred-component', $customField14);
+
+        // Custom Field 15: Environment (Project)
+        $customField15 = new CustomField();
+        $customField15->setType('ProjectCustomField');
+        $customField15->setName('Environment');
+        $customField15->setFieldFormat('list');
+        $customField15->setIsRequired(false);
+        $customField15->setIsForAll(true);
+        $customField15->setIsFilter(true);
+        $customField15->setSearchable(true);
+        $customField15->setVisible(true);
+        $customField15->setEditable(true);
+        $customField15->setPosition(1);
+
+        $manager->persist($customField15);
+        $this->addReference('custom-field-environment', $customField15);
 
         $manager->flush();
     }

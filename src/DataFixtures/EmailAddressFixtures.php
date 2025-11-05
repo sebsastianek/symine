@@ -17,8 +17,8 @@ class EmailAddressFixtures extends Fixture implements DependentFixtureInterface
         $email1 = new EmailAddress();
         $email1->setUser($this->getReference('user-jsmith', \App\Entity\User::class));
         $email1->setAddress('john.smith.pm@company.com');
-        $email1->setIsDefault(0);
-        $email1->setNotify(1);
+        $email1->setIsDefault(false);
+        $email1->setNotify(true);
         $email1->setCreatedOn(new \DateTime('2024-01-10 09:00:00'));
         $email1->setUpdatedOn(new \DateTime('2024-01-10 09:00:00'));
         
@@ -29,8 +29,8 @@ class EmailAddressFixtures extends Fixture implements DependentFixtureInterface
         $email2 = new EmailAddress();
         $email2->setUser($this->getReference('user-jsmith', \App\Entity\User::class));
         $email2->setAddress('john.personal@gmail.com');
-        $email2->setIsDefault(0);
-        $email2->setNotify(0);
+        $email2->setIsDefault(false);
+        $email2->setNotify(false);
         $email2->setCreatedOn(new \DateTime('2024-01-10 09:05:00'));
         $email2->setUpdatedOn(new \DateTime('2024-01-10 09:05:00'));
         
@@ -41,8 +41,8 @@ class EmailAddressFixtures extends Fixture implements DependentFixtureInterface
         $email3 = new EmailAddress();
         $email3->setUser($this->getReference('user-mjohnson', \App\Entity\User::class));
         $email3->setAddress('mike.johnson.dev@company.com');
-        $email3->setIsDefault(0);
-        $email3->setNotify(1);
+        $email3->setIsDefault(false);
+        $email3->setNotify(true);
         $email3->setCreatedOn(new \DateTime('2024-01-20 14:15:00'));
         $email3->setUpdatedOn(new \DateTime('2024-01-20 14:15:00'));
         
@@ -53,8 +53,8 @@ class EmailAddressFixtures extends Fixture implements DependentFixtureInterface
         $email4 = new EmailAddress();
         $email4->setUser($this->getReference('user-sgarcia', \App\Entity\User::class));
         $email4->setAddress('sarah.garcia.freelance@outlook.com');
-        $email4->setIsDefault(0);
-        $email4->setNotify(1);
+        $email4->setIsDefault(false);
+        $email4->setNotify(true);
         $email4->setCreatedOn(new \DateTime('2024-02-01 11:30:00'));
         $email4->setUpdatedOn(new \DateTime('2024-02-01 11:30:00'));
         
@@ -65,8 +65,8 @@ class EmailAddressFixtures extends Fixture implements DependentFixtureInterface
         $email5 = new EmailAddress();
         $email5->setUser($this->getReference('user-dbrown', \App\Entity\User::class));
         $email5->setAddress('qa.david.brown@company.com');
-        $email5->setIsDefault(0);
-        $email5->setNotify(1);
+        $email5->setIsDefault(false);
+        $email5->setNotify(true);
         $email5->setCreatedOn(new \DateTime('2024-02-05 08:45:00'));
         $email5->setUpdatedOn(new \DateTime('2024-02-05 08:45:00'));
         
@@ -77,8 +77,8 @@ class EmailAddressFixtures extends Fixture implements DependentFixtureInterface
         $email6 = new EmailAddress();
         $email6->setUser($this->getReference('user-alee', \App\Entity\User::class));
         $email6->setAddress('alice.lee.client@business.com');
-        $email6->setIsDefault(1); // This is her primary business email
-        $email6->setNotify(1);
+        $email6->setIsDefault(true); // This is her primary business email
+        $email6->setNotify(true);
         $email6->setCreatedOn(new \DateTime('2024-02-10 16:00:00'));
         $email6->setUpdatedOn(new \DateTime('2024-02-10 16:00:00'));
         
@@ -89,8 +89,8 @@ class EmailAddressFixtures extends Fixture implements DependentFixtureInterface
         $email7 = new EmailAddress();
         $email7->setUser($this->getReference('user-alee', \App\Entity\User::class));
         $email7->setAddress('alice.support@business.com');
-        $email7->setIsDefault(0);
-        $email7->setNotify(1);
+        $email7->setIsDefault(false);
+        $email7->setNotify(true);
         $email7->setCreatedOn(new \DateTime('2024-02-10 16:05:00'));
         $email7->setUpdatedOn(new \DateTime('2024-02-10 16:05:00'));
         
@@ -101,8 +101,8 @@ class EmailAddressFixtures extends Fixture implements DependentFixtureInterface
         $email8 = new EmailAddress();
         $email8->setUser($this->getReference('user-admin', \App\Entity\User::class));
         $email8->setAddress('system.admin@company.com');
-        $email8->setIsDefault(0);
-        $email8->setNotify(1);
+        $email8->setIsDefault(false);
+        $email8->setNotify(true);
         $email8->setCreatedOn(new \DateTime('2023-12-01 00:00:00'));
         $email8->setUpdatedOn(new \DateTime('2024-01-01 00:00:00'));
         
@@ -113,8 +113,8 @@ class EmailAddressFixtures extends Fixture implements DependentFixtureInterface
         $email9 = new EmailAddress();
         $email9->setUser($this->getReference('user-admin', \App\Entity\User::class));
         $email9->setAddress('emergency.contact@company.com');
-        $email9->setIsDefault(0);
-        $email9->setNotify(1);
+        $email9->setIsDefault(false);
+        $email9->setNotify(true);
         $email9->setCreatedOn(new \DateTime('2023-12-01 00:05:00'));
         $email9->setUpdatedOn(new \DateTime('2024-01-01 00:05:00'));
         
@@ -125,8 +125,8 @@ class EmailAddressFixtures extends Fixture implements DependentFixtureInterface
         $email10 = new EmailAddress();
         $email10->setUser($this->getReference('user-mjohnson', \App\Entity\User::class));
         $email10->setAddress('mobile.team@company.com');
-        $email10->setIsDefault(0);
-        $email10->setNotify(0); // Team alias, no individual notifications
+        $email10->setIsDefault(false);
+        $email10->setNotify(false); // Team alias, no individual notifications
         $email10->setCreatedOn(new \DateTime('2024-02-25 10:00:00'));
         $email10->setUpdatedOn(new \DateTime('2024-02-25 10:00:00'));
         

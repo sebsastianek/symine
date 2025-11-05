@@ -20,13 +20,13 @@ class ArInternalMetadata
      * Property key
      */
     #[ORM\Id]
-    #[ORM\Column(type: 'string', length: 255, nullable: false)]
+    #[ORM\Column(name: '`key`', type: 'string', length: 255, nullable: false)]
     private string $key;
 
     /**
      * Property value
      */
-    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    #[ORM\Column(name: '`value`', type: 'string', length: 255, nullable: true)]
     private ?string $value = NULL;
 
     /**

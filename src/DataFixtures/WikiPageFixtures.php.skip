@@ -19,7 +19,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $docsHome->setWiki($this->getReference('wiki-docs', \App\Entity\Wiki::class));
         $docsHome->setTitle('Documentation Home');
         $docsHome->setCreatedOn(new \DateTime('2024-01-15 10:00:00'));
-        $docsHome->setProtected(0);
+        $docsHome->setProtected(false);
         $docsHome->setParent(null);
         
         $manager->persist($docsHome);
@@ -30,7 +30,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $techSpecs->setWiki($this->getReference('wiki-docs', \App\Entity\Wiki::class));
         $techSpecs->setTitle('Technical Specifications');
         $techSpecs->setCreatedOn(new \DateTime('2024-01-16 14:30:00'));
-        $techSpecs->setProtected(1); // Protected page
+        $techSpecs->setProtected(true); // Protected page
         $techSpecs->setParent($docsHome);
         
         $manager->persist($techSpecs);
@@ -41,7 +41,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $userGuide->setWiki($this->getReference('wiki-docs', \App\Entity\Wiki::class));
         $userGuide->setTitle('User Guide');
         $userGuide->setCreatedOn(new \DateTime('2024-01-17 09:15:00'));
-        $userGuide->setProtected(0);
+        $userGuide->setProtected(false);
         $userGuide->setParent($docsHome);
         
         $manager->persist($userGuide);
@@ -52,7 +52,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $installGuide->setWiki($this->getReference('wiki-docs', \App\Entity\Wiki::class));
         $installGuide->setTitle('Installation Guide');
         $installGuide->setCreatedOn(new \DateTime('2024-01-17 11:00:00'));
-        $installGuide->setProtected(0);
+        $installGuide->setProtected(false);
         $installGuide->setParent($userGuide);
         
         $manager->persist($installGuide);
@@ -63,7 +63,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $configGuide->setWiki($this->getReference('wiki-docs', \App\Entity\Wiki::class));
         $configGuide->setTitle('Configuration Guide');
         $configGuide->setCreatedOn(new \DateTime('2024-01-17 15:30:00'));
-        $configGuide->setProtected(0);
+        $configGuide->setProtected(false);
         $configGuide->setParent($userGuide);
         
         $manager->persist($configGuide);
@@ -75,7 +75,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $ecommerceHome->setWiki($this->getReference('wiki-ecommerce', \App\Entity\Wiki::class));
         $ecommerceHome->setTitle('E-commerce Project');
         $ecommerceHome->setCreatedOn(new \DateTime('2024-01-20 08:00:00'));
-        $ecommerceHome->setProtected(0);
+        $ecommerceHome->setProtected(false);
         $ecommerceHome->setParent(null);
         
         $manager->persist($ecommerceHome);
@@ -86,7 +86,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $setupGuide->setWiki($this->getReference('wiki-ecommerce', \App\Entity\Wiki::class));
         $setupGuide->setTitle('Setup Guide');
         $setupGuide->setCreatedOn(new \DateTime('2024-01-20 10:30:00'));
-        $setupGuide->setProtected(0);
+        $setupGuide->setProtected(false);
         $setupGuide->setParent($ecommerceHome);
         
         $manager->persist($setupGuide);
@@ -97,7 +97,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $apiDocs->setWiki($this->getReference('wiki-ecommerce', \App\Entity\Wiki::class));
         $apiDocs->setTitle('API Documentation');
         $apiDocs->setCreatedOn(new \DateTime('2024-01-22 13:45:00'));
-        $apiDocs->setProtected(1); // Protected technical documentation
+        $apiDocs->setProtected(true); // Protected technical documentation
         $apiDocs->setParent($ecommerceHome);
         
         $manager->persist($apiDocs);
@@ -108,7 +108,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $dbSchema->setWiki($this->getReference('wiki-ecommerce', \App\Entity\Wiki::class));
         $dbSchema->setTitle('Database Schema');
         $dbSchema->setCreatedOn(new \DateTime('2024-01-23 16:20:00'));
-        $dbSchema->setProtected(1); // Protected technical documentation
+        $dbSchema->setProtected(true); // Protected technical documentation
         $dbSchema->setParent($apiDocs);
         
         $manager->persist($dbSchema);
@@ -119,7 +119,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $deployGuide->setWiki($this->getReference('wiki-ecommerce', \App\Entity\Wiki::class));
         $deployGuide->setTitle('Deployment Guide');
         $deployGuide->setCreatedOn(new \DateTime('2024-01-25 12:00:00'));
-        $deployGuide->setProtected(1); // Protected deployment info
+        $deployGuide->setProtected(true); // Protected deployment info
         $deployGuide->setParent($ecommerceHome);
         
         $manager->persist($deployGuide);
@@ -131,7 +131,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $crmHome->setWiki($this->getReference('wiki-crm', \App\Entity\Wiki::class));
         $crmHome->setTitle('CRM System Overview');
         $crmHome->setCreatedOn(new \DateTime('2024-02-01 09:00:00'));
-        $crmHome->setProtected(0);
+        $crmHome->setProtected(false);
         $crmHome->setParent(null);
         
         $manager->persist($crmHome);
@@ -142,7 +142,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $bizReqs->setWiki($this->getReference('wiki-crm', \App\Entity\Wiki::class));
         $bizReqs->setTitle('Business Requirements');
         $bizReqs->setCreatedOn(new \DateTime('2024-02-02 14:15:00'));
-        $bizReqs->setProtected(0);
+        $bizReqs->setProtected(false);
         $bizReqs->setParent($crmHome);
         
         $manager->persist($bizReqs);
@@ -153,7 +153,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $featureSpecs->setWiki($this->getReference('wiki-crm', \App\Entity\Wiki::class));
         $featureSpecs->setTitle('Feature Specifications');
         $featureSpecs->setCreatedOn(new \DateTime('2024-02-03 11:30:00'));
-        $featureSpecs->setProtected(0);
+        $featureSpecs->setProtected(false);
         $featureSpecs->setParent($crmHome);
         
         $manager->persist($featureSpecs);
@@ -165,7 +165,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $mobileHome->setWiki($this->getReference('wiki-mobile', \App\Entity\Wiki::class));
         $mobileHome->setTitle('Mobile App Development');
         $mobileHome->setCreatedOn(new \DateTime('2024-02-05 10:45:00'));
-        $mobileHome->setProtected(0);
+        $mobileHome->setProtected(false);
         $mobileHome->setParent(null);
         
         $manager->persist($mobileHome);
@@ -176,7 +176,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $platformGuide->setWiki($this->getReference('wiki-mobile', \App\Entity\Wiki::class));
         $platformGuide->setTitle('Platform Guidelines');
         $platformGuide->setCreatedOn(new \DateTime('2024-02-06 13:20:00'));
-        $platformGuide->setProtected(0);
+        $platformGuide->setProtected(false);
         $platformGuide->setParent($mobileHome);
         
         $manager->persist($platformGuide);
@@ -187,7 +187,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $testingProcs->setWiki($this->getReference('wiki-mobile', \App\Entity\Wiki::class));
         $testingProcs->setTitle('Testing Procedures');
         $testingProcs->setCreatedOn(new \DateTime('2024-02-07 16:00:00'));
-        $testingProcs->setProtected(1); // Protected testing guidelines
+        $testingProcs->setProtected(true); // Protected testing guidelines
         $testingProcs->setParent($mobileHome);
         
         $manager->persist($testingProcs);
@@ -199,7 +199,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $analyticsHome->setWiki($this->getReference('wiki-analytics', \App\Entity\Wiki::class));
         $analyticsHome->setTitle('Analytics Dashboard');
         $analyticsHome->setCreatedOn(new \DateTime('2024-02-10 08:30:00'));
-        $analyticsHome->setProtected(0);
+        $analyticsHome->setProtected(false);
         $analyticsHome->setParent(null);
         
         $manager->persist($analyticsHome);
@@ -210,7 +210,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $dataSources->setWiki($this->getReference('wiki-analytics', \App\Entity\Wiki::class));
         $dataSources->setTitle('Data Sources');
         $dataSources->setCreatedOn(new \DateTime('2024-02-11 12:45:00'));
-        $dataSources->setProtected(1); // Protected data information
+        $dataSources->setProtected(true); // Protected data information
         $dataSources->setParent($analyticsHome);
         
         $manager->persist($dataSources);
@@ -221,7 +221,7 @@ class WikiPageFixtures extends Fixture implements DependentFixtureInterface
         $reportTemplates->setWiki($this->getReference('wiki-analytics', \App\Entity\Wiki::class));
         $reportTemplates->setTitle('Report Templates');
         $reportTemplates->setCreatedOn(new \DateTime('2024-02-12 15:30:00'));
-        $reportTemplates->setProtected(0);
+        $reportTemplates->setProtected(false);
         $reportTemplates->setParent($analyticsHome);
         
         $manager->persist($reportTemplates);

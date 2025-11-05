@@ -17,9 +17,9 @@ class TrackerFixtures extends Fixture
         $bug->setName('Bug');
         $bug->setDescription('Software defects and issues that need to be fixed');
         $bug->setDefaultStatusId(null); // Will be set after IssueStatus fixtures
-        $bug->setIsInRoadmap(0);
+        $bug->setIsInRoadmap(false);
         $bug->setPosition(1);
-        
+
         $manager->persist($bug);
         $this->addReference('tracker-bug', $bug);
 
@@ -28,9 +28,9 @@ class TrackerFixtures extends Fixture
         $feature->setName('Feature');
         $feature->setDescription('New features and enhancements');
         $feature->setDefaultStatusId(null);
-        $feature->setIsInRoadmap(1);
+        $feature->setIsInRoadmap(true);
         $feature->setPosition(2);
-        
+
         $manager->persist($feature);
         $this->addReference('tracker-feature', $feature);
 
@@ -39,9 +39,9 @@ class TrackerFixtures extends Fixture
         $task->setName('Task');
         $task->setDescription('General tasks and work items');
         $task->setDefaultStatusId(null);
-        $task->setIsInRoadmap(1);
+        $task->setIsInRoadmap(true);
         $task->setPosition(3);
-        
+
         $manager->persist($task);
         $this->addReference('tracker-task', $task);
 
@@ -50,9 +50,9 @@ class TrackerFixtures extends Fixture
         $support->setName('Support');
         $support->setDescription('Customer support requests and inquiries');
         $support->setDefaultStatusId(null);
-        $support->setIsInRoadmap(0);
+        $support->setIsInRoadmap(false);
         $support->setPosition(4);
-        
+
         $manager->persist($support);
         $this->addReference('tracker-support', $support);
 
@@ -61,9 +61,9 @@ class TrackerFixtures extends Fixture
         $documentation->setName('Documentation');
         $documentation->setDescription('Documentation tasks and improvements');
         $documentation->setDefaultStatusId(null);
-        $documentation->setIsInRoadmap(1);
+        $documentation->setIsInRoadmap(true);
         $documentation->setPosition(5);
-        
+
         $manager->persist($documentation);
         $this->addReference('tracker-documentation', $documentation);
 
@@ -72,9 +72,9 @@ class TrackerFixtures extends Fixture
         $research->setName('Research');
         $research->setDescription('Research and investigation tasks');
         $research->setDefaultStatusId(null);
-        $research->setIsInRoadmap(0);
+        $research->setIsInRoadmap(false);
         $research->setPosition(6);
-        
+
         $manager->persist($research);
         $this->addReference('tracker-research', $research);
 
@@ -83,9 +83,9 @@ class TrackerFixtures extends Fixture
         $testing->setName('Testing');
         $testing->setDescription('Testing and quality assurance tasks');
         $testing->setDefaultStatusId(null);
-        $testing->setIsInRoadmap(1);
+        $testing->setIsInRoadmap(true);
         $testing->setPosition(7);
-        
+
         $manager->persist($testing);
         $this->addReference('tracker-testing', $testing);
 
@@ -94,9 +94,9 @@ class TrackerFixtures extends Fixture
         $deployment->setName('Deployment');
         $deployment->setDescription('Deployment and release management tasks');
         $deployment->setDefaultStatusId(null);
-        $deployment->setIsInRoadmap(1);
+        $deployment->setIsInRoadmap(true);
         $deployment->setPosition(8);
-        
+
         $manager->persist($deployment);
         $this->addReference('tracker-deployment', $deployment);
 

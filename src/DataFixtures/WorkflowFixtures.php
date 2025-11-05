@@ -21,8 +21,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow1->setOldStatus($this->getReference('status-new', \App\Entity\IssueStatus::class));
         $workflow1->setNewStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $workflow1->setRole($this->getReference('role-manager', \App\Entity\Role::class));
-        $workflow1->setAssignee(0);
-        $workflow1->setAuthor(0);
+        $workflow1->setAssignee(false);
+        $workflow1->setAuthor(false);
         
         $manager->persist($workflow1);
         $this->addReference('workflow-bug-new-to-progress-manager', $workflow1);
@@ -32,8 +32,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow2->setOldStatus($this->getReference('status-new', \App\Entity\IssueStatus::class));
         $workflow2->setNewStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $workflow2->setRole($this->getReference('role-developer', \App\Entity\Role::class));
-        $workflow2->setAssignee(1); // Only assignee can transition
-        $workflow2->setAuthor(0);
+        $workflow2->setAssignee(true); // Only assignee can transition
+        $workflow2->setAuthor(false);
         
         $manager->persist($workflow2);
         $this->addReference('workflow-bug-new-to-progress-dev', $workflow2);
@@ -44,8 +44,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow3->setOldStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $workflow3->setNewStatus($this->getReference('status-resolved', \App\Entity\IssueStatus::class));
         $workflow3->setRole($this->getReference('role-developer', \App\Entity\Role::class));
-        $workflow3->setAssignee(1);
-        $workflow3->setAuthor(0);
+        $workflow3->setAssignee(true);
+        $workflow3->setAuthor(false);
         
         $manager->persist($workflow3);
         $this->addReference('workflow-bug-progress-to-resolved-dev', $workflow3);
@@ -55,8 +55,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow4->setOldStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $workflow4->setNewStatus($this->getReference('status-resolved', \App\Entity\IssueStatus::class));
         $workflow4->setRole($this->getReference('role-tester', \App\Entity\Role::class));
-        $workflow4->setAssignee(0);
-        $workflow4->setAuthor(0);
+        $workflow4->setAssignee(false);
+        $workflow4->setAuthor(false);
         
         $manager->persist($workflow4);
         $this->addReference('workflow-bug-progress-to-resolved-tester', $workflow4);
@@ -67,8 +67,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow5->setOldStatus($this->getReference('status-resolved', \App\Entity\IssueStatus::class));
         $workflow5->setNewStatus($this->getReference('status-closed', \App\Entity\IssueStatus::class));
         $workflow5->setRole($this->getReference('role-tester', \App\Entity\Role::class));
-        $workflow5->setAssignee(0);
-        $workflow5->setAuthor(0);
+        $workflow5->setAssignee(false);
+        $workflow5->setAuthor(false);
         
         $manager->persist($workflow5);
         $this->addReference('workflow-bug-resolved-to-closed-tester', $workflow5);
@@ -78,8 +78,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow6->setOldStatus($this->getReference('status-resolved', \App\Entity\IssueStatus::class));
         $workflow6->setNewStatus($this->getReference('status-closed', \App\Entity\IssueStatus::class));
         $workflow6->setRole($this->getReference('role-manager', \App\Entity\Role::class));
-        $workflow6->setAssignee(0);
-        $workflow6->setAuthor(0);
+        $workflow6->setAssignee(false);
+        $workflow6->setAuthor(false);
         
         $manager->persist($workflow6);
         $this->addReference('workflow-bug-resolved-to-closed-manager', $workflow6);
@@ -90,8 +90,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow7->setOldStatus($this->getReference('status-resolved', \App\Entity\IssueStatus::class));
         $workflow7->setNewStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $workflow7->setRole($this->getReference('role-tester', \App\Entity\Role::class));
-        $workflow7->setAssignee(0);
-        $workflow7->setAuthor(0);
+        $workflow7->setAssignee(false);
+        $workflow7->setAuthor(false);
         
         $manager->persist($workflow7);
         $this->addReference('workflow-bug-resolved-to-progress-reopen', $workflow7);
@@ -102,8 +102,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow8->setOldStatus($this->getReference('status-closed', \App\Entity\IssueStatus::class));
         $workflow8->setNewStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $workflow8->setRole($this->getReference('role-manager', \App\Entity\Role::class));
-        $workflow8->setAssignee(0);
-        $workflow8->setAuthor(0);
+        $workflow8->setAssignee(false);
+        $workflow8->setAuthor(false);
         
         $manager->persist($workflow8);
         $this->addReference('workflow-bug-closed-to-progress-reopen', $workflow8);
@@ -116,8 +116,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow9->setOldStatus($this->getReference('status-new', \App\Entity\IssueStatus::class));
         $workflow9->setNewStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $workflow9->setRole($this->getReference('role-manager', \App\Entity\Role::class));
-        $workflow9->setAssignee(0);
-        $workflow9->setAuthor(0);
+        $workflow9->setAssignee(false);
+        $workflow9->setAuthor(false);
         
         $manager->persist($workflow9);
         $this->addReference('workflow-feature-new-to-progress-manager', $workflow9);
@@ -127,8 +127,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow10->setOldStatus($this->getReference('status-new', \App\Entity\IssueStatus::class));
         $workflow10->setNewStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $workflow10->setRole($this->getReference('role-developer', \App\Entity\Role::class));
-        $workflow10->setAssignee(1);
-        $workflow10->setAuthor(0);
+        $workflow10->setAssignee(true);
+        $workflow10->setAuthor(false);
         
         $manager->persist($workflow10);
         $this->addReference('workflow-feature-new-to-progress-dev', $workflow10);
@@ -139,8 +139,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow11->setOldStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $workflow11->setNewStatus($this->getReference('status-resolved', \App\Entity\IssueStatus::class));
         $workflow11->setRole($this->getReference('role-developer', \App\Entity\Role::class));
-        $workflow11->setAssignee(1);
-        $workflow11->setAuthor(0);
+        $workflow11->setAssignee(true);
+        $workflow11->setAuthor(false);
         
         $manager->persist($workflow11);
         $this->addReference('workflow-feature-progress-to-resolved', $workflow11);
@@ -151,8 +151,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow12->setOldStatus($this->getReference('status-resolved', \App\Entity\IssueStatus::class));
         $workflow12->setNewStatus($this->getReference('status-closed', \App\Entity\IssueStatus::class));
         $workflow12->setRole($this->getReference('role-manager', \App\Entity\Role::class));
-        $workflow12->setAssignee(0);
-        $workflow12->setAuthor(0);
+        $workflow12->setAssignee(false);
+        $workflow12->setAuthor(false);
         
         $manager->persist($workflow12);
         $this->addReference('workflow-feature-resolved-to-closed-manager', $workflow12);
@@ -162,8 +162,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow13->setOldStatus($this->getReference('status-resolved', \App\Entity\IssueStatus::class));
         $workflow13->setNewStatus($this->getReference('status-closed', \App\Entity\IssueStatus::class));
         $workflow13->setRole($this->getReference('role-tester', \App\Entity\Role::class));
-        $workflow13->setAssignee(0);
-        $workflow13->setAuthor(0);
+        $workflow13->setAssignee(false);
+        $workflow13->setAuthor(false);
         
         $manager->persist($workflow13);
         $this->addReference('workflow-feature-resolved-to-closed-tester', $workflow13);
@@ -176,8 +176,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow14->setOldStatus($this->getReference('status-new', \App\Entity\IssueStatus::class));
         $workflow14->setNewStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $workflow14->setRole($this->getReference('role-manager', \App\Entity\Role::class));
-        $workflow14->setAssignee(0);
-        $workflow14->setAuthor(0);
+        $workflow14->setAssignee(false);
+        $workflow14->setAuthor(false);
         
         $manager->persist($workflow14);
         $this->addReference('workflow-support-new-to-progress-manager', $workflow14);
@@ -187,8 +187,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow15->setOldStatus($this->getReference('status-new', \App\Entity\IssueStatus::class));
         $workflow15->setNewStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $workflow15->setRole($this->getReference('role-developer', \App\Entity\Role::class));
-        $workflow15->setAssignee(0);
-        $workflow15->setAuthor(0);
+        $workflow15->setAssignee(false);
+        $workflow15->setAuthor(false);
         
         $manager->persist($workflow15);
         $this->addReference('workflow-support-new-to-progress-dev', $workflow15);
@@ -199,8 +199,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow16->setOldStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $workflow16->setNewStatus($this->getReference('status-resolved', \App\Entity\IssueStatus::class));
         $workflow16->setRole($this->getReference('role-developer', \App\Entity\Role::class));
-        $workflow16->setAssignee(1);
-        $workflow16->setAuthor(0);
+        $workflow16->setAssignee(true);
+        $workflow16->setAuthor(false);
         
         $manager->persist($workflow16);
         $this->addReference('workflow-support-progress-to-resolved', $workflow16);
@@ -211,8 +211,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow17->setOldStatus($this->getReference('status-resolved', \App\Entity\IssueStatus::class));
         $workflow17->setNewStatus($this->getReference('status-closed', \App\Entity\IssueStatus::class));
         $workflow17->setRole($this->getReference('role-manager', \App\Entity\Role::class));
-        $workflow17->setAssignee(0);
-        $workflow17->setAuthor(0);
+        $workflow17->setAssignee(false);
+        $workflow17->setAuthor(false);
         
         $manager->persist($workflow17);
         $this->addReference('workflow-support-resolved-to-closed-manager', $workflow17);
@@ -222,8 +222,8 @@ class WorkflowFixtures extends Fixture implements DependentFixtureInterface
         $workflow18->setOldStatus($this->getReference('status-resolved', \App\Entity\IssueStatus::class));
         $workflow18->setNewStatus($this->getReference('status-closed', \App\Entity\IssueStatus::class));
         $workflow18->setRole($this->getReference('role-client', \App\Entity\Role::class));
-        $workflow18->setAssignee(0);
-        $workflow18->setAuthor(1); // Author can close their own support tickets
+        $workflow18->setAssignee(false);
+        $workflow18->setAuthor(true); // Author can close their own support tickets
         
         $manager->persist($workflow18);
         $this->addReference('workflow-support-resolved-to-closed-author', $workflow18);

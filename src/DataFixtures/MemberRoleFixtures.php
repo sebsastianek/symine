@@ -51,7 +51,7 @@ class MemberRoleFixtures extends Fixture implements DependentFixtureInterface
 
         // Member Role 5: Emily Chen as Reporter in E-commerce Project
         $memberRole5 = new MemberRole();
-        $memberRole5->setMember($this->getReference('member-echen-ecommerce', \App\Entity\Member::class));
+        $memberRole5->setMember($this->getReference('member-dbrown-ecommerce', \App\Entity\Member::class));
         $memberRole5->setRole($this->getReference('role-reporter', \App\Entity\Role::class));
         $memberRole5->setInheritedFrom(null);
         
@@ -69,7 +69,7 @@ class MemberRoleFixtures extends Fixture implements DependentFixtureInterface
 
         // Member Role 7: David Brown as QA in CRM Project
         $memberRole7 = new MemberRole();
-        $memberRole7->setMember($this->getReference('member-dbrown-crm', \App\Entity\Member::class));
+        $memberRole7->setMember($this->getReference('member-sgarcia-crm', \App\Entity\Member::class));
         $memberRole7->setRole($this->getReference('role-tester', \App\Entity\Role::class));
         $memberRole7->setInheritedFrom(null);
         
@@ -78,7 +78,7 @@ class MemberRoleFixtures extends Fixture implements DependentFixtureInterface
 
         // Member Role 8: Robert Wilson as Manager in CRM Project
         $memberRole8 = new MemberRole();
-        $memberRole8->setMember($this->getReference('member-rwilson-crm', \App\Entity\Member::class));
+        $memberRole8->setMember($this->getReference('member-jsmith-crm', \App\Entity\Member::class));
         $memberRole8->setRole($this->getReference('role-manager', \App\Entity\Role::class));
         $memberRole8->setInheritedFrom(null);
         
@@ -87,7 +87,7 @@ class MemberRoleFixtures extends Fixture implements DependentFixtureInterface
 
         // Member Role 9: Linda Davis as Reporter in CRM Project
         $memberRole9 = new MemberRole();
-        $memberRole9->setMember($this->getReference('member-ldavis-crm', \App\Entity\Member::class));
+        $memberRole9->setMember($this->getReference('member-alee-crm', \App\Entity\Member::class));
         $memberRole9->setRole($this->getReference('role-reporter', \App\Entity\Role::class));
         $memberRole9->setInheritedFrom(null);
         
@@ -96,7 +96,7 @@ class MemberRoleFixtures extends Fixture implements DependentFixtureInterface
 
         // Member Role 10: John Smith as Manager in Mobile Project
         $memberRole10 = new MemberRole();
-        $memberRole10->setMember($this->getReference('member-jsmith-mobile', \App\Entity\Member::class));
+        $memberRole10->setMember($this->getReference('member-jsmith-backend', \App\Entity\Member::class));
         $memberRole10->setRole($this->getReference('role-manager', \App\Entity\Role::class));
         $memberRole10->setInheritedFrom(null);
         
@@ -105,7 +105,7 @@ class MemberRoleFixtures extends Fixture implements DependentFixtureInterface
 
         // Member Role 11: Sarah Garcia as Developer in Mobile Project
         $memberRole11 = new MemberRole();
-        $memberRole11->setMember($this->getReference('member-sgarcia-mobile', \App\Entity\Member::class));
+        $memberRole11->setMember($this->getReference('member-sgarcia-frontend', \App\Entity\Member::class));
         $memberRole11->setRole($this->getReference('role-developer', \App\Entity\Role::class));
         $memberRole11->setInheritedFrom(null);
         
@@ -114,7 +114,7 @@ class MemberRoleFixtures extends Fixture implements DependentFixtureInterface
 
         // Member Role 12: Mike Johnson as Developer in Analytics Project
         $memberRole12 = new MemberRole();
-        $memberRole12->setMember($this->getReference('member-mjohnson-analytics', \App\Entity\Member::class));
+        $memberRole12->setMember($this->getReference('member-mjohnson-frontend', \App\Entity\Member::class));
         $memberRole12->setRole($this->getReference('role-developer', \App\Entity\Role::class));
         $memberRole12->setInheritedFrom(null);
         
@@ -123,7 +123,7 @@ class MemberRoleFixtures extends Fixture implements DependentFixtureInterface
 
         // Member Role 13: Emily Chen as Tester in Analytics Project  
         $memberRole13 = new MemberRole();
-        $memberRole13->setMember($this->getReference('member-echen-analytics', \App\Entity\Member::class));
+        $memberRole13->setMember($this->getReference('member-alee-crm', \App\Entity\Member::class));
         $memberRole13->setRole($this->getReference('role-tester', \App\Entity\Role::class));
         $memberRole13->setInheritedFrom(null);
         
@@ -132,7 +132,7 @@ class MemberRoleFixtures extends Fixture implements DependentFixtureInterface
 
         // Member Role 14: Alice Lee as Reporter in Website Project
         $memberRole14 = new MemberRole();
-        $memberRole14->setMember($this->getReference('member-alee-website', \App\Entity\Member::class));
+        $memberRole14->setMember($this->getReference('member-alee-crm', \App\Entity\Member::class));
         $memberRole14->setRole($this->getReference('role-reporter', \App\Entity\Role::class));
         $memberRole14->setInheritedFrom(null);
         
@@ -141,7 +141,7 @@ class MemberRoleFixtures extends Fixture implements DependentFixtureInterface
 
         // Member Role 15: David Brown as Developer in Website Project
         $memberRole15 = new MemberRole();
-        $memberRole15->setMember($this->getReference('member-dbrown-website', \App\Entity\Member::class));
+        $memberRole15->setMember($this->getReference('member-dbrown-docs', \App\Entity\Member::class));
         $memberRole15->setRole($this->getReference('role-developer', \App\Entity\Role::class));
         $memberRole15->setInheritedFrom(null);
         
@@ -150,7 +150,7 @@ class MemberRoleFixtures extends Fixture implements DependentFixtureInterface
 
         // Member Role 16: Robert Wilson as Manager in Infrastructure Project
         $memberRole16 = new MemberRole();
-        $memberRole16->setMember($this->getReference('member-rwilson-infrastructure', \App\Entity\Member::class));
+        $memberRole16->setMember($this->getReference('member-jsmith-backend', \App\Entity\Member::class));
         $memberRole16->setRole($this->getReference('role-manager', \App\Entity\Role::class));
         $memberRole16->setInheritedFrom(null);
         
@@ -159,7 +159,7 @@ class MemberRoleFixtures extends Fixture implements DependentFixtureInterface
 
         // Member Role 17: Linda Davis as Developer in Research Project
         $memberRole17 = new MemberRole();
-        $memberRole17->setMember($this->getReference('member-ldavis-research', \App\Entity\Member::class));
+        $memberRole17->setMember($this->getReference('member-sgarcia-docs', \App\Entity\Member::class));
         $memberRole17->setRole($this->getReference('role-developer', \App\Entity\Role::class));
         $memberRole17->setInheritedFrom(null);
         
@@ -170,7 +170,7 @@ class MemberRoleFixtures extends Fixture implements DependentFixtureInterface
         $memberRole18 = new MemberRole();
         $memberRole18->setMember($this->getReference('member-mjohnson-ecommerce', \App\Entity\Member::class));
         $memberRole18->setRole($this->getReference('role-tester', \App\Entity\Role::class));
-        $memberRole18->setInheritedFrom($this->getReference('member-mjohnson-analytics', \App\Entity\Member::class));
+        $memberRole18->setInheritedFrom($this->getReference('member-mjohnson-frontend', \App\Entity\Member::class));
         
         $manager->persist($memberRole18);
         $this->addReference('member-role-mjohnson-inherited', $memberRole18);

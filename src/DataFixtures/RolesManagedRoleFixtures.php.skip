@@ -39,35 +39,35 @@ class RolesManagedRoleFixtures extends Fixture implements DependentFixtureInterf
 
         // Admin can manage Manager role
         $managedRole4 = new RolesManagedRole();
-        $managedRole4->setRole($this->getReference('role-admin', \App\Entity\Role::class));
+        $managedRole4->setRole($this->getReference('role-manager', \App\Entity\Role::class));
         $managedRole4->setManagedRole($this->getReference('role-manager', \App\Entity\Role::class));
         
         $manager->persist($managedRole4);
-        $this->addReference('managed-role-admin-manager', $managedRole4);
+        $this->addReference('managed-role-manager-manager', $managedRole4);
 
         // Admin can manage Developer role
         $managedRole5 = new RolesManagedRole();
-        $managedRole5->setRole($this->getReference('role-admin', \App\Entity\Role::class));
+        $managedRole5->setRole($this->getReference('role-manager', \App\Entity\Role::class));
         $managedRole5->setManagedRole($this->getReference('role-developer', \App\Entity\Role::class));
         
         $manager->persist($managedRole5);
-        $this->addReference('managed-role-admin-developer', $managedRole5);
+        $this->addReference('managed-role-manager-developer', $managedRole5);
 
         // Admin can manage Tester role
         $managedRole6 = new RolesManagedRole();
-        $managedRole6->setRole($this->getReference('role-admin', \App\Entity\Role::class));
+        $managedRole6->setRole($this->getReference('role-manager', \App\Entity\Role::class));
         $managedRole6->setManagedRole($this->getReference('role-tester', \App\Entity\Role::class));
         
         $manager->persist($managedRole6);
-        $this->addReference('managed-role-admin-tester', $managedRole6);
+        $this->addReference('managed-role-manager-tester', $managedRole6);
 
         // Admin can manage Reporter role
         $managedRole7 = new RolesManagedRole();
-        $managedRole7->setRole($this->getReference('role-admin', \App\Entity\Role::class));
+        $managedRole7->setRole($this->getReference('role-manager', \App\Entity\Role::class));
         $managedRole7->setManagedRole($this->getReference('role-reporter', \App\Entity\Role::class));
         
         $manager->persist($managedRole7);
-        $this->addReference('managed-role-admin-reporter', $managedRole7);
+        $this->addReference('managed-role-manager-reporter', $managedRole7);
 
         // Developer can manage Reporter role (in some cases, senior devs can assign reporter roles)
         $managedRole8 = new RolesManagedRole();

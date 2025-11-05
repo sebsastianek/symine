@@ -25,7 +25,7 @@ class RepositoryFixtures extends Fixture implements DependentFixtureInterface
         $repo1->setLogEncoding('UTF-8');
         $repo1->setExtraInfo('Frontend React application repository');
         $repo1->setIdentifier('frontend-repo');
-        $repo1->setIsDefault(1);
+        $repo1->setIsDefault(true);
         $repo1->setCreatedOn(new \DateTime('2024-01-05 11:30:00'));
         
         $manager->persist($repo1);
@@ -43,7 +43,7 @@ class RepositoryFixtures extends Fixture implements DependentFixtureInterface
         $repo2->setLogEncoding('UTF-8');
         $repo2->setExtraInfo('Backend API repository');
         $repo2->setIdentifier('backend-repo');
-        $repo2->setIsDefault(1);
+        $repo2->setIsDefault(true);
         $repo2->setCreatedOn(new \DateTime('2024-01-05 12:00:00'));
         
         $manager->persist($repo2);
@@ -61,7 +61,7 @@ class RepositoryFixtures extends Fixture implements DependentFixtureInterface
         $repo3->setLogEncoding('UTF-8');
         $repo3->setExtraInfo('React Native mobile application repository');
         $repo3->setIdentifier('mobile-repo');
-        $repo3->setIsDefault(1);
+        $repo3->setIsDefault(true);
         $repo3->setCreatedOn(new \DateTime('2024-02-01 14:30:00'));
         
         $manager->persist($repo3);
@@ -79,7 +79,7 @@ class RepositoryFixtures extends Fixture implements DependentFixtureInterface
         $repo4->setLogEncoding('UTF-8');
         $repo4->setExtraInfo('Customer relationship management system repository');
         $repo4->setIdentifier('crm-repo');
-        $repo4->setIsDefault(1);
+        $repo4->setIsDefault(true);
         $repo4->setCreatedOn(new \DateTime('2024-01-15 14:00:00'));
         
         $manager->persist($repo4);
@@ -97,7 +97,7 @@ class RepositoryFixtures extends Fixture implements DependentFixtureInterface
         $repo5->setLogEncoding('UTF-8');
         $repo5->setExtraInfo('Project documentation and guides repository');
         $repo5->setIdentifier('docs-repo');
-        $repo5->setIsDefault(1);
+        $repo5->setIsDefault(true);
         $repo5->setCreatedOn(new \DateTime('2024-02-10 17:15:00'));
         
         $manager->persist($repo5);

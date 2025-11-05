@@ -25,11 +25,11 @@ class AuthSourceFixtures extends Fixture
         $auth1->setAttrFirstname('givenName');
         $auth1->setAttrLastname('sn');
         $auth1->setAttrMail('mail');
-        $auth1->setOntheflyRegister(1);
-        $auth1->setTls(1);
+        $auth1->setOntheflyRegister(true);
+        $auth1->setTls(true);
         $auth1->setFilter('(&(objectClass=user)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))');
         $auth1->setTimeout(10);
-        $auth1->setVerifyPeer(1);
+        $auth1->setVerifyPeer(true);
         
         $manager->persist($auth1);
         $this->addReference('auth-source-ad', $auth1);
@@ -47,11 +47,11 @@ class AuthSourceFixtures extends Fixture
         $auth2->setAttrFirstname('givenName');
         $auth2->setAttrLastname('sn');
         $auth2->setAttrMail('mail');
-        $auth2->setOntheflyRegister(1);
-        $auth2->setTls(0);
+        $auth2->setOntheflyRegister(true);
+        $auth2->setTls(false);
         $auth2->setFilter('(objectClass=person)');
         $auth2->setTimeout(5);
-        $auth2->setVerifyPeer(0);
+        $auth2->setVerifyPeer(false);
         
         $manager->persist($auth2);
         $this->addReference('auth-source-openldap', $auth2);
@@ -69,11 +69,11 @@ class AuthSourceFixtures extends Fixture
         $auth3->setAttrFirstname('givenName');
         $auth3->setAttrLastname('sn');
         $auth3->setAttrMail('mail');
-        $auth3->setOntheflyRegister(0); // Manual user creation required
-        $auth3->setTls(1);
+        $auth3->setOntheflyRegister(false); // Manual user creation required
+        $auth3->setTls(true);
         $auth3->setFilter('(objectClass=person)');
         $auth3->setTimeout(15);
-        $auth3->setVerifyPeer(1);
+        $auth3->setVerifyPeer(true);
         
         $manager->persist($auth3);
         $this->addReference('auth-source-google', $auth3);
@@ -91,11 +91,11 @@ class AuthSourceFixtures extends Fixture
         $auth4->setAttrFirstname('givenName');
         $auth4->setAttrLastname('sn');
         $auth4->setAttrMail('mail');
-        $auth4->setOntheflyRegister(1);
-        $auth4->setTls(0);
+        $auth4->setOntheflyRegister(true);
+        $auth4->setTls(false);
         $auth4->setFilter('(objectClass=inetOrgPerson)');
         $auth4->setTimeout(30);
-        $auth4->setVerifyPeer(0);
+        $auth4->setVerifyPeer(false);
         
         $manager->persist($auth4);
         $this->addReference('auth-source-dev', $auth4);
@@ -113,11 +113,11 @@ class AuthSourceFixtures extends Fixture
         $auth5->setAttrFirstname('givenName');
         $auth5->setAttrLastname('sn');
         $auth5->setAttrMail('mail');
-        $auth5->setOntheflyRegister(0); // Manual approval required for external users
-        $auth5->setTls(1);
+        $auth5->setOntheflyRegister(false); // Manual approval required for external users
+        $auth5->setTls(true);
         $auth5->setFilter('(&(objectClass=user)(department=External))');
         $auth5->setTimeout(20);
-        $auth5->setVerifyPeer(1);
+        $auth5->setVerifyPeer(true);
         
         $manager->persist($auth5);
         $this->addReference('auth-source-partner', $auth5);

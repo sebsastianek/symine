@@ -24,7 +24,8 @@ class MemberFixtures extends Fixture implements DependentFixtureInterface
         $member1->setCreatedOn(new \DateTime('2024-01-02 10:00:00'));
         
         $manager->persist($member1);
-        
+        $this->addReference('member-jsmith-ecommerce', $member1);
+
         $memberRole1 = new MemberRole();
         $memberRole1->setMember($member1);
         $memberRole1->setRole($this->getReference('role-manager', \App\Entity\Role::class));
@@ -41,7 +42,8 @@ class MemberFixtures extends Fixture implements DependentFixtureInterface
         $member2->setCreatedOn(new \DateTime('2024-01-20 14:15:00'));
         
         $manager->persist($member2);
-        
+        $this->addReference('member-mjohnson-ecommerce', $member2);
+
         $memberRole2 = new MemberRole();
         $memberRole2->setMember($member2);
         $memberRole2->setRole($this->getReference('role-developer', \App\Entity\Role::class));
@@ -58,7 +60,8 @@ class MemberFixtures extends Fixture implements DependentFixtureInterface
         $member3->setCreatedOn(new \DateTime('2024-02-01 11:45:00'));
         
         $manager->persist($member3);
-        
+        $this->addReference('member-sgarcia-ecommerce', $member3);
+
         $memberRole3 = new MemberRole();
         $memberRole3->setMember($member3);
         $memberRole3->setRole($this->getReference('role-developer', \App\Entity\Role::class));
@@ -75,7 +78,8 @@ class MemberFixtures extends Fixture implements DependentFixtureInterface
         $member4->setCreatedOn(new \DateTime('2024-02-10 16:20:00'));
         
         $manager->persist($member4);
-        
+        $this->addReference('member-dbrown-ecommerce', $member4);
+
         $memberRole4 = new MemberRole();
         $memberRole4->setMember($member4);
         $memberRole4->setRole($this->getReference('role-tester', \App\Entity\Role::class));
@@ -94,7 +98,8 @@ class MemberFixtures extends Fixture implements DependentFixtureInterface
         $member5->setCreatedOn(new \DateTime('2024-01-20 14:15:00'));
         
         $manager->persist($member5);
-        
+        $this->addReference('member-mjohnson-frontend', $member5);
+
         $memberRole5 = new MemberRole();
         $memberRole5->setMember($member5);
         $memberRole5->setRole($this->getReference('role-developer', \App\Entity\Role::class));
@@ -111,7 +116,8 @@ class MemberFixtures extends Fixture implements DependentFixtureInterface
         $member6->setCreatedOn(new \DateTime('2024-02-01 11:45:00'));
         
         $manager->persist($member6);
-        
+        $this->addReference('member-sgarcia-frontend', $member6);
+
         $memberRole6 = new MemberRole();
         $memberRole6->setMember($member6);
         $memberRole6->setRole($this->getReference('role-developer', \App\Entity\Role::class));
@@ -130,7 +136,8 @@ class MemberFixtures extends Fixture implements DependentFixtureInterface
         $member7->setCreatedOn(new \DateTime('2024-01-05 11:00:00'));
         
         $manager->persist($member7);
-        
+        $this->addReference('member-jsmith-backend', $member7);
+
         $memberRole7 = new MemberRole();
         $memberRole7->setMember($member7);
         $memberRole7->setRole($this->getReference('role-manager', \App\Entity\Role::class));
@@ -147,7 +154,8 @@ class MemberFixtures extends Fixture implements DependentFixtureInterface
         $member8->setCreatedOn(new \DateTime('2024-01-20 14:15:00'));
         
         $manager->persist($member8);
-        
+        $this->addReference('member-mjohnson-backend', $member8);
+
         $memberRole8 = new MemberRole();
         $memberRole8->setMember($member8);
         $memberRole8->setRole($this->getReference('role-developer', \App\Entity\Role::class));
@@ -166,7 +174,8 @@ class MemberFixtures extends Fixture implements DependentFixtureInterface
         $member9->setCreatedOn(new \DateTime('2024-01-15 13:20:00'));
         
         $manager->persist($member9);
-        
+        $this->addReference('member-jsmith-crm', $member9);
+
         $memberRole9 = new MemberRole();
         $memberRole9->setMember($member9);
         $memberRole9->setRole($this->getReference('role-manager', \App\Entity\Role::class));
@@ -183,7 +192,8 @@ class MemberFixtures extends Fixture implements DependentFixtureInterface
         $member10->setCreatedOn(new \DateTime('2024-02-01 11:45:00'));
         
         $manager->persist($member10);
-        
+        $this->addReference('member-sgarcia-crm', $member10);
+
         $memberRole10 = new MemberRole();
         $memberRole10->setMember($member10);
         $memberRole10->setRole($this->getReference('role-developer', \App\Entity\Role::class));
@@ -200,7 +210,8 @@ class MemberFixtures extends Fixture implements DependentFixtureInterface
         $member11->setCreatedOn(new \DateTime('2024-02-15 13:10:00'));
         
         $manager->persist($member11);
-        
+        $this->addReference('member-alee-crm', $member11);
+
         $memberRole11 = new MemberRole();
         $memberRole11->setMember($member11);
         $memberRole11->setRole($this->getReference('role-client', \App\Entity\Role::class));
@@ -219,7 +230,8 @@ class MemberFixtures extends Fixture implements DependentFixtureInterface
         $member12->setCreatedOn(new \DateTime('2024-02-10 16:45:00'));
         
         $manager->persist($member12);
-        
+        $this->addReference('member-jsmith-docs', $member12);
+
         $memberRole12 = new MemberRole();
         $memberRole12->setMember($member12);
         $memberRole12->setRole($this->getReference('role-manager', \App\Entity\Role::class));
@@ -236,7 +248,8 @@ class MemberFixtures extends Fixture implements DependentFixtureInterface
         $member13->setCreatedOn(new \DateTime('2024-02-18 10:00:00'));
         
         $manager->persist($member13);
-        
+        $this->addReference('member-mjohnson-docs', $member13);
+
         $memberRole13 = new MemberRole();
         $memberRole13->setMember($member13);
         $memberRole13->setRole($this->getReference('role-reporter', \App\Entity\Role::class));
@@ -253,7 +266,8 @@ class MemberFixtures extends Fixture implements DependentFixtureInterface
         $member14->setCreatedOn(new \DateTime('2024-02-20 09:00:00'));
         
         $manager->persist($member14);
-        
+        $this->addReference('member-sgarcia-docs', $member14);
+
         $memberRole14 = new MemberRole();
         $memberRole14->setMember($member14);
         $memberRole14->setRole($this->getReference('role-viewer', \App\Entity\Role::class));
@@ -269,7 +283,8 @@ class MemberFixtures extends Fixture implements DependentFixtureInterface
         $member15->setCreatedOn(new \DateTime('2024-02-20 09:00:00'));
         
         $manager->persist($member15);
-        
+        $this->addReference('member-dbrown-docs', $member15);
+
         $memberRole15 = new MemberRole();
         $memberRole15->setMember($member15);
         $memberRole15->setRole($this->getReference('role-viewer', \App\Entity\Role::class));
