@@ -76,8 +76,8 @@ class Journal
     /**
      * Property privateNotes
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    private int $privateNotes = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $privateNotes = false;
 
     /**
      * Getter for id
@@ -213,14 +213,15 @@ class Journal
     /**
      * Getter for privateNotes
      */
-    public function getPrivateNotes(): int    {
+    public function getPrivateNotes(): bool
+    {
         return $this->privateNotes;
     }
 
     /**
      * Setter for privateNotes
      */
-    public function setPrivateNotes(int $privateNotes): static
+    public function setPrivateNotes(bool $privateNotes): static
     {
         $this->privateNotes = $privateNotes;
         return $this;

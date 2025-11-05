@@ -40,14 +40,14 @@ class EmailAddress
     /**
      * Property isDefault
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    private int $isDefault = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isDefault = false;
 
     /**
      * Property notify
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '1'])]
-    private int $notify = 1;
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $notify = true;
 
     /**
      * Property createdOn
@@ -113,14 +113,15 @@ class EmailAddress
     /**
      * Getter for isDefault
      */
-    public function getIsDefault(): int    {
+    public function getIsDefault(): bool
+    {
         return $this->isDefault;
     }
 
     /**
      * Setter for isDefault
      */
-    public function setIsDefault(int $isDefault): static
+    public function setIsDefault(bool $isDefault): static
     {
         $this->isDefault = $isDefault;
         return $this;
@@ -129,14 +130,15 @@ class EmailAddress
     /**
      * Getter for notify
      */
-    public function getNotify(): int    {
+    public function getNotify(): bool
+    {
         return $this->notify;
     }
 
     /**
      * Setter for notify
      */
-    public function setNotify(int $notify): static
+    public function setNotify(bool $notify): static
     {
         $this->notify = $notify;
         return $this;

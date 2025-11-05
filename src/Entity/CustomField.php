@@ -68,20 +68,20 @@ class CustomField
     /**
      * Property isRequired
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    private int $isRequired = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isRequired = false;
 
     /**
      * Property isForAll
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    private int $isForAll = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isForAll = false;
 
     /**
      * Property isFilter
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '0'])]
-    private int $isFilter = 0;
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $isFilter = false;
 
     /**
      * Property position
@@ -92,8 +92,8 @@ class CustomField
     /**
      * Property searchable
      */
-    #[ORM\Column(type: 'boolean', nullable: true, options: ['default' => '0'])]
-    private ?int $searchable = 0;
+    #[ORM\Column(type: 'boolean', nullable: true, options: ['default' => false])]
+    private ?bool $searchable = false;
 
     /**
      * Property defaultValue
@@ -104,20 +104,20 @@ class CustomField
     /**
      * Property editable
      */
-    #[ORM\Column(type: 'boolean', nullable: true, options: ['default' => '1'])]
-    private ?int $editable = 1;
+    #[ORM\Column(type: 'boolean', nullable: true, options: ['default' => true])]
+    private ?bool $editable = true;
 
     /**
      * Property visible
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '1'])]
-    private int $visible = 1;
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $visible = true;
 
     /**
      * Property multiple
      */
-    #[ORM\Column(type: 'boolean', nullable: true, options: ['default' => '0'])]
-    private ?int $multiple = 0;
+    #[ORM\Column(type: 'boolean', nullable: true, options: ['default' => false])]
+    private ?bool $multiple = false;
 
     /**
      * Property formatStore
@@ -262,14 +262,15 @@ class CustomField
     /**
      * Getter for isRequired
      */
-    public function getIsRequired(): int    {
+    public function getIsRequired(): bool
+    {
         return $this->isRequired;
     }
 
     /**
      * Setter for isRequired
      */
-    public function setIsRequired(int $isRequired): static
+    public function setIsRequired(bool $isRequired): static
     {
         $this->isRequired = $isRequired;
         return $this;
@@ -278,14 +279,15 @@ class CustomField
     /**
      * Getter for isForAll
      */
-    public function getIsForAll(): int    {
+    public function getIsForAll(): bool
+    {
         return $this->isForAll;
     }
 
     /**
      * Setter for isForAll
      */
-    public function setIsForAll(int $isForAll): static
+    public function setIsForAll(bool $isForAll): static
     {
         $this->isForAll = $isForAll;
         return $this;
@@ -294,14 +296,15 @@ class CustomField
     /**
      * Getter for isFilter
      */
-    public function getIsFilter(): int    {
+    public function getIsFilter(): bool
+    {
         return $this->isFilter;
     }
 
     /**
      * Setter for isFilter
      */
-    public function setIsFilter(int $isFilter): static
+    public function setIsFilter(bool $isFilter): static
     {
         $this->isFilter = $isFilter;
         return $this;
@@ -326,14 +329,15 @@ class CustomField
     /**
      * Getter for searchable
      */
-    public function getSearchable(): ?int    {
+    public function getSearchable(): ?bool
+    {
         return $this->searchable;
     }
 
     /**
      * Setter for searchable
      */
-    public function setSearchable(?int $searchable): static
+    public function setSearchable(?bool $searchable): static
     {
         $this->searchable = $searchable;
         return $this;
@@ -358,14 +362,15 @@ class CustomField
     /**
      * Getter for editable
      */
-    public function getEditable(): ?int    {
+    public function getEditable(): ?bool
+    {
         return $this->editable;
     }
 
     /**
      * Setter for editable
      */
-    public function setEditable(?int $editable): static
+    public function setEditable(?bool $editable): static
     {
         $this->editable = $editable;
         return $this;
@@ -374,14 +379,15 @@ class CustomField
     /**
      * Getter for visible
      */
-    public function getVisible(): int    {
+    public function getVisible(): bool
+    {
         return $this->visible;
     }
 
     /**
      * Setter for visible
      */
-    public function setVisible(int $visible): static
+    public function setVisible(bool $visible): static
     {
         $this->visible = $visible;
         return $this;
@@ -390,14 +396,15 @@ class CustomField
     /**
      * Getter for multiple
      */
-    public function getMultiple(): ?int    {
+    public function getMultiple(): ?bool
+    {
         return $this->multiple;
     }
 
     /**
      * Setter for multiple
      */
-    public function setMultiple(?int $multiple): static
+    public function setMultiple(?bool $multiple): static
     {
         $this->multiple = $multiple;
         return $this;

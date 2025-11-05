@@ -40,8 +40,8 @@ class Role
     /**
      * Property assignable
      */
-    #[ORM\Column(type: 'boolean', nullable: true, options: ['default' => '1'])]
-    private ?int $assignable = 1;
+    #[ORM\Column(type: 'boolean', nullable: true, options: ['default' => true])]
+    private ?bool $assignable = true;
 
     /**
      * Property builtin
@@ -76,8 +76,8 @@ class Role
     /**
      * Property allRolesManaged
      */
-    #[ORM\Column(type: 'boolean', options: ['default' => '1'])]
-    private int $allRolesManaged = 1;
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $allRolesManaged = true;
 
     /**
      * Property settings
@@ -142,14 +142,15 @@ class Role
     /**
      * Getter for assignable
      */
-    public function getAssignable(): ?int    {
+    public function getAssignable(): ?bool
+    {
         return $this->assignable;
     }
 
     /**
      * Setter for assignable
      */
-    public function setAssignable(?int $assignable): static
+    public function setAssignable(?bool $assignable): static
     {
         $this->assignable = $assignable;
         return $this;
@@ -238,14 +239,15 @@ class Role
     /**
      * Getter for allRolesManaged
      */
-    public function getAllRolesManaged(): int    {
+    public function getAllRolesManaged(): bool
+    {
         return $this->allRolesManaged;
     }
 
     /**
      * Setter for allRolesManaged
      */
-    public function setAllRolesManaged(int $allRolesManaged): static
+    public function setAllRolesManaged(bool $allRolesManaged): static
     {
         $this->allRolesManaged = $allRolesManaged;
         return $this;
