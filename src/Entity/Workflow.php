@@ -33,16 +33,16 @@ class Workflow
     /**
      * Property oldStatus
      */
-    #[ORM\ManyToOne(targetEntity: IssueStatuse::class)]
+    #[ORM\ManyToOne(targetEntity: IssueStatus::class)]
     #[ORM\JoinColumn(name: 'old_status_id', referencedColumnName: 'id', nullable: false)]
-    private IssueStatuse $oldStatus;
+    private IssueStatus $oldStatus;
 
     /**
      * Property newStatus
      */
-    #[ORM\ManyToOne(targetEntity: IssueStatuse::class)]
+    #[ORM\ManyToOne(targetEntity: IssueStatus::class)]
     #[ORM\JoinColumn(name: 'new_status_id', referencedColumnName: 'id', nullable: false)]
-    private IssueStatuse $newStatus;
+    private IssueStatus $newStatus;
 
     /**
      * Property role
@@ -117,7 +117,7 @@ class Workflow
     /**
      * Getter for oldStatus
      */
-    public function getOldStatus(): IssueStatuse
+    public function getOldStatus(): IssueStatus
     {
         return $this->oldStatus;
     }
@@ -125,7 +125,7 @@ class Workflow
     /**
      * Setter for oldStatus
      */
-    public function setOldStatus(IssueStatuse $oldStatus): static
+    public function setOldStatus(IssueStatus $oldStatus): static
     {
         $this->oldStatus = $oldStatus;
         return $this;
@@ -134,7 +134,7 @@ class Workflow
     /**
      * Getter for newStatus
      */
-    public function getNewStatus(): IssueStatuse
+    public function getNewStatus(): IssueStatus
     {
         return $this->newStatus;
     }
@@ -142,7 +142,7 @@ class Workflow
     /**
      * Setter for newStatus
      */
-    public function setNewStatus(IssueStatuse $newStatus): static
+    public function setNewStatus(IssueStatus $newStatus): static
     {
         $this->newStatus = $newStatus;
         return $this;

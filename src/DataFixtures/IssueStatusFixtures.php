@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\DataFixtures;
 
-use App\Entity\IssueStatuse;
+use App\Entity\IssueStatus;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 
@@ -13,7 +13,7 @@ class IssueStatusFixtures extends Fixture
     public function load(ObjectManager $manager): void
     {
         // Create New status
-        $new = new IssueStatuse();
+        $new = new IssueStatus();
         $new->setName('New');
         $new->setIsClosed(0);
         $new->setPosition(1);
@@ -23,7 +23,7 @@ class IssueStatusFixtures extends Fixture
         $this->addReference('status-new', $new);
 
         // Create In Progress status
-        $inProgress = new IssueStatuse();
+        $inProgress = new IssueStatus();
         $inProgress->setName('In Progress');
         $inProgress->setIsClosed(0);
         $inProgress->setPosition(2);
@@ -33,7 +33,7 @@ class IssueStatusFixtures extends Fixture
         $this->addReference('status-in-progress', $inProgress);
 
         // Create Under Review status
-        $underReview = new IssueStatuse();
+        $underReview = new IssueStatus();
         $underReview->setName('Under Review');
         $underReview->setIsClosed(0);
         $underReview->setPosition(3);
@@ -43,7 +43,7 @@ class IssueStatusFixtures extends Fixture
         $this->addReference('status-under-review', $underReview);
 
         // Create Testing status
-        $testing = new IssueStatuse();
+        $testing = new IssueStatus();
         $testing->setName('Testing');
         $testing->setIsClosed(0);
         $testing->setPosition(4);
@@ -53,7 +53,7 @@ class IssueStatusFixtures extends Fixture
         $this->addReference('status-testing', $testing);
 
         // Create Resolved status
-        $resolved = new IssueStatuse();
+        $resolved = new IssueStatus();
         $resolved->setName('Resolved');
         $resolved->setIsClosed(1);
         $resolved->setPosition(5);
@@ -63,7 +63,7 @@ class IssueStatusFixtures extends Fixture
         $this->addReference('status-resolved', $resolved);
 
         // Create Closed status
-        $closed = new IssueStatuse();
+        $closed = new IssueStatus();
         $closed->setName('Closed');
         $closed->setIsClosed(1);
         $closed->setPosition(6);
@@ -73,7 +73,7 @@ class IssueStatusFixtures extends Fixture
         $this->addReference('status-closed', $closed);
 
         // Create Rejected status
-        $rejected = new IssueStatuse();
+        $rejected = new IssueStatus();
         $rejected->setName('Rejected');
         $rejected->setIsClosed(1);
         $rejected->setPosition(7);
@@ -83,7 +83,7 @@ class IssueStatusFixtures extends Fixture
         $this->addReference('status-rejected', $rejected);
 
         // Create On Hold status
-        $onHold = new IssueStatuse();
+        $onHold = new IssueStatus();
         $onHold->setName('On Hold');
         $onHold->setIsClosed(0);
         $onHold->setPosition(8);
@@ -93,7 +93,7 @@ class IssueStatusFixtures extends Fixture
         $this->addReference('status-on-hold', $onHold);
 
         // Create Needs Information status
-        $needsInfo = new IssueStatuse();
+        $needsInfo = new IssueStatus();
         $needsInfo->setName('Needs Information');
         $needsInfo->setIsClosed(0);
         $needsInfo->setPosition(9);
@@ -103,7 +103,7 @@ class IssueStatusFixtures extends Fixture
         $this->addReference('status-needs-info', $needsInfo);
 
         // Create Duplicate status
-        $duplicate = new IssueStatuse();
+        $duplicate = new IssueStatus();
         $duplicate->setName('Duplicate');
         $duplicate->setIsClosed(1);
         $duplicate->setPosition(10);

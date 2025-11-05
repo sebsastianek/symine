@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
-use App\Repository\IssueStatuseRepository;
+use App\Repository\IssueStatusRepository;
 
 /**
- * IssueStatuse.
+ * IssueStatus.
  * Table: issue_statuses
  */
-#[ORM\Entity(repositoryClass: IssueStatuseRepository::class)]
+#[ORM\Entity(repositoryClass: IssueStatusRepository::class)]
 #[ORM\Table(name: 'issue_statuses')]
-class IssueStatuse
+class IssueStatus
 {
     /**
      * Property id

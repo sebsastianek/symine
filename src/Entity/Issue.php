@@ -67,9 +67,9 @@ class Issue
     /**
      * Property status
      */
-    #[ORM\ManyToOne(targetEntity: IssueStatuse::class)]
+    #[ORM\ManyToOne(targetEntity: IssueStatus::class)]
     #[ORM\JoinColumn(name: 'status_id', referencedColumnName: 'id', nullable: false)]
-    private IssueStatuse $status;
+    private IssueStatus $status;
 
     /**
      * Property assignedTo
@@ -302,7 +302,7 @@ class Issue
     /**
      * Getter for status
      */
-    public function getStatus(): IssueStatuse
+    public function getStatus(): IssueStatus
     {
         return $this->status;
     }
@@ -310,7 +310,7 @@ class Issue
     /**
      * Setter for status
      */
-    public function setStatus(IssueStatuse $status): static
+    public function setStatus(IssueStatus $status): static
     {
         $this->status = $status;
         return $this;

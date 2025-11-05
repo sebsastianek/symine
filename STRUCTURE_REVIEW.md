@@ -616,7 +616,7 @@ The project has successfully replicated **Redmine's comprehensive database struc
 2. **No Migration Path**: No database migrations created
 3. **Polymorphic Relationships**: Not fully implemented in Doctrine
 4. **Type Inconsistency**: Some boolean fields are `int` (0/1) instead of `bool`
-5. **Entity Name Typo**: `IssueStatuse` should be `IssueStatus`
+5. ~~**Entity Name Typo**: `IssueStatuse` should be `IssueStatus`~~ ✅ **FIXED**
 6. **Missing Associations**: Some inverse sides of relationships not mapped
 7. **No Service Layer**: Business logic should be in services, not controllers
 8. **No Repository Methods**: Custom queries not implemented

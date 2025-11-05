@@ -19,7 +19,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue1->setDescription('Implement user authentication with login, logout, and session management. Include password hashing and security features.');
         $issue1->setProject($this->getReference('project-backend', \App\Entity\Project::class));
         $issue1->setTracker($this->getReference('tracker-feature', \App\Entity\Tracker::class));
-        $issue1->setStatus($this->getReference('status-resolved', \App\Entity\IssueStatuse::class));
+        $issue1->setStatus($this->getReference('status-resolved', \App\Entity\IssueStatus::class));
         $issue1->setPriority($this->getReference('priority-high', \App\Entity\Enumeration::class));
         $issue1->setAuthor($this->getReference('user-jsmith', \App\Entity\User::class));
         $issue1->setAssignedTo($this->getReference('user-mjohnson', \App\Entity\User::class));
@@ -41,7 +41,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue2->setDescription('Create a mobile-responsive layout for the main application interface. Include navigation, sidebar, and content areas.');
         $issue2->setProject($this->getReference('project-frontend', \App\Entity\Project::class));
         $issue2->setTracker($this->getReference('tracker-task', \App\Entity\Tracker::class));
-        $issue2->setStatus($this->getReference('status-in-progress', \App\Entity\IssueStatuse::class));
+        $issue2->setStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $issue2->setPriority($this->getReference('priority-normal', \App\Entity\Enumeration::class));
         $issue2->setAuthor($this->getReference('user-jsmith', \App\Entity\User::class));
         $issue2->setAssignedTo($this->getReference('user-sgarcia', \App\Entity\User::class));
@@ -62,7 +62,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue3->setDescription('The client-side validation for the login form is not functioning correctly. Empty fields are allowed to be submitted.');
         $issue3->setProject($this->getReference('project-frontend', \App\Entity\Project::class));
         $issue3->setTracker($this->getReference('tracker-bug', \App\Entity\Tracker::class));
-        $issue3->setStatus($this->getReference('status-testing', \App\Entity\IssueStatuse::class));
+        $issue3->setStatus($this->getReference('status-testing', \App\Entity\IssueStatus::class));
         $issue3->setPriority($this->getReference('priority-urgent', \App\Entity\Enumeration::class));
         $issue3->setAuthor($this->getReference('user-dbrown', \App\Entity\User::class));
         $issue3->setAssignedTo($this->getReference('user-sgarcia', \App\Entity\User::class));
@@ -83,7 +83,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue4->setDescription('Create a cross-platform mobile application for iOS and Android using React Native.');
         $issue4->setProject($this->getReference('project-mobile', \App\Entity\Project::class));
         $issue4->setTracker($this->getReference('tracker-feature', \App\Entity\Tracker::class));
-        $issue4->setStatus($this->getReference('status-in-progress', \App\Entity\IssueStatuse::class));
+        $issue4->setStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $issue4->setPriority($this->getReference('priority-high', \App\Entity\Enumeration::class));
         $issue4->setAuthor($this->getReference('user-jsmith', \App\Entity\User::class));
         $issue4->setAssignedTo($this->getReference('user-mjohnson', \App\Entity\User::class));
@@ -104,7 +104,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue5->setDescription('Initialize React Native project with proper folder structure, navigation, and basic components.');
         $issue5->setProject($this->getReference('project-mobile', \App\Entity\Project::class));
         $issue5->setTracker($this->getReference('tracker-task', \App\Entity\Tracker::class));
-        $issue5->setStatus($this->getReference('status-resolved', \App\Entity\IssueStatuse::class));
+        $issue5->setStatus($this->getReference('status-resolved', \App\Entity\IssueStatus::class));
         $issue5->setPriority($this->getReference('priority-normal', \App\Entity\Enumeration::class));
         $issue5->setAuthor($this->getReference('user-mjohnson', \App\Entity\User::class));
         $issue5->setAssignedTo($this->getReference('user-mjohnson', \App\Entity\User::class));
@@ -127,7 +127,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue6->setDescription('Create interface for managing customer contacts with CRUD operations, search, and filtering capabilities.');
         $issue6->setProject($this->getReference('project-crm', \App\Entity\Project::class));
         $issue6->setTracker($this->getReference('tracker-feature', \App\Entity\Tracker::class));
-        $issue6->setStatus($this->getReference('status-new', \App\Entity\IssueStatuse::class));
+        $issue6->setStatus($this->getReference('status-new', \App\Entity\IssueStatus::class));
         $issue6->setPriority($this->getReference('priority-normal', \App\Entity\Enumeration::class));
         $issue6->setAuthor($this->getReference('user-alee', \App\Entity\User::class));
         $issue6->setAssignedTo($this->getReference('user-sgarcia', \App\Entity\User::class));
@@ -148,7 +148,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue7->setDescription('Document all REST API endpoints with examples, request/response formats, and authentication requirements.');
         $issue7->setProject($this->getReference('project-docs', \App\Entity\Project::class));
         $issue7->setTracker($this->getReference('tracker-documentation', \App\Entity\Tracker::class));
-        $issue7->setStatus($this->getReference('status-under-review', \App\Entity\IssueStatuse::class));
+        $issue7->setStatus($this->getReference('status-under-review', \App\Entity\IssueStatus::class));
         $issue7->setPriority($this->getReference('priority-normal', \App\Entity\Enumeration::class));
         $issue7->setAuthor($this->getReference('user-jsmith', \App\Entity\User::class));
         $issue7->setAssignedTo($this->getReference('user-mjohnson', \App\Entity\User::class));
@@ -169,7 +169,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue8->setDescription('Conduct security assessment of the authentication system and identify potential vulnerabilities.');
         $issue8->setProject($this->getReference('project-backend', \App\Entity\Project::class));
         $issue8->setTracker($this->getReference('tracker-research', \App\Entity\Tracker::class));
-        $issue8->setStatus($this->getReference('status-in-progress', \App\Entity\IssueStatuse::class));
+        $issue8->setStatus($this->getReference('status-in-progress', \App\Entity\IssueStatus::class));
         $issue8->setPriority($this->getReference('priority-urgent', \App\Entity\Enumeration::class));
         $issue8->setAuthor($this->getReference('user-admin', \App\Entity\User::class));
         $issue8->setAssignedTo($this->getReference('user-jsmith', \App\Entity\User::class));
@@ -190,7 +190,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue9->setDescription('Customer reports they cannot log in with their credentials. Need to investigate account status and password reset functionality.');
         $issue9->setProject($this->getReference('project-ecommerce', \App\Entity\Project::class));
         $issue9->setTracker($this->getReference('tracker-support', \App\Entity\Tracker::class));
-        $issue9->setStatus($this->getReference('status-needs-info', \App\Entity\IssueStatuse::class));
+        $issue9->setStatus($this->getReference('status-needs-info', \App\Entity\IssueStatus::class));
         $issue9->setPriority($this->getReference('priority-high', \App\Entity\Enumeration::class));
         $issue9->setAuthor($this->getReference('user-alee', \App\Entity\User::class));
         $issue9->setAssignedTo($this->getReference('user-dbrown', \App\Entity\User::class));
@@ -211,7 +211,7 @@ class IssueFixtures extends Fixture implements DependentFixtureInterface
         $issue10->setDescription('Integrate Stripe payment gateway for processing customer payments. Waiting for API access approval.');
         $issue10->setProject($this->getReference('project-ecommerce', \App\Entity\Project::class));
         $issue10->setTracker($this->getReference('tracker-feature', \App\Entity\Tracker::class));
-        $issue10->setStatus($this->getReference('status-on-hold', \App\Entity\IssueStatuse::class));
+        $issue10->setStatus($this->getReference('status-on-hold', \App\Entity\IssueStatus::class));
         $issue10->setPriority($this->getReference('priority-high', \App\Entity\Enumeration::class));
         $issue10->setAuthor($this->getReference('user-jsmith', \App\Entity\User::class));
         $issue10->setAssignedTo($this->getReference('user-mjohnson', \App\Entity\User::class));
