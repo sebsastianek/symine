@@ -1,0 +1,6 @@
+{% if current_user().isLogged() and path_exists('projects_autocomplete') %}
+<div id="project-jump" class="drdn"><span class="drdn-trigger">{{ project ? project.name : l('label_jump_to_a_project') }}</span>
+<div class="drdn-content"><div class="quick-search">{{ sprite_icon('search') }}<input type="text" name="q" id="projects-quick-search" value="" class="autocomplete" data-automcomplete-url="{{ path('projects_autocomplete', {jump: main_menu_selected ?? ''}) }}" autocomplete="off" /></div>
+<div class="drdn-items projects selection"></div>
+<div class="drdn-items all-projects selection"><a class="selected" href="{{ path('projects_index', {jump: main_menu_selected ?? ''}) }}">{{ l('label_project_all') }}</a></div></div></div>
+{% endif %}

@@ -1,0 +1,166 @@
+{#- Symine base layout: same markup as Redmine's app/views/layouts/base.html.erb so Redmine stylesheets/scripts apply. -#}
+{%- set user = current_user() -%}
+{%- set project = project ?? null -%}
+{%- set locale = i18n.locale() -%}
+<!DOCTYPE html>
+<html lang="{{ locale }}" dir="{{ l('direction') }}">
+<head>
+<meta charset="utf-8" />
+<title>{% block title %}{% if page_title is defined and page_title %}{{ page_title }} - {% endif %}{% if project %}{{ project.name }} - {% endif %}{% endblock %}{{ settings.appTitle() }}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Symine" />
+<meta name="keywords" content="issue,bug,tracker" />
+<meta name="csrf-param" content="_token" />
+<meta name="csrf-token" content="{{ csrf_token_value() }}" />
+<link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico" />
+<link rel="stylesheet" href="/assets/jquery/jquery-ui-1.13.2.css" media="all" />
+<link rel="stylesheet" href="/assets/tribute-5.1.3.css" media="all" />
+<link rel="stylesheet" href="/assets/application.css" media="all" />
+<link rel="stylesheet" href="/assets/dropdown.css" media="all" />
+<link rel="stylesheet" href="/assets/jstoolbar.css" media="all" />
+<link rel="stylesheet" href="/assets/responsive.css" media="all" />
+{% set theme = settings.string('ui_theme') %}{% if theme %}<link rel="stylesheet" href="/assets/themes/{{ theme }}/application.css" media="all" />{% endif %}
+<script type="importmap">{{ importmap_json() }}</script>
+<script type="module">import "application"</script>
+<script src="/assets/jquery-3.7.1-ui-1.13.3.js"></script>
+<script src="/assets/rails-ujs.js"></script>
+<script src="/assets/tribute-5.1.3.min.js"></script>
+<script src="/assets/application-legacy.js"></script>
+<script src="/assets/responsive.js"></script>
+{% if locale != 'en' %}<script src="/assets/i18n/datepicker-{{ locale }}.js"></script>{% endif %}
+<script>
+//<![CDATA[
+$(window).on('load', function(){ warnLeavingUnsaved({{ l('text_warn_on_leaving_unsaved')|json_encode|raw }}); });
+rm = window.rm || {};rm.I18n = Object.freeze({buttonCopy: {{ l('button_copy')|json_encode|raw }}});
+rm.AutoComplete = {dataSources: {{ {issues: (path_exists('issues_auto_complete') ? path('issues_auto_complete') ~ '?q=' : ''), wiki_pages: ''}|json_encode|raw }}};
+//]]>
+</script>
+{% block header_tags %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% if project %}project-{{ project.identifier }} {% endif %}{{ body_css ?? '' }}{% endblock %}" data-text-formatting="{{ settings.textFormatting() }}">
+<div id="wrapper">
+
+<div class="flyout-menu js-flyout-menu">
+    {% if user.isLogged() or not settings.loginRequired() %}
+        <div class="flyout-menu__search">
+            <form action="{{ path_exists('search') ? path('search') : '#' }}" method="get">
+            <label class="search-magnifier search-magnifier--flyout" for="flyout-search">{{ sprite_icon('search', l('label_search'), 18, true) }}</label>
+            <input type="text" name="q" id="flyout-search" class="small js-search-input" placeholder="{{ l('label_search') }}" />
+            </form>
+        </div>
+    {% endif %}
+    {% if user.isLogged() %}
+        <div class="flyout-menu__avatar">
+          {{ avatar(user, 40) }}
+          {{ link_to_user(user) }}
+        </div>
+    {% endif %}
+    {% if project %}
+        <h3>{{ l('label_project') }}</h3>
+        <span class="js-project-menu"></span>
+    {% endif %}
+    <h3>{{ l('label_general') }}</h3>
+    <span class="js-general-menu"></span>
+    <span class="js-sidebar flyout-menu__sidebar"></span>
+    <h3>{{ l('label_profile') }}</h3>
+    <span class="js-profile-menu"></span>
+</div>
+
+<nav class="top-menu" id="top-menu">
+  <div class="general-menu">
+    <div class="top-menu__links">
+      {% if user.isLogged() or not settings.loginRequired() %}
+        {% include 'common/_menu.html.twig' with {items: top_menu()} %}
+      {% endif %}
+    </div>
+  </div>
+  <div class="profile-menu">
+    {% if user.isLogged() %}
+    <div id="account" class="dropdown" data-controller="dropdown">
+      <a href="#" class="dropdown-trigger" data-action="click->dropdown#toggle">
+        {{ avatar(user, 22) }}
+        {{ sprite_icon('angle-down', null, 14) }}
+      </a>
+      <div class="dropdown-content hidden" data-dropdown-target="content">
+        <div class="user-info">
+          <span class="user-name">{{ user.getName() }}</span>
+          <span class="user-login">@{{ user.login }}</span>
+        </div>
+        <div class="dropdown-divider"></div>
+        {% include 'common/_menu.html.twig' with {items: account_menu()} %}
+      </div>
+    </div>
+    {% else %}
+    <div id="account" class="top-menu__links">
+        {% include 'common/_menu.html.twig' with {items: account_menu()} %}
+    </div>
+    {% endif %}
+  </div>
+</nav>
+
+<div id="header">
+    <a href="#" class="mobile-toggle-button js-flyout-menu-toggle-button"></a>
+    {% if user.isLogged() or not settings.loginRequired() %}
+    <div id="quick-search">
+        <form action="{{ path_exists('search') ? path('search', project ? {id: project.identifier} : {}) : '#' }}" method="get">
+        <input type="hidden" name="scope" value="{{ project ? 'subprojects' : '' }}" />
+        {% if search_scope is defined and search_scope %}<input type="hidden" name="{{ search_scope }}" value="1" />{% endif %}
+        <label for="q"><a accesskey="4" href="{{ path_exists('search') ? path('search') : '#' }}">{{ l('label_search') }}</a>:</label>
+        <input type="text" name="q" id="q" size="20" class="small" accesskey="f" value="{{ question ?? '' }}" data-auto-complete="true" />
+        </form>
+        {% include 'common/_project_jump_box.html.twig' %}
+    </div>
+    {% endif %}
+
+    <h1>{% block page_header %}{% if project %}{% for a in project.getAncestors() %}{{ link_to_project(a) }} &raquo; {% endfor %}<span class="current-project">{{ project.name }}</span>{% elseif admin_menu_selected is defined %}{{ l('label_administration') }}{% else %}{{ settings.appTitle() }}{% endif %}{% endblock %}</h1>
+
+    {% block main_menu %}
+    {% set menu_items = project ? project_menu(project, main_menu_selected ?? null) : (admin_menu_selected is defined ? [] : application_menu(main_menu_selected ?? null)) %}
+    {% if menu_items|length > 0 %}
+    <div id="main-menu" class="tabs">
+        {% include 'common/_menu.html.twig' with {items: menu_items} %}
+        <div class="tabs-buttons" style="display:none;">
+            <button class="tab-left icon-only" onclick="moveTabLeft(this); return false;">{{ sprite_icon('angle-left') }}</button>
+            <button class="tab-right icon-only" onclick="moveTabRight(this); return false;">{{ sprite_icon('angle-right') }}</button>
+        </div>
+    </div>
+    {% endif %}
+    {% endblock %}
+</div>
+
+{% set sidebar_html %}{% block sidebar %}{% endblock %}{% endset %}
+<div id="main" class="{{ sidebar_html|trim is empty ? 'nosidebar' : 'collapsiblesidebar' }}">
+    {% if sidebar_html|trim is not empty %}<script>$('#main.collapsiblesidebar').collapsibleSidebar();</script>{% endif %}
+    <div id="sidebar">
+        {% if sidebar_html|trim is not empty %}
+          <div id="sidebar-switch-panel" style="visibility: hidden;">
+            <a id="sidebar-switch-button" class="" href="#">{{ sprite_icon('chevrons-right', null, 20) }}</a>
+          </div>
+          <script>$('#sidebar-switch-panel').css('visibility', 'visible');</script>
+        {% endif %}
+        <div id="sidebar-wrapper">
+          {{ sidebar_html }}
+        </div>
+    </div>
+
+    <div id="content">
+        {% include 'common/_flash.html.twig' %}
+        {% if project and not project.isActive() and not project.isArchived() %}
+          <p class="warning"><span class="icon icon-lock">{{ sprite_icon('lock', l('text_project_closed')) }}</span></p>
+        {% endif %}
+        {% block content %}{% endblock %}
+        <div style="clear:both;"></div>
+    </div>
+</div>
+<div id="footer">
+    Powered by <a href="https://github.com/symine/symine" target="_blank" rel="noopener">Symine</a>, a Symfony port of <a href="https://www.redmine.org/" target="_blank" rel="noopener">Redmine</a> &copy; 2006-2026 Jean-Philippe Lang
+</div>
+
+<div id="ajax-indicator" style="display:none;">
+  <span class="icon">{{ sprite_icon('loader', l('label_loading'), 18, false, 'svg-loader') }}</span>
+</div>
+<div id="ajax-modal" style="display:none;"></div>
+<div id="icon-copy-source" style="display: none;">{{ sprite_icon('') }}</div>
+</div>
+</body>
+</html>

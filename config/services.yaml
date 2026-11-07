@@ -1,0 +1,30 @@
+parameters:
+    symine.files_path: '%env(resolve:SYMINE_FILES_PATH)%'
+
+services:
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        bind:
+            string $projectDir: '%kernel.project_dir%'
+
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+when@test:
+    services:
+        _defaults:
+            autowire: true
+            autoconfigure: true
+            public: true
+            bind:
+                string $projectDir: '%kernel.project_dir%'
+        App\:
+            resource: '../src/'
+            exclude:
+                - '../src/Entity/'
+                - '../src/Event/'
+                - '../src/Kernel.php'

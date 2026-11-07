@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+{% if error %}<div class="flash error" id="flash_error">{{ error }}</div>{% endif %}
+<div id="login-form">
+  <form action="{{ path('signin') }}" method="post" onsubmit="return keepAnchorOnSignIn(this);">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+  {% if back_url %}<input type="hidden" name="back_url" value="{{ back_url }}">{% endif %}
+  <label for="username">{{ l('field_login') }}</label>
+  <input type="text" name="username" id="username" value="{{ last_username }}" tabindex="1" autocomplete="username" {% if not last_username %}autofocus{% endif %} />
+  <label for="password">
+    {{ l('field_password') }}
+    {% if settings.bool('lost_password') and path_exists('lost_password') %}<a class="lost_password" href="{{ path('lost_password') }}">{{ l('label_password_lost') }}</a>{% endif %}
+  </label>
+  <input type="password" name="password" id="password" tabindex="2" autocomplete="current-password" {% if last_username %}autofocus{% endif %} />
+  {% if settings.int('autologin') > 0 %}
+    <label for="autologin"><input type="checkbox" name="autologin" id="autologin" value="1" tabindex="4" /> {{ l('label_stay_logged_in') }}</label>
+  {% endif %}
+  <input type="submit" name="login" value="{{ l('button_login') }}" tabindex="5" id="login-submit" />
+  </form>
+</div>
+{% endblock %}

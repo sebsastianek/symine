@@ -1,0 +1,67 @@
+security:
+    password_hashers:
+        redmine_legacy:
+            id: App\Security\RedminePasswordHasher
+        App\Entity\User:
+            algorithm: auto
+            migrate_from:
+                - redmine_legacy
+
+    providers:
+        symine_users:
+            id: App\Security\UserProvider
+
+    firewalls:
+        dev:
+            pattern: ^/(_profiler|_wdt|assets|build|favicon\.ico)
+            security: false
+        api:
+            request_matcher: App\Security\ApiRequestMatcher
+            stateless: true
+            provider: symine_users
+            user_checker: App\Security\UserChecker
+            custom_authenticators:
+                - App\Security\ApiKeyAuthenticator
+            entry_point: App\Security\LoginEntryPoint
+        main:
+            lazy: true
+            provider: symine_users
+            user_checker: App\Security\UserChecker
+            entry_point: App\Security\LoginEntryPoint
+            form_login:
+                login_path: signin
+                check_path: signin
+                username_parameter: username
+                password_parameter: password
+                target_path_parameter: back_url
+                enable_csrf: true
+                csrf_token_id: authenticate
+                default_target_path: my_page
+                use_referer: false
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 31536000
+                remember_me_parameter: autologin
+                name: autologin
+                path: /
+            logout:
+                path: signout
+                target: home
+                enable_csrf: true
+            login_throttling:
+                max_attempts: 10
+                interval: '5 minutes'
+            switch_user: false
+
+    access_control: []
+
+when@test:
+    security:
+        password_hashers:
+            App\Entity\User:
+                algorithm: auto
+                cost: 4
+                time_cost: 3
+                memory_cost: 10
+                migrate_from:
+                    - redmine_legacy

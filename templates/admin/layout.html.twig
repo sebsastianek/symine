@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+{% block page_header %}{{ l('label_administration') }}{% endblock %}
+{% block main_menu %}{% endblock %}
+{% block sidebar %}
+<h3>{{ l('label_administration') }}</h3>
+<div id="admin-menu">
+{% include 'common/_menu.html.twig' with {items: admin_menu(admin_menu_selected ?? null)} %}
+</div>
+{% block admin_sidebar %}{% endblock %}
+{% endblock %}

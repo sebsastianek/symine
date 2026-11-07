@@ -1,0 +1,6 @@
+# Session based CSRF tokens (works for every client, incl. non-JS ones)
+framework:
+    form:
+        csrf_protection:
+            token_id: symine
+    csrf_protection: ~

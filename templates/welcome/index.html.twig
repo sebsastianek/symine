@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_home') }}</h2>
+<div class="splitcontent">
+<div class="splitcontentleft">
+  <div class="wiki">
+    {{ textilizable(settings.string('welcome_text')) }}
+  </div>
+</div>
+<div class="splitcontentright">
+  {% if news|length > 0 %}
+  <div class="news box">
+  <h3 class="icon icon-news">{{ sprite_icon('news', l('label_news_latest')) }}</h3>
+    {% for n in news %}{% include 'news/_news.html.twig' ignore missing with {news: n} %}{% endfor %}
+    {% if path_exists('news_index') %}<a href="{{ path('news_index') }}">{{ l('label_news_view_all') }}</a>{% endif %}
+  </div>
+  {% endif %}
+</div>
+</div>
+{% endblock %}

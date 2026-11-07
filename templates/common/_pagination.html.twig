@@ -1,0 +1,14 @@
+{#- Redmine-style pagination: requires `pager` (from AbstractController::paginate) -#}
+{% if pager.count > 0 %}
+{% set q = app.request.query.all %}
+<span class="pagination"><ul class="pages">
+{% if pager.page > 1 %}<li class="previous page"><a accesskey="p" href="?{{ q|merge({page: pager.page - 1})|url_encode }}">« {{ l('label_previous') }}</a></li>{% endif %}
+{% for p in 1..pager.pages %}
+  {% if p == 1 or p == pager.pages or (p >= pager.page - 2 and p <= pager.page + 2) %}
+    {% if p == pager.page %}<li class="current"><span>{{ p }}</span></li>{% else %}<li><a href="?{{ q|merge({page: p})|url_encode }}">{{ p }}</a></li>{% endif %}
+  {% elseif p == pager.page - 3 or p == pager.page + 3 %}<li class="spacer"><span>…</span></li>{% endif %}
+{% endfor %}
+{% if pager.page < pager.pages %}<li class="next page"><a accesskey="n" href="?{{ q|merge({page: pager.page + 1})|url_encode }}">{{ l('label_next') }} »</a></li>{% endif %}
+</ul><span><span class="items">({{ pager.offset + 1 }}-{{ min(pager.offset + pager.limit, pager.count) }}/{{ pager.count }})</span>
+<span class="per-page">{{ l('label_display_per_page', {value: ''}) }}{% for n in pager.per_page_options %}{% if n == pager.limit %}<span class="selected">{{ n }}</span>{% else %}<a href="?{{ q|merge({per_page: n, page: 1})|url_encode }}">{{ n }}</a>{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</span></span></span>
+{% endif %}

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Copies Redmine's front-end assets (CSS, JS, icons, fonts, themes) from the reference clone into public/assets.
+# Symine renders the same markup as Redmine, so the original stylesheets and scripts apply unchanged.
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SRC="${1:-$ROOT/reference/redmine}"
+DST="$ROOT/public/assets"
+rm -rf "$DST"; mkdir -p "$DST"
+for dir in app/assets/images app/assets/fonts app/assets/stylesheets app/assets/javascripts app/javascript vendor/javascript; do
+  cp -R "$SRC/$dir/." "$DST/"
+done
+mkdir -p "$DST/themes" && cp -R "$SRC/app/assets/themes/." "$DST/themes/"
+# Propshaft resolves url(/file) against the asset root: point them to /assets/file
+find "$DST" -name '*.css' -print0 | xargs -0 sed -i.bak -E 's#url\((["'"'"']?)/([^/"'"'"')][^"'"'"')]*)#url(\1/assets/\2#g'
+find "$DST" -name '*.bak' -delete
+cp "$ROOT"/assets-vendor/*.js "$DST/"
+echo "Redmine assets synced into $DST"
