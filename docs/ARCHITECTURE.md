@@ -87,5 +87,5 @@ admin_plugins, admin_info, attachment_show, attachment_download
   admin/admin, jsmith|dlopper|rhill|anna / password123).
 - Run a server on your own port with your own DB/cache to avoid clashes:
   `APP_CACHE_DIR=var/cache-X DATABASE_URL="sqlite:///$PWD/var/X.db" php -S 127.0.0.1:81XX -t public`
-- Tests: `php bin/phpunit` (integration tests copy tests/fixtures/symine-seeded.db to var/test.db).
+- Tests: `TEST_TOKEN=X APP_CACHE_DIR=var/cache-X php bin/phpunit tests/...` (integration tests copy tests/fixtures/symine-seeded.db to var/testX.db).
 - Parity data: tests/fixtures/redmine-expectations.json (regenerate with tests/fixtures/redmine_expectations.rb).

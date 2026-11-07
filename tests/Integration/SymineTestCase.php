@@ -21,7 +21,7 @@ abstract class SymineTestCase extends KernelTestCase
     protected function setUp(): void
     {
         $project = \dirname(__DIR__, 2);
-        copy($project.'/tests/fixtures/symine-seeded.db', $project.'/var/test.db');
+        copy($project.'/tests/fixtures/symine-seeded.db', $project.'/var/test'.($_SERVER['TEST_TOKEN'] ?? getenv('TEST_TOKEN') ?: '').'.db');
         self::bootKernel();
         $this->em = self::getContainer()->get(EntityManagerInterface::class);
     }
