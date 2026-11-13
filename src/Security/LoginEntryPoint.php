@@ -15,13 +15,16 @@ use Symfony\Component\Security\Http\EntryPoint\AuthenticationEntryPointInterface
 /** Redirects to /login?back_url=... (HTML) or answers 401 (API), like Redmine's require_login. */
 final class LoginEntryPoint implements AuthenticationEntryPointInterface
 {
-    public function __construct(private readonly UrlGeneratorInterface $urls)
+    public function __construct(private readonly UrlGeneratorInterface $urls, private readonly ?\App\Service\Settings $settings = null)
     {
     }
 
     public function start(Request $request, ?AuthenticationException $authException = null): Response
     {
-        if (ApiRequestMatcher::isApiRequest($request) || $request->isXmlHttpRequest()) {
+        if (ApiRequestMatcher::isApiRequest($request)) {
+            return self::apiUnauthorized($request, $this->settings?->restApiEnabled() ?? true);
+        }
+        if ($request->isXmlHttpRequest()) {
             $r = new JsonResponse(null, 401);
             $r->headers->set('WWW-Authenticate', 'Basic realm="Redmine API"');
 
@@ -29,5 +32,23 @@ final class LoginEntryPoint implements AuthenticationEntryPointInterface
         }
 
         return new RedirectResponse($this->urls->generate('signin', ['back_url' => $request->getUri()]));
+    }
+
+    /**
+     * ApplicationController#require_login for API formats: 403 when the REST API is disabled,
+     * otherwise 401 (with the Basic challenge only when no API key was given).
+     */
+    public static function apiUnauthorized(Request $request, bool $restApiEnabled): Response
+    {
+        if (!$restApiEnabled) {
+            return new Response('', 403);
+        }
+        $r = new Response('', 401);
+        $key = $request->query->get('key') ?? $request->headers->get('X-Redmine-API-Key');
+        if (null === $key || '' === $key) {
+            $r->headers->set('WWW-Authenticate', 'Basic realm="Redmine API"');
+        }
+
+        return $r;
     }
 }

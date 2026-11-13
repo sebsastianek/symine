@@ -1,0 +1,19 @@
+{% extends 'admin/layout.html.twig' %}
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+{% block content %}
+{{ f.title(custom_field, type, type_label) }}
+
+<form class="new_custom_field" id="custom_field_form" action="{{ path('custom_field_create') }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+{% include 'admin/custom_fields/_form.html.twig' %}
+<input type="hidden" name="type" id="type" value="{{ type }}" autocomplete="off" />
+{% if copy_from %}<input type="hidden" name="copy" id="copy" value="{{ copy_from.id }}" autocomplete="off" />{% endif %}
+</form>
+<script>
+//<![CDATA[
+$('#custom_field_field_format').change(function(){
+  var data = $('#custom_field_form').find('input, select, textarea').not('[name=_token], [name=_method]').serialize();
+  location.href = '{{ path('custom_field_new') }}?' + data;
+});
+//]]>
+</script>
+{% endblock %}

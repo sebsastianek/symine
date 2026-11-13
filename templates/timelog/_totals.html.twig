@@ -1,0 +1,1 @@
+{% if totals is not empty %}<p class="query-totals">{% for t in totals %}<span class="total-for-{{ t[0].name|replace({'_': '-'}) }}"><span>{{ t[0].caption }}:</span> <span class="value">{{ t[0].name == 'hours' ? format_hours(t[1]) : t[1] }}</span></span>{% if not loop.last %} {% endif %}{% endfor %}</p>{% endif %}

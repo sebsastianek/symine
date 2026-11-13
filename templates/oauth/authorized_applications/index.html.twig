@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+{% block main_menu %}{% endblock %}
+{% block content %}
+<h2><a href="{{ path('my_account') }}">{{ l('label_my_account') }}</a> &#187; {{ l('label_oauth_authorized_application_plural') }}</h2>
+
+{% if applications is not empty %}
+<div class="autoscroll">
+<table class="list">
+  <thead><tr>
+    <th>{{ l('doorkeeper.authorized_applications.index.application') }}</th>
+    <th>{{ l('doorkeeper.authorized_applications.index.created_at') }}</th>
+    <th></th>
+  </tr></thead>
+  <tbody>
+  {% for application in applications %}
+    <tr id="application_{{ application.id }}" class="{{ cycle(['odd', 'even'], loop.index0) }}">
+      <td class="name"><span>{{ application.name }}</span></td>
+      <td >{{ format_date(application.createdAt) }}</td>
+      <td class="buttons">
+        <a data-confirm="{{ l('doorkeeper.authorized_applications.confirmations.revoke') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('oauth_authorized_application', {id: application.id}) }}">{{ sprite_icon('del', l('doorkeeper.authorized_applications.buttons.revoke')) }}</a>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+  <p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}
+{% endblock %}
+{% block sidebar %}{% include 'my/_sidebar.html.twig' %}{% endblock %}

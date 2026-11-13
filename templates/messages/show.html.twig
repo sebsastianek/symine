@@ -1,0 +1,100 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+{% include 'boards/_breadcrumb.html.twig' with {board: topic.board, include_board: true} %}
+
+{% set quote_btn = path('message_quote', {board_id: board.id, id: topic.id, _format: 'js'}) %}
+<div data-controller="quote-reply">
+  <div class="contextual">
+    {% include 'content/_watch_link.html.twig' with {watched_type: 'message', watched_class: 'Message', watched_id: topic.id} %}
+    {% if can_reply %}
+    <a data-action="quote-reply#quote" data-quote-reply-url-param="{{ quote_btn }}" data-quote-reply-text-formatting-param="{{ settings.textFormatting() }}" class="icon icon-quote" href="#">{{ sprite_icon('quote-filled', l('button_quote'), 18, false, null, true) }}</a>
+    {% endif %}
+    {% if editable[topic.id] %}
+    <a class="icon icon-edit" href="{{ path('message_edit', {board_id: board.id, id: topic.id}) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>
+    {% endif %}
+    {% if destroyable[topic.id] %}
+    <a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="post" href="{{ path('message_destroy', {board_id: board.id, id: topic.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+    {% endif %}
+  </div>
+
+  <h2>{{ avatar(topic.author) }}{{ topic.subject }}</h2>
+
+  <div class="message">
+    <div class="reaction">
+      {{ reaction_button(topic) }}
+    </div>
+    <p><span class="author">{{ authoring(topic.createdOn, topic.author) }}</span></p>
+    <div id="message_topic_wiki" class="wiki" data-quote-reply-target="content">
+      {{ textilizable(topic.content, project) }}
+    </div>
+    {% include 'content/_attachments_links.html.twig' with {attachments: attachments_for('Message', topic.id), author: false, thumbnails: true} %}
+  </div>
+</div>
+<br/>
+
+{% if replies|length > 0 %}
+  <div id="replies" class="journals">
+    <h3 class="comments icon icon-comments">{{ sprite_icon('comments', l('label_reply_plural')) }}
+      ({{ reply_pager.count }})</h3>
+    {% if can_reply and replies|length >= 3 %}
+      <p><a onclick="$('#reply').toggle(); $('#message_content:visible').focus(); $(window).scrollTop($('#message_content').position().top); return false;" href="#">{{ l('button_reply') }}</a></p>
+    {% endif %}
+    {{ preload_reactions(replies) }}{% for m in replies %}
+      <div class="message reply journal" id="message-{{ m.id }}" data-controller="quote-reply">
+        <h4 class='reply-header journal-header'>
+    <span class="journal-info">
+      {{ avatar(m.author) }}
+      <a href="{{ path('board_message_show', {board_id: board.id, id: topic.id, r: m.id}) }}#message-{{ m.id }}">{{ m.subject }}</a>
+      -
+      {{ authoring(m.createdOn, m.author) }}
+    </span>
+          <span class="journal-meta">
+            {{ reaction_button(m) }}
+            {% if can_reply %}
+            <a data-action="quote-reply#quote" data-quote-reply-url-param="{{ path('message_quote', {board_id: board.id, id: m.id, _format: 'js'}) }}" data-quote-reply-text-formatting-param="{{ settings.textFormatting() }}" class="icon-only icon-quote" title="{{ l('button_quote') }}" href="#">{{ sprite_icon('quote-filled', l('button_quote'), 18, true, null, true) }}</a>
+            {% endif %}
+            {% if editable[m.id] %}
+            <a title="{{ l('button_edit') }}" class="icon icon-edit" href="{{ path('message_edit', {board_id: board.id, id: m.id}) }}">{{ sprite_icon('edit', l('button_edit'), 18, true) }}</a>
+            {% endif %}
+            {% if destroyable[m.id] %}
+            <a data-confirm="{{ l('text_are_you_sure') }}" title="{{ l('button_delete') }}" class="icon icon-del" rel="nofollow" data-method="post" href="{{ path('message_destroy', {board_id: board.id, id: m.id}) }}">{{ sprite_icon('del', l('button_delete'), 18, true) }}</a>
+            {% endif %}
+          </span>
+        </h4>
+        <div class="wiki journal-content" data-quote-reply-target="content">
+          {{ textilizable(m.content, project) }}
+        </div>
+        {% include 'content/_attachments_links.html.twig' with {attachments: attachments_for('Message', m.id), author: false, thumbnails: true} %}
+      </div>
+    {% endfor %}
+  </div>
+  {% set q = app.request.query.all|filter((v, k) => k != 'r') %}
+  <span class="pagination"><ul class="pages">
+  {% if reply_pager.pages > 1 %}
+    {% if reply_pager.page > 1 %}<li class="previous page"><a accesskey="p" href="?{{ q|merge({page: reply_pager.page - 1})|url_encode }}">« {{ l('label_previous') }}</a></li>{% endif %}
+    {% for p in 1..reply_pager.pages %}
+      {% if p == reply_pager.page %}<li class="current"><span>{{ p }}</span></li>{% else %}<li><a href="?{{ q|merge({page: p})|url_encode }}">{{ p }}</a></li>{% endif %}
+    {% endfor %}
+    {% if reply_pager.page < reply_pager.pages %}<li class="next page"><a accesskey="n" href="?{{ q|merge({page: reply_pager.page + 1})|url_encode }}">{{ l('label_next') }} »</a></li>{% endif %}
+  {% endif %}
+  </ul><span><span class="items">({{ reply_pager.offset + 1 }}-{{ min(reply_pager.offset + reply_pager.limit, reply_pager.count) }}/{{ reply_pager.count }})</span> </span></span>
+{% endif %}
+
+{% if can_reply %}
+  <p><a onclick="$('#reply').toggle(); $('#message_content:visible').focus(); return false;" href="#">{{ l('button_reply') }}</a></p>
+  <div id="reply" style="display:none;">
+    <form class="new_reply" id="message-form" enctype="multipart/form-data" action="{{ path('message_reply', {board_id: board.id, id: topic.id}) }}" accept-charset="UTF-8" method="post">
+    {{ csrf_field() }}
+      {% include 'messages/_form.html.twig' with {message: reply, param: 'reply', replying: true, can_sticky: false} %}
+      <input type="submit" name="commit" value="{{ l('button_submit') }}" data-disable-with="{{ l('button_submit') }}" />
+    </form>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block sidebar %}
+{% set ws = watchers_of('Message', topic.id) %}
+{% if allowed_to('add_message_watchers', project) or (ws|length > 0 and allowed_to('view_message_watchers', project)) %}
+  {% include 'content/_watchers.html.twig' with {watched_type: 'message', watched_id: topic.id} %}
+{% endif %}
+{% endblock %}

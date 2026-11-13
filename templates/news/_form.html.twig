@@ -1,0 +1,20 @@
+{#- Port of news/_form.html.erb. Params: news, form_project (null => cross-project form), manage_projects, errors -#}
+{% include 'news/_errors.html.twig' %}
+<div class="box tabular">
+{% if form_project is null %}
+  <p>
+    <label>{{ l('field_project') }} <span class="required">*</span></label>
+    <select name="project_id" id="project_id" required="required" data-preview-param="true">
+    {% for p in manage_projects %}
+      <option value="{{ p.id }}"{% if news.project is not null and news.project.id == p.id %} selected="selected"{% endif %}>{% for a in p.getAncestors() %}&#187; {% endfor %}{{ p.name }}</option>
+    {% endfor %}
+    </select>
+    <input type="hidden" name="cross_project" value="1" />
+  </p>
+{% endif %}
+<p><label for="news_title">{{ l('field_title') }}<span class="required"> *</span></label><input size="60" type="text" value="{{ news.title }}" name="news[title]" id="news_title" /></p>
+<p><label for="news_summary">{{ l('field_summary') }}</label><textarea cols="60" rows="2" name="news[summary]" id="news_summary">
+{{ news.summary }}</textarea></p>
+<p><label for="news_description">{{ l('field_description') }}<span class="required"> *</span></label>{% include ['issues/_wiki_textarea.html.twig', 'content/_textarea.html.twig'] with {name: 'news[description]', id: 'news_description', value: news.description, rows: 15, cols: 60} %}</p>
+<p id="attachments_form"><label>{{ l('label_attachment_plural') }}</label>{% include 'content/_attachments_form.html.twig' %}</p>
+</div>

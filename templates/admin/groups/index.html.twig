@@ -1,0 +1,42 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<div class="contextual">
+<a class="icon icon-add" href="{{ path('group_new') }}">{{ sprite_icon('add', l('label_group_new')) }}</a>
+</div>
+
+<h2>{{ l('label_group_plural') }}</h2>
+
+<form action="{{ path('groups_index') }}" accept-charset="UTF-8" method="get">
+<fieldset><legend>{{ l('label_filter_plural') }}</legend>
+  <label for="name">{{ l('label_group') }}:</label>
+  <input type="text" name="name" id="name" value="{{ name }}" size="30" />
+  <input type="submit" value="{{ l('button_apply') }}" class="small" />
+  <a class="icon icon-reload" href="{{ path('groups_index') }}">{{ sprite_icon('reload', l('button_clear')) }}</a>
+  </fieldset>
+</form>
+&nbsp;
+
+{% if groups|length > 0 %}
+<div class="autoscroll">
+<table class="list groups">
+  <thead><tr>
+  <th>{{ l('label_group') }}</th>
+  <th>{{ l('label_user_plural') }}</th>
+  <th></th>
+  </tr></thead>
+  <tbody>
+{% for group in groups %}
+  <tr id="group-{{ group.id }}" class="{{ group.isBuiltin() ? 'builtin' : '' }}">
+    <td class="name"><a href="{{ path('group_edit', {id: group.id}) }}">{{ group.getName() }}</a></td>
+    <td class="user_count">{% if not group.isBuiltin() %}{{ user_counts[group.id] ?? 0 }}{% endif %}</td>
+    <td class="buttons">{% if not group.isBuiltin() %}<a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('group_destroy', {id: group.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>{% endif %}</td>
+  </tr>
+{% endfor %}
+  </tbody>
+</table>
+</div>
+{% include 'common/_pagination.html.twig' %}
+{% else %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}
+{% endblock %}

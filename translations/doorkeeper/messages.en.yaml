@@ -1,0 +1,92 @@
+# Doorkeeper translations (doorkeeper-i18n 5.2.9 / doorkeeper 5.8.2, MIT), used by the OAuth2 provider.
+# Generated - merged into the "messages" domain.
+activerecord.attributes.doorkeeper/application.name: Name
+activerecord.attributes.doorkeeper/application.redirect_uri: 'Redirect URI'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.forbidden_uri: 'is forbidden by the server.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.fragment_present: 'cannot contain a fragment.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.invalid_uri: 'must be a valid URI.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.relative_uri: 'must be an absolute URI.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.secured_uri: 'must be an HTTPS/SSL URI.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.unspecified_scheme: 'must specify a scheme.'
+activerecord.errors.models.doorkeeper/application.attributes.scopes.not_match_configured: "doesn't match configured on the server."
+doorkeeper.applications.buttons.authorize: Authorize
+doorkeeper.applications.buttons.cancel: Cancel
+doorkeeper.applications.buttons.destroy: Destroy
+doorkeeper.applications.buttons.edit: Edit
+doorkeeper.applications.buttons.submit: Submit
+doorkeeper.applications.confirmations.destroy: 'Are you sure?'
+doorkeeper.applications.edit.title: 'Edit application'
+doorkeeper.applications.form.error: 'Whoops! Check your form for possible errors'
+doorkeeper.applications.help.blank_redirect_uri: "Leave it blank if you configured your provider to use Client Credentials, Resource Owner Password Credentials or any other grant type that doesn't require redirect URI."
+doorkeeper.applications.help.confidential: 'Application will be used where the client secret can be kept confidential. Native mobile apps and Single Page Apps are considered non-confidential.'
+doorkeeper.applications.help.redirect_uri: 'Use one line per URI'
+doorkeeper.applications.help.scopes: 'Separate scopes with spaces. Leave blank to use the default scopes.'
+doorkeeper.applications.index.actions: Actions
+doorkeeper.applications.index.callback_url: 'Callback URL'
+doorkeeper.applications.index.confidential: 'Confidential?'
+doorkeeper.applications.index.confidentiality.no: 'No'
+doorkeeper.applications.index.confidentiality.yes: 'Yes'
+doorkeeper.applications.index.name: Name
+doorkeeper.applications.index.new: 'New Application'
+doorkeeper.applications.index.title: 'Your applications'
+doorkeeper.applications.new.title: 'New Application'
+doorkeeper.applications.show.actions: Actions
+doorkeeper.applications.show.application_id: UID
+doorkeeper.applications.show.callback_urls: 'Callback urls'
+doorkeeper.applications.show.confidential: Confidential
+doorkeeper.applications.show.not_defined: 'Not defined'
+doorkeeper.applications.show.scopes: Scopes
+doorkeeper.applications.show.secret: Secret
+doorkeeper.applications.show.secret_hashed: 'Secret hashed'
+doorkeeper.applications.show.title: 'Application: %{name}'
+doorkeeper.authorizations.buttons.authorize: Authorize
+doorkeeper.authorizations.buttons.deny: Deny
+doorkeeper.authorizations.error.title: 'An error has occurred'
+doorkeeper.authorizations.form_post.title: 'Submit this form'
+doorkeeper.authorizations.new.able_to: 'This application will be able to'
+doorkeeper.authorizations.new.prompt: 'Authorize %{client_name} to use your account?'
+doorkeeper.authorizations.new.title: 'Authorization required'
+doorkeeper.authorizations.show.title: 'Authorization code'
+doorkeeper.authorized_applications.buttons.revoke: Revoke
+doorkeeper.authorized_applications.confirmations.revoke: 'Are you sure?'
+doorkeeper.authorized_applications.index.application: Application
+doorkeeper.authorized_applications.index.created_at: 'Created At'
+doorkeeper.authorized_applications.index.date_format: '%Y-%m-%d %H:%M:%S'
+doorkeeper.authorized_applications.index.title: 'Your authorized applications'
+doorkeeper.errors.messages.access_denied: 'The resource owner or authorization server denied the request.'
+doorkeeper.errors.messages.admin_authenticator_not_configured: 'Access to admin panel is forbidden due to Doorkeeper.configure.admin_authenticator being unconfigured.'
+doorkeeper.errors.messages.credential_flow_not_configured: 'Resource Owner Password Credentials flow failed due to Doorkeeper.configure.resource_owner_from_credentials being unconfigured.'
+doorkeeper.errors.messages.forbidden_token.missing_scope: 'Access to this resource requires scope "%{oauth_scopes}".'
+doorkeeper.errors.messages.invalid_client: 'Client authentication failed due to unknown client, no client authentication included, or unsupported authentication method.'
+doorkeeper.errors.messages.invalid_code_challenge_method: 'The code challenge method must be plain or S256.'
+doorkeeper.errors.messages.invalid_code_challenge_method.one: 'The code_challenge_method must be %{challenge_methods}.'
+doorkeeper.errors.messages.invalid_code_challenge_method.other: 'The code_challenge_method must be one of %{challenge_methods}.'
+doorkeeper.errors.messages.invalid_code_challenge_method.zero: 'The authorization server does not support PKCE as there are no accepted code_challenge_method values.'
+doorkeeper.errors.messages.invalid_grant: 'The provided authorization grant is invalid, expired, revoked, does not match the redirection URI used in the authorization request, or was issued to another client.'
+doorkeeper.errors.messages.invalid_redirect_uri: "The requested redirect uri is malformed or doesn't match client redirect URI."
+doorkeeper.errors.messages.invalid_request.invalid_code_challenge: 'Code challenge is required.'
+doorkeeper.errors.messages.invalid_request.missing_param: 'Missing required parameter: %{value}.'
+doorkeeper.errors.messages.invalid_request.request_not_authorized: 'Request need to be authorized. Required parameter for authorizing request is missing or invalid.'
+doorkeeper.errors.messages.invalid_request.unknown: 'The request is missing a required parameter, includes an unsupported parameter value, or is otherwise malformed.'
+doorkeeper.errors.messages.invalid_scope: 'The requested scope is invalid, unknown, or malformed.'
+doorkeeper.errors.messages.invalid_token.expired: 'The access token expired'
+doorkeeper.errors.messages.invalid_token.revoked: 'The access token was revoked'
+doorkeeper.errors.messages.invalid_token.unknown: 'The access token is invalid'
+doorkeeper.errors.messages.resource_owner_authenticator_not_configured: 'Resource Owner find failed due to Doorkeeper.configure.resource_owner_authenticator being unconfigured.'
+doorkeeper.errors.messages.revoke.unauthorized: 'You are not authorized to revoke this token'
+doorkeeper.errors.messages.server_error: 'The authorization server encountered an unexpected condition which prevented it from fulfilling the request.'
+doorkeeper.errors.messages.temporarily_unavailable: 'The authorization server is currently unable to handle the request due to a temporary overloading or maintenance of the server.'
+doorkeeper.errors.messages.unauthorized_client: 'The client is not authorized to perform this request using this method.'
+doorkeeper.errors.messages.unsupported_grant_type: 'The authorization grant type is not supported by the authorization server.'
+doorkeeper.errors.messages.unsupported_response_mode: 'The authorization server does not support this response mode.'
+doorkeeper.errors.messages.unsupported_response_type: 'The authorization server does not support this response type.'
+doorkeeper.flash.applications.create.notice: 'Application created.'
+doorkeeper.flash.applications.destroy.notice: 'Application deleted.'
+doorkeeper.flash.applications.update.notice: 'Application updated.'
+doorkeeper.flash.authorized_applications.destroy.notice: 'Application revoked.'
+doorkeeper.layouts.admin.nav.applications: Applications
+doorkeeper.layouts.admin.nav.home: Home
+doorkeeper.layouts.admin.nav.oauth2_provider: 'OAuth2 Provider'
+doorkeeper.layouts.admin.title: Doorkeeper
+doorkeeper.layouts.application.title: 'OAuth authorization required'
+doorkeeper.pre_authorization.status: Pre-authorization

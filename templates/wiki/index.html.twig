@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}{% if path_exists('project_activity') %}<link rel="alternate" type="application/atom+xml" title="ATOM" href="{{ path('project_activity', {id: project.identifier}) }}.atom?show_wiki_edits=1" />{% endif %}{% endblock %}
+{% block content %}
+{% include 'wiki/_index_contextual.html.twig' %}
+
+<h2>{{ l('label_index_by_title') }}</h2>
+
+{% if pages is empty %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}
+
+{{ hierarchy|raw }}
+
+{% include 'wiki/_other_formats.html.twig' %}
+{% endblock %}
+{% block sidebar %}{% include 'wiki/_sidebar.html.twig' %}{% endblock %}

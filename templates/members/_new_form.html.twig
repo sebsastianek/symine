@@ -1,0 +1,20 @@
+<fieldset class="box">
+  <legend><label for="principal_search">{{ l('label_principal_search') }}</label></legend>
+  <p><input type="text" name="principal_search" id="principal_search" /></p>
+  <script>
+//<![CDATA[
+observeSearchfield('principal_search', null, '{{ path('member_autocomplete_js', {project_id: project.identifier})|e('js') }}', {checkboxSelector: 'input[name="membership[user_ids][]"]'})
+//]]>
+</script>
+  <div id="principals_for_new_member">
+    {% include 'members/_principals.html.twig' with {page: 1, q: ''} %}
+  </div>
+</fieldset>
+<fieldset class="box">
+  <legend><a href="#" onclick="toggleCheckboxesBySelector('.roles-selection input'); return false;" title="{{ l('button_check_all') }} / {{ l('button_uncheck_all') }}" class="icon icon-checked">{{ sprite_icon('checked', '') }}</a>{{ l('label_role_plural') }}</legend>
+  <div class="roles-selection">
+    {% for role in roles %}
+      <label><input type="checkbox" name="membership[role_ids][]" value="{{ role.id }}" /> {{ role.name }}</label>
+    {% endfor %}
+  </div>
+</fieldset>

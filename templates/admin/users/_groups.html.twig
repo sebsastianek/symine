@@ -1,0 +1,14 @@
+<form action="{{ path('user_update', {id: edited_user.id}) }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+<input type="hidden" name="_method" value="put" autocomplete="off" />
+<div class="box">
+<div id="user_group_ids">
+{% for group in groups %}
+<label><input type="checkbox" name="user[group_ids][]" value="{{ group.id }}"{% if group.id in group_ids %} checked="checked"{% endif %} /> {{ group.name }}</label><br />
+{% endfor %}
+<input type="hidden" name="user[group_ids][]" id="user_group_ids_" value="" autocomplete="off" />
+</div>
+<p><a href="#" onclick="checkAll('user_group_ids', true); return false;">{{ l('button_check_all') }}</a> | <a href="#" onclick="checkAll('user_group_ids', false); return false;">{{ l('button_uncheck_all') }}</a></p>
+</div>
+<input type="submit" name="commit" value="{{ l('button_save') }}" />
+</form>

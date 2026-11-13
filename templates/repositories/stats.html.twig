@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}{% include 'repositories/_header_tags.html.twig' %}{% endblock %}
+{% block content %}
+<h2>{{ l('label_statistics') }}</h2>
+
+<div class="repository-graph"
+     data-controller="repositories--stats"
+     data-repositories--stats-url-value="{{ repo_url('graph', repository, {graph: 'commits_per_month'}) }}"
+     data-repositories--stats-revision-value="{{ l('label_revision_plural') }}"
+     data-repositories--stats-change-value="{{ l('label_change_plural') }}"
+     data-repositories--stats-title-value="{{ l('label_commits_per_month') }}">
+  <canvas id="commits_per_month" data-repositories--stats-target="canvas"></canvas>
+</div>
+
+<div class="repository-graph"
+     data-controller="repositories--stats"
+     data-repositories--stats-url-value="{{ repo_url('graph', repository, {graph: 'commits_per_author'}) }}"
+     data-repositories--stats-revision-value="{{ l('label_revision_plural') }}"
+     data-repositories--stats-change-value="{{ l('label_change_plural') }}"
+     data-repositories--stats-title-value="{{ l('label_commits_per_author') }}">
+  <canvas id="commits_per_author" data-repositories--stats-target="canvas"></canvas>
+</div>
+
+<p><a href="{{ repo_url('show', repository) }}">{{ l('button_back') }}</a></p>
+{% endblock %}

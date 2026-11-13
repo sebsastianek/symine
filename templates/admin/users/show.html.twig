@@ -1,0 +1,107 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<div class="contextual">
+{% if current_user().admin and edited_user.isLogged() %}<a class="icon icon-edit" href="{{ path('user_edit', {id: edited_user.id}) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>{% endif %}
+</div>
+
+<h2>{{ avatar(edited_user, 50) }} {{ edited_user.getName() }}</h2>
+
+<div class="splitcontent">
+<div class="splitcontentleft">
+<ul>
+  <li>{{ l('field_login') }}: {{ edited_user.login }}</li>
+  {% if not edited_user.getPref().hideMail %}
+    <li>{{ l('field_mail') }}: {% for e in emails %}<a href="mailto:{{ e }}">{{ e }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</li>
+  {% endif %}
+  {% for cv in custom_values %}
+    <li class="cf_{{ cv.field.id }}">{{ cv.field.name }}: {{ cv.value }}</li>
+  {% endfor %}
+    <li>{{ l('label_registered_on') }}: {{ format_date(edited_user.createdOn) }}</li>
+  {% if edited_user.lastLoginOn %}
+    <li>{{ l('field_last_login_on') }}: {{ format_date(edited_user.lastLoginOn) }}</li>
+  {% endif %}
+</ul>
+
+<h3>{{ l('label_issue_plural') }}</h3>
+
+{% set issues_url = path_exists('issues_index') ? path('issues_index') : '/issues' %}
+{% set sort_cond = 'priority:desc,updated_on:desc' %}
+<table class="list issue-report">
+<thead>
+  <tr>
+    <th></th>
+    <th>{{ l('label_open_issues_plural') }}</th>
+    <th>{{ l('label_closed_issues_plural') }}</th>
+    <th>{{ l('label_total') }}</th>
+  </tr>
+</thead>
+<tbody>
+  {% set a = {set_filter: 1, assigned_to_id: assigned_to_ids, sort: sort_cond} %}
+  <tr>
+    <td class="name"><a href="{{ issues_url }}?{{ a|url_encode }}">{{ l('label_assigned_issues') }}</a></td>
+    <td><a href="{{ issues_url }}?{{ a|url_encode }}">{{ issue_counts.assigned.open }}</a></td>
+    <td><a href="{{ issues_url }}?{{ {set_filter: 1, status_id: 'c', assigned_to_id: assigned_to_ids, sort: sort_cond}|url_encode }}">{{ issue_counts.assigned.total - issue_counts.assigned.open }}</a></td>
+    <td class="total"><a href="{{ issues_url }}?{{ {set_filter: 1, status_id: '*', assigned_to_id: assigned_to_ids, sort: sort_cond}|url_encode }}">{{ issue_counts.assigned.total }}</a></td>
+  </tr>
+  {% set r = {set_filter: 1, author_id: edited_user.id, sort: sort_cond} %}
+  <tr>
+    <td class="name"><a href="{{ issues_url }}?{{ r|url_encode }}">{{ l('label_reported_issues') }}</a></td>
+    <td><a href="{{ issues_url }}?{{ r|url_encode }}">{{ issue_counts.reported.open }}</a></td>
+    <td><a href="{{ issues_url }}?{{ {set_filter: 1, status_id: 'c', author_id: edited_user.id, sort: sort_cond}|url_encode }}">{{ issue_counts.reported.total - issue_counts.reported.open }}</a></td>
+    <td class="total"><a href="{{ issues_url }}?{{ {set_filter: 1, status_id: '*', author_id: edited_user.id, sort: sort_cond}|url_encode }}">{{ issue_counts.reported.total }}</a></td>
+  </tr>
+</tbody>
+</table>
+
+{% if memberships|length > 0 %}
+<h3>{{ l('label_project_plural') }}</h3>
+<table class="list projects">
+<thead>
+  <tr>
+    <th>{{ l('label_project') }}</th>
+    <th>{{ l('label_role_plural') }}</th>
+    <th>{{ l('label_registered_on') }}</th>
+  </tr>
+</thead>
+<tbody>
+{% set ids = memberships|map(m => m.project.id) %}
+{% for membership in memberships %}
+  {% set project = membership.project %}
+  {% set level = project.getAncestors()|filter(a => a.id in ids)|length %}
+  <tr class="{{ level == 0 ? 'root' : 'child' }} {{ level > 0 ? 'idnt idnt-' ~ level : '' }}">
+    <td class="name"><span>{{ link_to_project(project) }}</span></td>
+    <td class="roles">{{ membership.getRoles()|map(r => r.name)|join(', ') }}</td>
+    <td>{{ format_date(membership.createdOn) }}</td>
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+{% endif %}
+
+{% if (current_user().id == edited_user.id or current_user().admin) and edited_user.groups|length > 0 %}
+<div id="groups">
+  <h3>{{ l('label_group_plural') }}</h3>
+  <ul>
+  {% for group in edited_user.groups %}
+    <li>{% if current_user().admin %}<a href="{{ path('group_show', {id: group.id}) }}">{{ group.name }}</a>{% else %}{{ group.name }}{% endif %}</li>
+  {% endfor %}
+  </ul>
+</div>
+{% endif %}
+{{ call_hook('view_account_left_bottom', {user: edited_user}) }}
+</div>
+
+<div class="splitcontentright">
+{% if event_days|length > 0 %}
+<h3>{% if path_exists('activity') %}<a href="{{ path('activity', {from: (event_days|first).date|date('Y-m-d'), user_id: edited_user.id}) }}">{{ l('label_activity') }}</a>{% else %}{{ l('label_activity') }}{% endif %}</h3>
+{% include 'activities/_activities.html.twig' with {event_days: event_days, project: null} only %}
+
+{% if path_exists('activity') %}
+<p class="other-formats hide-when-print">{{ l('label_export_to') }} <span><a class="atom" rel="nofollow" href="{{ path('activity', ({_format: 'atom'}|merge(atom_key ? {key: atom_key} : {}))|merge({user_id: edited_user.id})) }}">Atom</a></span>
+</p>
+{% endif %}
+{% endif %}
+{{ call_hook('view_account_right_bottom', {user: edited_user}) }}
+</div>
+</div>
+{% endblock %}

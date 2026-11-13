@@ -1,0 +1,12 @@
+{#- queries/edit.html.erb -#}
+{% extends 'base.html.twig' %}
+{% import 'queries/_macros.html.twig' as qm %}
+{% block header_tags %}{{ qm.calendar_headers() }}{% endblock %}
+{% block content %}
+<h2>{{ l('label_query') }}</h2>
+
+<form id="query-form" action="{{ path('query_update', {id: query.record.id}) }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="put" autocomplete="off" />{{ csrf_field() }}
+  {% include 'queries/_form.html.twig' %}
+  <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>
+{% endblock %}

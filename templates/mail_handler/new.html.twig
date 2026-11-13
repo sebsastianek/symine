@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<style>
+  label {display:block;margin:0.5em;}
+</style>
+</head>
+<body>
+<h1>Redmine Mail Handler</h1>
+
+<form action="{{ path('mail_handler') }}" accept-charset="UTF-8" method="post" enctype="multipart/form-data">
+  <input type="hidden" name="key" id="key" value="{{ key }}" />
+
+  <fieldset>
+    <legend>Raw Email</legend>
+    <label><textarea name="email" id="email" style="width:95%; height:400px;"></textarea></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Options</legend>
+    <label>unknown_user: <select name="unknown_user" id="unknown_user"><option value=""></option>
+<option value="ignore">ignore</option>
+<option value="accept">accept</option>
+<option value="create">create</option></select></label>
+    <label>default_group: <input type="text" name="default_group" id="default_group" /></label>
+    <label>no_account_notice: <input type="checkbox" name="no_account_notice" id="no_account_notice" value="1" /></label>
+    <label>no_notification: <input type="checkbox" name="no_notification" id="no_notification" value="1" /></label>
+    <label>no_permission_check: <input type="checkbox" name="no_permission_check" id="no_permission_check" value="1" /></label>
+  </fieldset>
+
+  <fieldset>
+    <legend>Issue attributes options</legend>
+    <label>project: <input type="text" name="issue[project]" id="issue_project" /></label>
+    <label>status: <input type="text" name="issue[status]" id="issue_status" /></label>
+    <label>tracker: <input type="text" name="issue[tracker]" id="issue_tracker" /></label>
+    <label>category: <input type="text" name="issue[category]" id="issue_category" /></label>
+    <label>priority: <input type="text" name="issue[priority]" id="issue_priority" /></label>
+    <label>assigned_to: <input type="text" name="issue[assigned_to]" id="issue_assigned_to" /></label>
+    <label>fixed_version: <input type="text" name="issue[fixed_version]" id="issue_fixed_version" /></label>
+    <label>private: <input type="checkbox" name="issue[private]" id="issue_private" value="1" /></label>
+    <label>allow_override: <input type="text" name="allow_override" id="allow_override" /></label>
+  </fieldset>
+
+  <p><input type="submit" name="commit" value="Submit Email" /></p>
+</form>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{#- change_status_link(edited_user) -#}
+{%- set q = {page: app.request.query.get('page'), status: app.request.query.get('status')}|filter(v => v is not null) -%}
+{%- if u.isLocked() -%}
+<a class="icon icon-unlock" rel="nofollow" data-method="put" href="{{ path('user_update', {id: u.id, 'user[status]': 1}|merge(q)) }}">{{ sprite_icon('unlock', l('button_unlock')) }}</a>
+{%- elseif u.isRegistered() -%}
+<a class="icon icon-unlock" rel="nofollow" data-method="put" href="{{ path('user_update', {id: u.id, 'user[status]': 1}|merge(q)) }}">{{ sprite_icon('unlock', l('button_activate')) }}</a>
+{%- elseif u.id != current_user().id -%}
+<a class="icon icon-lock" rel="nofollow" data-method="put" href="{{ path('user_update', {id: u.id, 'user[status]': 3}|merge(q)) }}">{{ sprite_icon('lock', l('button_lock')) }}</a>
+{%- endif -%}

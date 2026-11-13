@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+{% block sidebar %}
+  <h3>{{ l('label_sort_by', {value: ''}) }}</h3>
+  <ul>
+    {% for key, label in {category: 'field_category', date: 'label_date', title: 'field_title', author: 'field_author'} %}
+    <li><a{% if sort_by == key %} class="selected"{% endif %} href="{{ path('project_documents', {project_id: project.identifier, sort_by: key}) }}">{{ l(label) }}</a></li>
+    {% endfor %}
+  </ul>
+{% endblock %}
+{% block content %}
+<div class="contextual">
+{% if allowed_to('add_documents', project) %}
+<a class="icon icon-add" onclick="showAndScrollTo(&quot;add-document&quot;, &quot;document_title&quot;); return false;" href="{{ path('document_new', {project_id: project.identifier}) }}">{{ sprite_icon('add', l('label_document_new')) }}</a>
+{% endif %}
+</div>
+
+{% if allowed_to('add_documents', project) %}
+<div id="add-document" style="display:none;">
+<h2>{{ l('label_document_new') }}</h2>
+<form class="new_document" id="new_document" enctype="multipart/form-data" action="{{ path('document_create', {project_id: project.identifier}) }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+{% include 'documents/_form.html.twig' %}
+<p>
+  <input type="submit" name="commit" value="{{ l('button_create') }}" data-disable-with="{{ l('button_create') }}" />
+  <a onclick="$(&quot;#add-document&quot;).hide(); return false;" href="#">{{ l('button_cancel') }}</a>
+</p>
+</form>
+</div>
+{% endif %}
+
+<h2>{{ l('label_document_plural') }}</h2>
+
+<div id="document-list">
+{% if groups is empty %}<p class="nodata">{{ l('label_no_data') }}</p>{% endif %}
+
+{% for group in groups %}
+  <div class="document-group document-group-{{ sort_by }}">
+    <h3 class="group-name">{{ group.name }}</h3>
+    {% for document in group.documents %}{% include 'documents/_document.html.twig' %}{% endfor %}
+  </div>
+{% endfor %}
+</div>
+{% endblock %}

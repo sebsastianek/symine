@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>{{ title }}</title>
+  <link rel="self" href="{{ url('issue_changes', {_format: 'atom'}) }}"/>
+  <link rel="alternate" href="{{ url('home') }}"/>
+  <id>{{ url('home') }}</id>
+  <updated>{{ (journals|first ? (journals|first).createdOn : 'now')|date('Y-m-d\\TH:i:sP') }}</updated>
+  <author>
+    <name>{{ settings.appTitle() }}</name>
+  </author>
+  {% for change in journals %}
+  {% set issue = change.issue %}
+  <entry>
+    <title>{{ issue.project.name }} - {{ issue.tracker.name }} #{{ issue.id }}: {{ issue.subject }}</title>
+    <link rel="alternate" href="{{ url('issue_show', {id: issue.id}) }}"/>
+    <id>{{ url('issue_show', {id: issue.id, journal_id: change.id}) }}</id>
+    <updated>{{ change.createdOn|date('Y-m-d\\TH:i:sP') }}</updated>
+    <author>
+      <name>{{ change.user.getName() }}</name>
+    </author>
+    <content type="html">{% apply escape %}<ul>{% for s in issue_details_to_strings(change, false, true) %}<li>{{ s|raw }}</li>{% endfor %}</ul>{% if change.hasNotes() %}{{ textilizable(change.notes, issue.project) }}{% endif %}{% endapply %}</content>
+  </entry>
+  {% endfor %}
+</feed>

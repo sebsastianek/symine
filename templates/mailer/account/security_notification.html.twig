@@ -1,0 +1,6 @@
+{% extends 'mailer/account/_layout.html.twig' %}{% block body %}<p>{{ message }}<br />
+<a href="{{ url }}">{{ url }}</a></p>
+<p>{{ l('field_user') }}: <strong>{{ sender.login }}</strong><br/>
+{{ l('field_remote_ip') }}: <strong>{{ remote_ip }}</strong><br/>
+{{ l('label_date') }}: <strong>{{ date }}</strong></p>
+{% endblock %}

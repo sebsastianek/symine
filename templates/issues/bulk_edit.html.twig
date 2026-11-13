@@ -1,0 +1,194 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ copy ? l('button_copy') : l('label_bulk_edit_selected_issues') }}</h2>
+
+{% if unsaved_issues|length > 0 %}
+<div id="errorExplanation">
+  {{ sprite_icon('warning', null, 18, false, 'notice-icon') }}
+  <span>{{ l('notice_failed_to_save_issues', {count: unsaved_issues|length, total: (saved_issues|length + unsaved_issues|length), ids: unsaved_issues|map(i => '#' ~ i.id)|join(', ')}) }}</span>
+</div>
+{% endif %}
+
+<ul id="bulk-selection">
+{% for issue in issues %}
+  <li>{{ link_to_issue(issue) }}</li>
+{% endfor %}
+</ul>
+
+<form id="bulk_edit_form" action="{{ path('issues_bulk_update') }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+{% if back_url %}<input type="hidden" name="back_url" value="{{ back_url }}" />{% endif %}
+{% for i in issues %}<input type="hidden" name="ids[]" value="{{ i.id }}" autocomplete="off" />
+{% endfor %}
+<div class="box tabular">
+<fieldset class="attributes">
+<legend>{{ l('label_change_properties') }}</legend>
+
+<div class="splitcontent">
+<div class="splitcontentleft">
+{% if allowed_projects|length > 0 %}
+<p>
+  <label for="issue_project_id">{{ l('field_project') }}</label>
+  <select name="issue[project_id]" id="issue_project_id" onchange="updateBulkEditFrom('{{ path('issues_bulk_edit_js', {_format: 'js'})|e('js') }}')">{{ issue_project_tree_options(allowed_projects, target_project, (not copy or projects|filter(p => p not in allowed_projects)|length == 0) ? l('label_no_change_option') : false) }}</select>
+</p>
+{% endif %}
+<p>
+  <label for="issue_tracker_id">{{ l('field_tracker') }}</label>
+  <select name="issue[tracker_id]" id="issue_tracker_id" onchange="updateBulkEditFrom('{{ path('issues_bulk_edit_js', {_format: 'js'})|e('js') }}')"><option value="">{{ l('label_no_change_option') }}</option>{% for t in trackers %}<option value="{{ t.id }}"{% if (issue_params.tracker_id ?? '') == t.id ~ '' %} selected="selected"{% endif %}>{{ t.name }}</option>{% endfor %}</select>
+</p>
+{% if available_statuses|length > 0 %}
+<p>
+  <label for="issue_status_id">{{ l('field_status') }}</label>
+  <select name="issue[status_id]" id="issue_status_id" onchange="updateBulkEditFrom('{{ path('issues_bulk_edit_js', {_format: 'js'})|e('js') }}')"><option value="">{{ l('label_no_change_option') }}</option>{% for s in available_statuses %}<option value="{{ s.id }}"{% if (issue_params.status_id ?? '') == s.id ~ '' %} selected="selected"{% endif %}>{{ s.name }}</option>{% endfor %}</select>
+</p>
+{% endif %}
+
+{% if 'priority_id' in safe %}
+<p>
+  <label for="issue_priority_id">{{ l('field_priority') }}</label>
+  <select name="issue[priority_id]" id="issue_priority_id"><option value="">{{ l('label_no_change_option') }}</option>{% for p in priorities %}<option value="{{ p.id }}"{% if (issue_params.priority_id ?? '') == p.id ~ '' %} selected="selected"{% endif %}>{{ p.name }}</option>{% endfor %}</select>
+</p>
+{% endif %}
+
+{% if 'assigned_to_id' in safe %}
+<p>
+  <label for="issue_assigned_to_id">{{ l('field_assigned_to') }}</label>
+  <select name="issue[assigned_to_id]" id="issue_assigned_to_id"><option value="">{{ l('label_no_change_option') }}</option><option value="none"{% if (issue_params.assigned_to_id ?? '') == 'none' %} selected="selected"{% endif %}>{{ l('label_nobody') }}</option>{{ issue_principals_options(assignables) }}</select>
+</p>
+{% endif %}
+
+{% if 'category_id' in safe %}
+<p>
+  <label for="issue_category_id">{{ l('field_category') }}</label>
+  <select name="issue[category_id]" id="issue_category_id"><option value="">{{ l('label_no_change_option') }}</option><option value="none"{% if (issue_params.category_id ?? '') == 'none' %} selected="selected"{% endif %}>{{ l('label_none') }}</option>{% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select>
+</p>
+{% endif %}
+
+{% if 'fixed_version_id' in safe %}
+<p>
+  <label for="issue_fixed_version_id">{{ l('field_fixed_version') }}</label>
+  <select name="issue[fixed_version_id]" id="issue_fixed_version_id"><option value="">{{ l('label_no_change_option') }}</option><option value="none"{% if (issue_params.fixed_version_id ?? '') == 'none' %} selected="selected"{% endif %}>{{ l('label_none') }}</option>{{ issue_version_options(versions) }}</select>
+</p>
+{% endif %}
+
+{% if copy and setting('link_copied_issue') == 'ask' %}
+<p>
+  <label for="link_copy">{{ l('label_link_copied_issue') }}</label>
+  <input type="hidden" name="link_copy" value="0" />
+  <input type="checkbox" name="link_copy" id="link_copy" value="1" checked="checked" />
+</p>
+{% endif %}
+
+{% if copy and (attachments_present or subtasks_present or watchers_present) %}
+<p>
+  <label>{{ l('button_copy') }}</label>
+  {% if attachments_present %}<label class="block"><input type="hidden" name="copy_attachments" value="0" /><input type="checkbox" name="copy_attachments" id="copy_attachments" value="1" checked="checked" /> {{ l('label_attachment_plural') }}</label>{% endif %}
+  {% if subtasks_present %}<label class="block"><input type="hidden" name="copy_subtasks" value="0" /><input type="checkbox" name="copy_subtasks" id="copy_subtasks" value="1" checked="checked" /> {{ l('label_subtask_plural') }}</label>{% endif %}
+  {% if watchers_present %}<label class="block"><input type="hidden" name="copy_watchers" value="0" /><input type="checkbox" name="copy_watchers" id="copy_watchers" value="1" checked="checked" /> {{ l('label_issue_watchers') }}</label>{% endif %}
+</p>
+{% endif %}
+</div>
+
+<div class="splitcontentright">
+{% if 'is_private' in safe %}
+<p>
+  <label for="issue_is_private">{{ l('field_is_private') }}</label>
+  <select name="issue[is_private]" id="issue_is_private"><option value="">{{ l('label_no_change_option') }}</option><option value="1">{{ l('general_text_Yes') }}</option><option value="0">{{ l('general_text_No') }}</option></select>
+</p>
+{% endif %}
+
+{% if 'parent_issue_id' in safe and project %}
+<p>
+  <label for="issue_parent_issue_id">{{ l('field_parent_issue') }}</label>
+  <input type="text" name="issue[parent_issue_id]" id="issue_parent_issue_id" value="{{ issue_params.parent_issue_id ?? '' }}" size="10" />
+  <label class="inline"><input type="checkbox" name="issue[parent_issue_id]" value="none" data-disables="#issue_parent_issue_id" />{{ l('button_clear') }}</label>
+</p>
+<script>observeAutocompleteField('issue_parent_issue_id', '{{ path('issues_auto_complete', {project_id: project.identifier, scope: setting('cross_project_subtasks')})|e('js') }}')</script>
+{% endif %}
+
+{% for f in ['start_date', 'due_date'] %}
+{% if f in safe %}
+<p>
+  <label for="issue_{{ f }}">{{ l('field_' ~ f) }}</label>
+  <input type="date" name="issue[{{ f }}]" id="issue_{{ f }}" value="{{ issue_params[f] ?? '' }}" size="10" />
+  <label class="inline"><input type="checkbox" name="issue[{{ f }}]" value="none" data-disables="#issue_{{ f }}" />{{ l('button_clear') }}</label>
+</p>
+{% endif %}
+{% endfor %}
+
+{% if 'estimated_hours' in safe %}
+<p>
+  <label for="issue_estimated_hours">{{ l('field_estimated_hours') }}</label>
+  <input type="text" name="issue[estimated_hours]" id="issue_estimated_hours" value="{{ issue_params.estimated_hours ?? '' }}" size="10" />
+  <label class="inline"><input type="checkbox" name="issue[estimated_hours]" value="none" data-disables="#issue_estimated_hours" />{{ l('button_clear') }}</label>
+</p>
+{% endif %}
+
+{% if 'done_ratio' in safe and use_field_for_done_ratio %}
+<p>
+  <label for="issue_done_ratio">{{ l('field_done_ratio') }}</label>
+  <select name="issue[done_ratio]" id="issue_done_ratio"><option value="">{{ l('label_no_change_option') }}</option>{% for r in done_ratio_options %}<option value="{{ r }}">{{ r }} %</option>{% endfor %}</select>
+</p>
+{% endif %}
+</div>
+</div>
+
+{% if custom_fields|length > 0 %}
+<div class="splitcontent">
+  <div class="splitcontentleft">
+   {% set split_on = (custom_fields|length / 2)|round(0, 'ceil') - 1 %}
+   {% for cf in custom_fields %}
+     <p>{{ issue_cf_bulk_tag(cf, (issue_params.custom_field_values ?? {})[cf.id] ?? null, project) }}</p>
+     {% if loop.index0 == split_on %}</div><div class="splitcontentright">{% endif %}
+   {% endfor %}
+  </div>
+</div>
+{% endif %}
+</fieldset>
+
+<fieldset>
+<legend>{{ l('field_notes') }}</legend>
+{% include 'issues/_wiki_textarea.html.twig' with {name: 'notes', id: 'notes', value: notes ?? '', rows: 10, cols: 60, preview_url: project ? path('preview_issue', {project_id: project.identifier}) : path('preview_text')} %}
+{% if 'private_notes' in safe %}
+  <label class="inline"><input type="checkbox" name="issue[private_notes]" id="issue_private_notes" value="1" /> {{ l('field_private_notes') }}</label>
+{% endif %}
+</fieldset>
+</div>
+
+{% if values_by_custom_field|length > 0 %}
+<div class="flash warning">
+  {{ sprite_icon('warning', null, 18, false, 'notice-icon') }}
+  {{ l('warning_fields_cleared_on_bulk_edit') }}:<br />
+  {% for cf in custom_fields %}{% if values_by_custom_field[cf.id] is defined %}<span>{{ cf.name }} ({{ values_by_custom_field[cf.id]|length }})</span>{% endif %}{% endfor %}
+</div>
+{% endif %}
+
+<p>
+  {% if copy %}
+    <input type="hidden" name="copy" value="1" />
+    <input type="submit" name="commit" value="{{ l('button_copy') }}" />
+    <input type="submit" name="follow" value="{{ l('button_copy_and_follow') }}" />
+  {% elseif target_project %}
+    <input type="submit" name="commit" value="{{ l('button_move') }}" />
+    <input type="submit" name="follow" value="{{ l('button_move_and_follow') }}" />
+  {% else %}
+    <input type="submit" name="commit" value="{{ l('button_submit') }}" />
+  {% endif %}
+</p>
+</form>
+
+<script>
+$(window).on('load', function(){
+  $(document).on('change', 'input[data-disables]', function(){
+    if ($(this).prop('checked')){
+      $($(this).data('disables')).attr('disabled', true).val('');
+    } else {
+      $($(this).data('disables')).attr('disabled', false);
+    }
+  });
+});
+$(document).ready(function(){
+  $('input[data-disables]').trigger('change');
+});
+</script>
+{% endblock %}

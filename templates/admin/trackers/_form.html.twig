@@ -1,0 +1,61 @@
+{% import 'admin/workflows/_macros.html.twig' as h %}
+{{ h.error_messages(errors) }}
+{% set submit_label = tracker.id is null ? l('button_create') : l('button_save') %}
+
+<div class="splitcontent">
+<div class="splitcontentleft">
+<div class="box tabular">
+<!--[form:tracker]-->
+<p><label for="tracker_name">{{ l('field_name') }}<span class="required"> *</span></label><input type="text" value="{{ tracker.name }}" name="tracker[name]" id="tracker_name" /></p>
+<p><label for="tracker_default_status_id">{{ l('field_default_status') }}<span class="required"> *</span></label><select name="tracker[default_status_id]" id="tracker_default_status_id">{% if tracker.defaultStatus is null %}<option value="" label=" "></option>
+{% endif %}{% for s in statuses %}<option{% if tracker.defaultStatus and tracker.defaultStatus.id == s.id %} selected="selected"{% endif %} value="{{ s.id }}">{{ s.name }}</option>
+{% endfor %}</select>
+</p>
+<p><label for="tracker_private_by_default">{{ l('field_private_by_default') }}</label><input name="tracker[private_by_default]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1"{% if tracker.privateByDefault %} checked="checked"{% endif %} name="tracker[private_by_default]" id="tracker_private_by_default" /></p>
+<p><label for="tracker_is_in_roadmap">{{ l('field_is_in_roadmap') }}</label><input name="tracker[is_in_roadmap]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1"{% if tracker.isInRoadmap %} checked="checked"{% endif %} name="tracker[is_in_roadmap]" id="tracker_is_in_roadmap" /></p>
+<p><label for="tracker_description">{{ l('field_description') }}</label><textarea rows="4" name="tracker[description]" id="tracker_description">
+{{ tracker.description }}</textarea></p>
+<p>
+  <label>{{ l('field_core_fields') }}</label>
+  {% for field, label in core_fields %}
+  <label class="block">
+    <input type="checkbox" name="tracker[core_fields][]" value="{{ field }}"{% if field in enabled_core_fields %} checked="checked"{% endif %} />
+    {{ label }}
+  </label>
+  {% endfor %}
+</p>
+<input type="hidden" name="tracker[core_fields][]" id="tracker_core_fields_" value="" autocomplete="off" />
+
+{% if issue_custom_fields is not empty %}
+<p>
+  <label>{{ l('label_custom_field_plural') }}</label>
+  {% for field in issue_custom_fields %}
+    <label class="block">
+      <input type="checkbox" name="tracker[custom_field_ids][]" value="{{ field.id }}"{% if field.id in custom_field_ids %} checked="checked"{% endif %} />
+      {{ field.name }}
+    </label>
+  {% endfor %}
+</p>
+<input type="hidden" name="tracker[custom_field_ids][]" id="tracker_custom_field_ids_" value="" autocomplete="off" />
+{% endif %}
+
+{% if tracker.id is null and trackers|length > 0 %}
+<p><label for="copy_workflow_from">{{ l('label_copy_workflow_from') }}</label>
+<select name="copy_workflow_from" id="copy_workflow_from"><option></option>{% for t in trackers %}<option{% if copy_workflow_from == t.id ~ '' %} selected="selected"{% endif %} value="{{ t.id }}">{{ t.name }}</option>
+{% endfor %}</select></p>
+{% endif %}
+<!--[eoform:tracker]-->
+</div>
+<input type="submit" name="commit" value="{{ submit_label }}" class="mobile-hide" data-disable-with="{{ submit_label }}" />
+</div>
+
+<div class="splitcontentright">
+{% if has_projects %}
+<fieldset class="box" id="tracker_project_ids"><legend>{{ h.toggle_checkboxes_link('#tracker_project_ids input[type=checkbox]') }}{{ l('label_project_plural') }}</legend>
+{{ projects_html|raw }}
+<input type="hidden" name="tracker[project_ids][]" value="" autocomplete="off" />
+</fieldset>
+{% endif %}
+</div>
+</div>
+<input type="submit" name="commit" value="{{ submit_label }}" class="mobile-show" data-disable-with="{{ submit_label }}" />

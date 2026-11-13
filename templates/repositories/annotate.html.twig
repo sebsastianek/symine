@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}{% include 'repositories/_header_tags.html.twig' %}{% endblock %}
+{% block content %}
+<div class="contextual">
+  {% include 'repositories/_navigation.html.twig' %}
+</div>
+
+<h2 class="breadcrumbs">{% include 'repositories/_breadcrumbs.html.twig' with {kind: 'file'} %}</h2>
+
+{% include 'repositories/_link_to_functions.html.twig' %}
+
+{% if error_message is null %}
+<div class="autoscroll">
+<table class="filecontent annotate syntaxhl">
+  <tbody>
+    {% for row in rows %}
+      <tr id="L{{ row.num }}" class="bloc-{{ row.color }} {{ row.bloc_change ? 'bloc-change' : '' }}">
+        <th class="line-num"><a href="#L{{ row.num }}" data-txt="{{ row.num }}"></a></th>
+        <td class="revision">
+          {% if row.show_rev %}{% if row.revision.identifier %}{{ link_to_revision(row.revision, repository) }}{% else %}{{ format_revision(row.revision) }}{% endif %}{% endif %}
+        </td>
+        <td class="author">
+          {% if row.show_rev %}{{ row.author }}{% endif %}
+        </td>
+        {% if has_previous %}
+        <td class="previous">
+          {% if row.previous_url %}<a title="{{ l('label_view_previous_annotation') }}" class="icon icon-history" href="{{ row.previous_url }}"></a>{% endif %}
+        </td>
+        {% endif %}
+        {% if row.line == "\n" or row.line == "\r\n" %}
+        <td class="line-code"><br></td>
+        {% else %}
+        <td class="line-code"><div>{{ row.line|raw }}</div></td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p id="errorExplanation">
+  {{ sprite_icon('warning') }}
+  {{ error_message }}
+</p>
+{% endif %}
+{% endblock %}

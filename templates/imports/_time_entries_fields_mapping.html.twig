@@ -1,0 +1,45 @@
+{% import 'imports/_macros.html.twig' as m %}
+<p>
+  <label for="import_mapping_project_id">{{ l('label_project') }}</label>
+  {{ m.project_select(project_options, selected_project_id) }}
+</p>
+<p>
+  <label for="import_mapping_activity">{{ l('field_activity') }}</label>
+  {{ m.mapping_select(columns, mapping, 'activity', {required: true, values: activities}) }}
+</p>
+
+<div class="splitcontent">
+  <div class="splitcontentleft">
+  {% if can_log_for_others %}
+    <p>
+      <label for="import_mapping_user">{{ l('field_user') }}</label>
+      {{ m.mapping_select(columns, mapping, 'user', {required: true, values: users, default_value: 'value:' ~ current_user().id}) }}
+    </p>
+  {% endif %}
+  <p>
+    <label for="import_mapping_issue_id">{{ l('field_issue') }}</label>
+    {{ m.mapping_select(columns, mapping, 'issue_id') }}
+  </p>
+  <p>
+    <label for="import_mapping_spent_on">{{ l('field_spent_on') }}</label>
+    {{ m.mapping_select(columns, mapping, 'spent_on', {required: true}) }}
+  </p>
+  <p>
+    <label for="import_mapping_hours">{{ l('field_hours') }}</label>
+    {{ m.mapping_select(columns, mapping, 'hours', {required: true}) }}
+  </p>
+  <p>
+    <label for="import_mapping_comments">{{ l('field_comments') }}</label>
+    {{ m.mapping_select(columns, mapping, 'comments') }}
+  </p>
+  </div>
+
+  <div class="splitcontentright">
+  {% for field in custom_fields %}
+    <p>
+      <label for="import_mapping_cf_{{ field.id }}">{{ field.name }}</label>
+      {{ m.mapping_select(columns, mapping, 'cf_' ~ field.id, {required: field.isRequired}) }}
+    </p>
+  {% endfor %}
+  </div>
+</div>

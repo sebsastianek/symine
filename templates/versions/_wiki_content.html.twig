@@ -1,0 +1,5 @@
+{% if page and page.content %}
+<div class="wiki wiki-page">
+  {{ textilizable(page.content.text, project) }}
+</div>
+{% endif %}

@@ -1,0 +1,27 @@
+<fieldset class="box tabular">
+  <legend>{{ l('label_fields_mapping') }}</legend>
+  <div id="fields-mapping">
+    {% include 'imports/_issues_fields_mapping.html.twig' %}
+  </div>
+</fieldset>
+
+<fieldset class="box tabular collapsible collapsed">
+  <legend onclick="toggleFieldset(this);" class="icon icon-collapsed">
+    {{ sprite_icon('angle-right') }}
+    {{ l('label_relations_mapping') }}
+  </legend>
+  <div id="relations-mapping" style="display: none;">
+    {% include 'imports/_issues_relations_mapping.html.twig' %}
+  </div>
+</fieldset>
+
+<script>
+  $('#fields-mapping').on('change', '#import_mapping_project_id, #import_mapping_tracker', function(){
+    $.ajax({
+      url: {{ path('import_mapping_js', {id: import.filename, _format: 'js'})|json_encode|raw }},
+      type: 'post',
+      headers: {'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')},
+      data: $('#import-form').serialize()
+    });
+  });
+</script>

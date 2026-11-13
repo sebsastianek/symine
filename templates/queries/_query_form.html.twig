@@ -1,0 +1,98 @@
+{#- queries/_query_form.html.erb ; params: query, project, list_url (form action of the current list), new_query_url, can_save_queries -#}
+{% import 'queries/_macros.html.twig' as qm %}
+<input type="hidden" name="set_filter" id="set_filter" value="1" autocomplete="off" />
+<input type="hidden" name="type" id="query_type" value="{{ query.type() }}" disabled="disabled" autocomplete="off" />
+<input type="hidden" name="sort" value="{{ query.sortCriteria().toParam() }}" autocomplete="off" />
+
+<div id="query_form_with_buttons" class="hide-when-print">
+<div id="query_form_content">
+  <fieldset id="filters" class="collapsible {{ query.isNew() ? '' : 'collapsed' }}">
+    <legend onclick="toggleFieldset(this);" class="icon icon-{{ query.isNew() ? 'expanded' : 'collapsed' }}">
+      {{ sprite_icon(query.isNew() ? 'angle-down' : 'angle-right', null, 18, false, query.isNew() ? null : 'icon-rtl') }}
+      {{ l('label_filter_plural') }}
+    </legend>
+    <div style="{{ query.isNew() ? '' : 'display: none;' }}">
+      {% include 'queries/_filters.html.twig' with {query: query} %}
+    </div>
+  </fieldset>
+
+  {% if query.availableColumns() is not empty %}
+    <fieldset id="options" class="collapsible collapsed">
+      <legend onclick="toggleFieldset(this);" class="icon icon-collapsed">
+        {{ sprite_icon('angle-right', null, 18, false, 'icon-rtl') }}
+        {{ l('label_options') }}
+      </legend>
+        <div class="hidden">
+          {% if query.availableDisplayTypes()|length > 1 %}
+          <div>
+            <div class="field"><label for='display_type'>{{ l('label_display_type') }}</label></div>
+            {% for t in query.availableDisplayTypes() %}<input type="radio" name="display_type" id="display_type_{{ t }}" value="{{ t }}"{% if query.displayType() == t %} checked="checked"{% endif %} /><label for="display_type_{{ t }}" class="inline">{{ l('label_display_type_' ~ t) }}</label>{% endfor %}
+          </div>
+          {% endif %}
+          <div id="list-definition" class="{{ query.displayType() != 'list' ? 'hidden' : '' }}">
+          {% if query.availableColumns() is not empty %}
+            <div>
+              <div class="field">{{ l('field_column_names') }}</div>
+              {% include 'queries/_columns.html.twig' with {query: query, tag_name: 'c[]'} %}
+            </div>
+          {% endif %}
+          {% if query.groupableColumns() is not empty %}
+            <div>
+              <div class="field"><label for='group_by'>{{ l('field_group_by') }}</label></div>
+              <div><select name="group_by" id="group_by"><option value=""></option>
+{% for c in query.groupableColumns() %}<option value="{{ c.name }}"{% if query.getGroupBy() == c.name %} selected="selected"{% endif %}>{{ c.caption }}</option>{% if not loop.last %}{{ "\n" }}{% endif %}{% endfor %}</select></div>
+            </div>
+          {% endif %}
+          {% if query.availableBlockColumns() is not empty %}
+            <div>
+              <div class="field">{{ l('button_show') }}</div>
+              <div>{% for c in query.availableBlockColumns() %}<label class="inline"><input type="checkbox" name="c[]" value="{{ c.name }}"{% if query.hasColumn(c.name) %} checked="checked"{% endif %} /> {{ c.caption }}</label>{% endfor %}</div>
+            </div>
+          {% endif %}
+          {% if query.availableTotalableColumns() is not empty %}
+            <div>
+              <div class="field">{{ l('label_total_plural') }}</div>
+              <div>{% for c in query.availableTotalableColumns() %}<label class="inline"><input type="checkbox" name="t[]" value="{{ c.name }}"{% if c.name in query.totalableNames() %} checked="checked"{% endif %} /> {{ c.caption }}</label>{% endfor %}<input type="hidden" name="t[]" id="t_" value="" autocomplete="off" /></div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </fieldset>
+  {% endif %}
+</div>
+
+<p class="buttons">
+  <a href="#" onclick="$(&quot;#query_form&quot;).submit(); return false;" class="icon icon-checked">{{ sprite_icon('checked', l('button_apply')) }}</a>
+  <a class="icon icon-reload" href="{{ clear_url }}">{{ sprite_icon('reload', l('button_clear')) }}</a>
+  {% if query.isNew() %}
+    {% if can_save_queries %}
+      <a href="#" onclick="$(&#39;#query_type&#39;).prop(&#39;disabled&#39;,false);$(&#39;#query_form&#39;).attr(&#39;action&#39;, &#39;{{ new_query_url }}&#39;).submit(); return false;" class="icon icon-save">{{ sprite_icon('save', l('button_save_object', {object_name: l('label_query')})|capitalize) }}</a>
+    {% endif %}
+  {% else %}
+    {% if query.isEditableBy() %}
+      <a class="icon icon-edit" href="{{ path('query_edit', {id: query.record.id}|merge(extra_query_params ?? {})) }}">{{ sprite_icon('edit', l('button_edit_object', {object_name: l('label_query')})|capitalize) }}</a>
+      <a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('query_destroy', {id: query.record.id}|merge(extra_query_params ?? {})) }}">{{ sprite_icon('del', l('button_delete_object', {object_name: l('label_query')})|capitalize) }}</a>
+    {% endif %}
+  {% endif %}
+</p>
+</div>
+
+{{ qm.error_messages(query.errors) }}
+{{ qm.filter_warnings(query) }}
+
+<script>
+//<![CDATA[
+
+$(function ($) {
+  $('input[name=display_type]').change(function (e) {
+    if ($("#display_type_list").is(':checked')) {
+      $('#list-definition').show();
+    } else {
+      $('#list-definition').hide();
+    }
+  })
+});
+
+
+//]]>
+</script>

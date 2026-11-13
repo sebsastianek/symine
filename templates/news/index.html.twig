@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}
+<link rel="alternate" type="application/atom+xml" title="ATOM" href="{{ project ? path('project_news', {project_id: project.identifier, _format: 'atom'}) : path('news_index', {_format: 'atom'}) }}" />
+{% endblock %}
+{% block content %}
+<div class="contextual">
+{% if allowed_to('manage_news', project, true) %}
+<a class="icon icon-add add-news-link" onclick="showAndScrollTo(&quot;add-news&quot;, &quot;news_title&quot;); return false;" href="{{ project ? path('project_news', {project_id: project.identifier}) : path('news_index') }}">{{ sprite_icon('add', l('label_news_new')) }}</a>
+{% endif %}
+{% if project and news_module_id %}{% include 'content/_watch_link.html.twig' with {watched_type: 'enabled_module', watched_class: 'EnabledModule', watched_id: news_module_id} %}{% endif %}
+</div>
+
+{% if allowed_to('manage_news', project, true) %}
+<div id="add-news" style="display:none;">
+<h2>{{ l('label_news_new') }}</h2>
+<form class="new_news" id="news-form" enctype="multipart/form-data" action="{{ project ? path('project_news_create', {project_id: project.identifier}) : path('news_create_global') }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+{% include 'news/_form.html.twig' with {form_project: project} %}
+<input type="submit" name="commit" value="{{ l('button_create') }}" data-disable-with="{{ l('button_create') }}" />
+<a onclick="$(&quot;#add-news&quot;).hide()" href="#">{{ l('button_cancel') }}</a>
+</form>
+</div>
+{% endif %}
+
+<h2>{{ l('label_news_plural') }}</h2>
+
+<div id="news-list">
+{% if newss is empty %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% else %}
+{% for n in newss %}
+    <article class="news-article">
+      <header>
+        <h3>{{ avatar(n.author) }}{% if project is null or n.project.id != project.id %}{{ link_to_project(n.project) }}: {% endif %}
+        <a href="{{ path('news_show', {id: n.id}) }}">{{ n.title }}</a>
+        {% if n.commentsCount > 0 %}({{ l('label_x_comments', {count: n.commentsCount}) }}){% endif %}</h3>
+        <p class="author">{{ authoring(n.createdOn, n.author) }}</p>
+      </header>
+      <div class="wiki">
+      {{ textilizable(n.description, n.project) }}
+      </div>
+    </article>
+{% endfor %}
+{% endif %}
+</div>
+{% include 'common/_pagination.html.twig' %}
+
+<p class="other-formats">{{ l('label_export_to') }}
+<span><a class="atom" rel="nofollow" href="{{ project ? path('project_news', {project_id: project.identifier, _format: 'atom'}) : path('news_index', {_format: 'atom'}) }}">Atom</a></span>
+</p>
+{% endblock %}

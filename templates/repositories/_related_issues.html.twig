@@ -1,0 +1,28 @@
+{% set rev_id = changeset_identifier(changeset) %}
+<div id="related-issues">
+{% if can_manage_related %}
+  <div class="contextual">
+    <a onclick="$('#new-relation-form').toggle(); $('#issue_id:visible').focus(); return false;" href="#">{{ l('button_add') }}</a>
+  </div>
+{% endif %}
+
+<h3>{{ l('label_related_issues') }}</h3>
+<ul>
+{% for issue in related_issues %}
+  <li id="related-issue-{{ issue.id }}">{{ link_to_issue(issue) }}
+    {% if can_manage_related %}
+    <a title="{{ l('label_relation_remove') }}" class="icon-only icon-link-break" data-confirm="{{ l('text_are_you_sure') }}" rel="nofollow" data-method="delete" href="{{ repo_url('revision', repository, {rev: rev_id}) }}/issues/{{ issue.id }}">{{ sprite_icon('link-break', l('label_relation_remove')) }}</a>
+    {% endif %}
+  </li>
+{% endfor %}
+</ul>
+
+{% if can_manage_related %}
+<form id="new-relation-form" style="display: none;" action="{{ repo_url('revision', repository, {rev: rev_id}) }}/issues" accept-charset="UTF-8" method="post">
+  {{ csrf_field() }}
+  {{ l('label_issue') }} #<input type="text" name="issue_id" id="issue_id" value="" size="10" />
+  <input type="submit" value="{{ l('button_add') }}" />
+  <a onclick="$('#new-relation-form').toggle(); this.blur(); return false;" href="#">{{ l('button_cancel') }}</a>
+</form>
+{% endif %}
+</div>

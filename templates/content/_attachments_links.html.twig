@@ -1,0 +1,38 @@
+{#- Port of attachments/_links.html.erb. Params: attachments, deletable (bool), author (bool, default true), thumbnails (bool) -#}
+{% if attachments|length > 0 %}
+<div class="attachments">
+<div class="contextual">
+  {% if attachments|length > 1 and attachments[0].containerType is defined %}
+  <a title="{{ l('label_download_all_attachments') }}" class="icon-only icon-download" href="/attachments/{{ attachments[0].containerType|replace({'WikiPage': 'wiki_pages', 'Document': 'documents', 'Message': 'messages', 'News': 'news', 'Project': 'projects', 'Version': 'versions'}) }}/{{ attachments[0].containerId }}/download">{{ sprite_icon('download', l('label_download_all_attachments')) }}</a>
+  {% endif %}
+</div>
+<table>
+{% for attachment in attachments %}
+<tr>
+  <td>
+    <a class="icon icon-attachment" href="{{ attachment_url(attachment) }}">{{ sprite_icon(mime_icon(attachment.contentType, attachment.filename), attachment.filename) }}</a>
+    <span class="size">({{ number_to_human_size(attachment.filesize) }})</span>
+    <a class="icon-only icon-download" title="{{ l('button_download') }}" href="{{ attachment_url(attachment, true) }}">{{ sprite_icon('download', l('button_download')) }}</a>
+  </td>
+  <td>{{ attachment.description }}</td>
+  <td>
+    {% if author ?? true %}<span class="author">{{ attachment.author.getName() }}, {{ format_time(attachment.createdOn) }}</span>{% endif %}
+  </td>
+  <td>
+    {% if deletable ?? false %}
+      <a data-confirm="{{ l('text_are_you_sure') }}" class="delete icon-only icon-del" title="{{ l('button_delete') }}" rel="nofollow" data-method="delete" href="/attachments/{{ attachment.id }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+    {% endif %}
+  </td>
+</tr>
+{% endfor %}
+</table>
+{% if thumbnails ?? false %}
+  {% set images = attachments|filter(a => a.isImage()) %}
+  {% if images|length > 0 %}
+  <div class="thumbnails">
+    {% for a in images %}<div><a href="{{ attachment_url(a) }}" title="{{ a.filename }}"><img src="/attachments/thumbnail/{{ a.id }}" alt="{{ a.filename }}" loading="lazy" style="max-width:200px;max-height:200px"></a></div>{% endfor %}
+  </div>
+  {% endif %}
+{% endif %}
+</div>
+{% endif %}

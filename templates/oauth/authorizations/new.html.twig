@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('doorkeeper.authorizations.new.title') }}</h2>
+
+<div class="warning">
+<p><strong>{{ pre_auth.client.name }}</strong></p>
+
+<p>{{ l('doorkeeper.authorizations.new.prompt', {client_name: '<strong class="text-info">' ~ pre_auth.client.name|e ~ '</strong>'})|raw }}</p>
+
+<div class="oauth-permissions">
+  <p>{{ l('doorkeeper.authorizations.new.able_to') }}:</p>
+  <ul>
+    <li>{{ l('text_oauth_implicit_permissions') }}</li>
+    {% for scope in pre_auth.scopes() %}
+      {% if scope == 'admin' %}
+        <li>{{ l('label_oauth_permission_admin') }}</li>
+      {% else %}
+        <li>{{ l('permission_' ~ scope) }}</li>
+      {% endif %}
+    {% endfor %}
+  </ul>
+</div>
+
+{% if 'admin' in pre_auth.scopes() %}
+  <p>{{ l('text_oauth_admin_permission_info') }}</p>
+{% endif %}
+</div>
+
+<p>
+  {% for method in ['post', 'delete'] %}
+  <form action="{{ path('oauth_authorization_create') }}" accept-charset="UTF-8" method="post">{% if method == 'delete' %}<input type="hidden" name="_method" value="delete" autocomplete="off" />{% endif %}{{ csrf_field() }}
+    <input type="hidden" name="client_id" id="client_id" value="{{ pre_auth.client.uid }}" autocomplete="off" />
+    <input type="hidden" name="redirect_uri" id="redirect_uri" value="{{ pre_auth.redirectUri }}" autocomplete="off" />
+    <input type="hidden" name="state" id="state" value="{{ pre_auth.state }}" autocomplete="off" />
+    <input type="hidden" name="response_type" id="response_type" value="{{ pre_auth.responseType }}" autocomplete="off" />
+    <input type="hidden" name="scope" id="scope" value="{{ pre_auth.scope }}" autocomplete="off" />
+    <input type="hidden" name="code_challenge" id="code_challenge" value="{{ pre_auth.codeChallenge }}" autocomplete="off" />
+    <input type="hidden" name="code_challenge_method" id="code_challenge_method" value="{{ pre_auth.codeChallengeMethod }}" autocomplete="off" />
+    {% set label = method == 'post' ? l('doorkeeper.authorizations.buttons.authorize') : l('doorkeeper.authorizations.buttons.deny') %}
+    <input type="submit" name="commit" value="{{ label }}" data-disable-with="{{ label }}" />
+</form>{% endfor %}</p>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+{% set p = {project_id: project.identifier, id: page.title} %}
+{% block header_tags %}<link rel="stylesheet" href="/assets/scm.css" media="screen" />{% endblock %}
+{% block content %}
+<div class="contextual">
+<a class="icon icon-edit" href="{{ path('wiki_edit', p) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>
+<a class="icon icon-history" href="{{ path('wiki_history', p) }}">{{ sprite_icon('history', l('label_history')) }}</a>
+</div>
+
+{% include 'wiki/_breadcrumb.html.twig' %}
+
+<h2><a href="{{ path('wiki_show', p) }}">{{ page.prettyTitle() }}</a> &#187; <a href="{{ path('wiki_history', p) }}">{{ l('label_history') }}</a> &#187; {{ l('label_version') }} {{ annotate.content.version }}</h2>
+
+<p>
+  <em>{{ annotate.content.author ? link_to_user(annotate.content.author) : l('label_user_anonymous') }}, {{ format_time(annotate.content.updatedOn) }} </em><br />
+  {{ annotate.content.comments }}
+</p>
+
+<table class="filecontent annotate">
+<tbody>
+{% set prev_version = null %}
+{% for line in annotate.lines %}
+<tr class="bloc-{{ colors[line[0]] }}">
+    <th class="line-num">{{ loop.index }}</th>
+    <td class="revision">{% if prev_version != line[0] %}<a href="{{ path('wiki_show_version', p|merge({version: line[0]})) }}">{{ line[0] }}</a>{% endif %}</td>
+    <td class="author">{% if prev_version != line[0] and line[1] %}{{ line[1].getName() }}{% endif %}</td>
+    <td class="line-code"><pre>{{ line[2] }}</pre></td>
+</tr>
+{% set prev_version = line[0] %}
+{% endfor %}
+</tbody>
+</table>
+{% endblock %}

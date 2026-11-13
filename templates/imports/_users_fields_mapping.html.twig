@@ -1,0 +1,58 @@
+{% import 'imports/_macros.html.twig' as m %}
+<div class="splitcontent">
+  <div class="splitcontentleft">
+  <p>
+    <label for="import_mapping_login">{{ l('field_login') }}</label>
+    {{ m.mapping_select(columns, mapping, 'login', {required: true}) }}
+  </p>
+  <p>
+    <label for="import_mapping_firstname">{{ l('field_firstname') }}</label>
+    {{ m.mapping_select(columns, mapping, 'firstname', {required: true}) }}
+  </p>
+  <p>
+    <label for="import_mapping_lastname">{{ l('field_lastname') }}</label>
+    {{ m.mapping_select(columns, mapping, 'lastname', {required: true}) }}
+  </p>
+  <p>
+    <label for="import_mapping_mail">{{ l('field_mail') }}</label>
+    {{ m.mapping_select(columns, mapping, 'mail') }}
+  </p>
+  <p>
+    <label for="import_mapping_language">{{ l('field_language') }}</label>
+    {{ m.mapping_select(columns, mapping, 'language') }}
+  </p>
+  <p>
+    <label for="import_mapping_admin">{{ l('field_admin') }}</label>
+    {{ m.mapping_select(columns, mapping, 'admin') }}
+  </p>
+  <p>
+    <label for="import_mapping_auth_source">{{ l('field_auth_source') }}</label>
+    {{ m.mapping_select(columns, mapping, 'auth_source') }}
+  </p>
+  <p>
+    <label for="import_mapping_password">{{ l('field_password') }}</label>
+    {{ m.mapping_select(columns, mapping, 'password') }}
+  </p>
+  <p>
+    <label for="import_mapping_must_change_passwd">{{ l('field_must_change_passwd') }}</label>
+    {{ m.mapping_select(columns, mapping, 'must_change_passwd') }}
+  </p>
+  <p>
+    <label for="import_mapping_status">{{ l('field_status') }}</label>
+    {{ m.mapping_select(columns, mapping, 'status') }}
+  </p>
+  <p>
+    <label for="import_mapping_mail_notification">{{ l('field_mail_notification') }}</label>
+    {{ m.mapping_select(columns, mapping, 'mail_notification') }}
+  </p>
+  </div>
+
+  <div class="splitcontentright">
+  {% for field in custom_fields %}
+    <p>
+      <label for="import_mapping_cf_{{ field.id }}">{{ field.name }}</label>
+      {{ m.mapping_select(columns, mapping, 'cf_' ~ field.id, {required: field.isRequired}) }}
+    </p>
+  {% endfor %}
+  </div>
+</div>

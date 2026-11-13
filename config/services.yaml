@@ -13,18 +13,3 @@ services:
         exclude:
             - '../src/Entity/'
             - '../src/Kernel.php'
-
-when@test:
-    services:
-        _defaults:
-            autowire: true
-            autoconfigure: true
-            public: true
-            bind:
-                string $projectDir: '%kernel.project_dir%'
-        App\:
-            resource: '../src/'
-            exclude:
-                - '../src/Entity/'
-                - '../src/Event/'
-                - '../src/Kernel.php'

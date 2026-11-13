@@ -1,0 +1,11 @@
+<div class="contextual">
+{% if is_editable %}<a onclick="showAndScrollTo(&quot;update&quot;, &quot;issue_notes&quot;); return false;" class="icon icon-edit " accesskey="e" href="{{ path('issue_edit', {id: issue.id}) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>{% endif %}
+{% if is_time_loggable %}<a class="icon icon-time-add " href="{{ path_exists('issue_time_entry_new') ? path('issue_time_entry_new', {issue_id: issue.id}) : '/issues/' ~ issue.id ~ '/time_entries/new' }}">{{ sprite_icon('time-add', l('button_log_time')) }}</a>{% endif %}
+{{ watcher_link_for(issue) }}
+{% if is_copyable %}<a class="icon icon-copy " href="{{ path('issue_copy', {project_id: project.identifier, copy_from: issue.id}) }}">{{ sprite_icon('copy', l('button_copy')) }}</a>{% endif %}
+{% set dropdown %}
+  {{ copy_object_url_link(issue_url) }}
+  {% if is_deletable %}<a data-confirm="{{ issue_destroy_confirmation(issue) }}" class="icon icon-del " rel="nofollow" data-method="delete" href="{{ path('issue_destroy', {id: issue.id}) }}">{{ sprite_icon('del', l('button_delete_object', {object_name: l('label_issue')})|capitalize) }}</a>{% endif %}
+{% endset %}
+{{ actions_dropdown(dropdown) }}
+</div>

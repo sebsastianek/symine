@@ -1,0 +1,31 @@
+{#- Port of documents/_form.html.erb. Params: document, categories, custom_field_values, errors -#}
+{% include 'news/_errors.html.twig' %}
+<div class="box tabular">
+  <p><label for="document_category_id">{{ l('field_category') }}</label><select name="document[category_id]" id="document_category_id">
+  {%- for c in categories %}<option{% if document.category is defined and document.category.id == c.id %} selected="selected"{% endif %} value="{{ c.id }}">{{ c.name }}</option>
+  {% endfor %}</select></p>
+  <p><label for="document_title">{{ l('field_title') }}<span class="required"> *</span></label><input size="60" type="text" value="{{ document.title }}" name="document[title]" id="document_title" /></p>
+  <p><label for="document_description">{{ l('field_description') }}</label>{% include ['issues/_wiki_textarea.html.twig', 'content/_textarea.html.twig'] with {name: 'document[description]', id: 'document_description', value: document.description, rows: 15, cols: 60} %}</p>
+
+  {% for cv in custom_field_values %}
+    {% set f = cv.field %}
+    {% set fid = 'document_custom_field_values_' ~ f.id %}
+    <p><label for="{{ fid }}">{{ f.name }}{% if f.isRequired %}<span class="required"> *</span>{% endif %}</label>
+    {% if f.fieldFormat in ['list', 'bool', 'enumeration', 'user', 'version'] %}
+      {% set selected = cv.value is iterable ? cv.value : [cv.value] %}
+      <select name="document[custom_field_values][{{ f.id }}]{{ f.isMultiple() ? '[]' : '' }}" id="{{ fid }}" class="{{ f.fieldFormat }}_cf"{% if f.isMultiple() %} multiple="multiple"{% endif %}>
+        {% if not f.isMultiple() %}<option value="">{% if not f.isRequired %}&nbsp;{% else %}--- {{ l('actionview_instancetag_blank_option') }} ---{% endif %}</option>{% endif %}
+        {% for opt in cv.options %}<option value="{{ opt[0] }}"{% if opt[0] in selected %} selected="selected"{% endif %}>{{ opt[1] }}</option>{% endfor %}
+      </select>
+    {% elseif f.fieldFormat == 'text' %}
+      <textarea rows="3" class="text_cf wiki-edit" name="document[custom_field_values][{{ f.id }}]" id="{{ fid }}">{{ cv.value }}</textarea>
+    {% else %}
+      <input type="text" value="{{ cv.value }}" name="document[custom_field_values][{{ f.id }}]" id="{{ fid }}" class="{{ f.fieldFormat }}_cf" />
+    {% endif %}
+    </p>
+  {% endfor %}
+
+  {% if document.id is null %}
+    <p><label>{{ l('label_attachment_plural') }}</label>{% include 'content/_attachments_form.html.twig' %}</p>
+  {% endif %}
+</div>

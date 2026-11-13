@@ -1,0 +1,11 @@
+<div class="tabs">
+  <ul>
+  {% for tab in tabs %}
+    <li><a id="tab-{{ tab.name }}" {% if tab.name == selected_tab %}class="selected" {% endif %}href="{{ tab.url }}">{{ l(tab.label) }}</a></li>
+  {% endfor %}
+  </ul>
+  <div class="tabs-buttons" style="display:none;">
+    <button class="tab-left icon-only" type="button" onclick="moveTabLeft(this);">{{ sprite_icon('angle-left') }}</button>
+    <button class="tab-right icon-only" type="button" onclick="moveTabRight(this);">{{ sprite_icon('angle-right') }}</button>
+  </div>
+</div>

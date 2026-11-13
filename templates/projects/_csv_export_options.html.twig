@@ -1,0 +1,22 @@
+{#- CSV export options modal of projects/_list.html.erb; params: hidden_fields (html of query_as_hidden_field_tags) -#}
+{%- set csv_encoding = l('general_csv_encoding') -%}
+{%- set csv_separator = l('general_csv_separator') -%}
+<div id="csv-export-options" style="display:none;">
+  <h3 class="title">{{ l('label_export_options', {export_format: 'CSV'}) }}</h3>
+  <form id="csv-export-form" action="{{ path('projects_index_format', {_format: 'csv'}) }}" accept-charset="UTF-8" method="get">
+  {{ hidden_fields|raw }}
+  <p>
+    <label><input type="radio" name="c[]" id="c__" value="" checked="checked" /> {{ l('description_selected_columns') }}</label><br />
+    <label><input type="radio" name="c[]" id="c__all_inline" value="all_inline" /> {{ l('description_all_columns') }}</label>
+  </p>
+  {% if csv_encoding|upper != 'UTF-8' %}<p><label>{{ l('label_encoding') }} <select name="encoding" id="encoding"><option selected="selected" value="UTF-8">UTF-8</option>
+<option value="{{ csv_encoding }}">{{ csv_encoding }}</option></select></label></p>{% endif %}
+  <p><label>{{ l('label_fields_separator') }} <select name="field_separator" id="field_separator"><option{% if csv_separator == ',' %} selected="selected"{% endif %} value=",">{{ l('label_comma_char') }}</option>
+<option{% if csv_separator == ';' %} selected="selected"{% endif %} value=";">{{ l('label_semi_colon_char') }}</option>{% if csv_separator not in [',', ';'] %}
+<option selected="selected" value="{{ csv_separator }}">{{ csv_separator }}</option>{% endif %}</select></label></p>
+  <p class="buttons">
+    <input type="submit" value="{{ l('button_export') }}" onclick="hideModal(this);" />
+    <a href="#" onclick="hideModal(this);; return false;">{{ l('button_cancel') }}</a>
+  </p>
+  </form>
+</div>

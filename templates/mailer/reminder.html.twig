@@ -1,0 +1,12 @@
+{% extends 'mailer/layout.html.twig' %}
+{% block content %}
+<p>{{ l('mail_body_reminder', {count: '<a href="' ~ (reminder_issues_url|e) ~ '">' ~ issues|length ~ '</a>', days: days})|raw }}</p>
+
+<ul>
+{% for issue in issues %}
+  <li>{{ mail.linkToIssue(issue)|raw }} ({{ mail.dueDateDistance(issue.dueDate) }})</li>
+{% endfor %}
+</ul>
+
+<p><a href="{{ open_issues_url }}">{{ l('label_issue_view_all') }}</a> ({{ l('label_x_open_issues_abbr', {count: open_issues_count}) }})</p>
+{% endblock %}

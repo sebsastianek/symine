@@ -162,7 +162,7 @@ class User extends Principal implements UserInterface, LegacyPasswordAuthenticat
 
     public function __serialize(): array
     {
-        return ['id' => $this->id, 'login' => $this->login, 'hashedPassword' => $this->hashedPassword, 'status' => $this->status];
+        return ['id' => $this->id, 'login' => $this->login, 'hashedPassword' => $this->hashedPassword, 'salt' => $this->salt, 'status' => $this->status];
     }
 
     public function __unserialize(array $data): void
@@ -171,5 +171,6 @@ class User extends Principal implements UserInterface, LegacyPasswordAuthenticat
         $this->login = $data['login'];
         $this->hashedPassword = $data['hashedPassword'];
         $this->status = $data['status'];
+        $this->salt = $data['salt'] ?? null;
     }
 }

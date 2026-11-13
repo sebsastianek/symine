@@ -1,0 +1,19 @@
+{% include 'admin/users/_error_messages.html.twig' %}
+
+<div class="box tabular">
+  <p><label for="group_name">{{ l('field_name') }}<span class="required"> *</span></label><input size="60" type="text" value="{{ group.getName() }}" name="group[name]" id="group_name"{% if group.isBuiltin() %} disabled="disabled"{% endif %} /></p>
+  {% if not group.isBuiltin() %}
+    {% set twofa = settings.string('twofa') %}
+    <p><label for="group_twofa_required">{{ l('field_twofa_required') }}</label><input name="group[twofa_required]" type="hidden" value="0" /><input type="checkbox" value="1" name="group[twofa_required]" id="group_twofa_required"{% if group.twofaRequired %} checked="checked"{% endif %}{% if twofa != '1' %} disabled="disabled"{% endif %} />
+      {% if twofa == '2' %}
+        <em class="info">{{ l('twofa_text_group_required') }}</em>
+      {% elseif twofa != '1' %}
+        <em class="info">{{ l('twofa_text_group_disabled') }}</em>
+      {% endif %}
+    </p>
+  {% endif %}
+
+  {% for field in custom_fields %}
+    <p>{% include 'admin/users/_custom_field.html.twig' with {field: field, value: custom_values[field.id] ?? null, prefix: 'group', options: cf_options[field.id] ?? []} only %}</p>
+  {% endfor %}
+</div>

@@ -1,17 +1,19 @@
 {
     "type": "project",
-    "license": "proprietary",
+    "license": "GPL-2.0-or-later",
     "minimum-stability": "stable",
     "prefer-stable": true,
     "require": {
         "php": ">=8.5",
         "ext-ctype": "*",
         "ext-iconv": "*",
+        "bacon/bacon-qr-code": "*",
         "doctrine/doctrine-bundle": "^3.3",
         "doctrine/doctrine-migrations-bundle": "^4.0",
         "doctrine/orm": "^3.7",
         "league/commonmark": "^2.10",
         "netcarver/textile": "^4.1",
+        "scrivo/highlight.php": "*",
         "symfony/asset": "7.4.*",
         "symfony/console": "7.4.*",
         "symfony/dotenv": "7.4.*",
@@ -25,6 +27,7 @@
         "symfony/mailer": "7.4.*",
         "symfony/mime": "7.4.*",
         "symfony/monolog-bundle": "^4.1",
+        "symfony/process": "7.4.*",
         "symfony/rate-limiter": "7.4.*",
         "symfony/runtime": "7.4.*",
         "symfony/security-bundle": "7.4.*",
@@ -34,7 +37,7 @@
         "symfony/twig-bundle": "7.4.*",
         "symfony/validator": "7.4.*",
         "symfony/yaml": "7.4.*",
-        "tecnickcom/tcpdf": "^7.0",
+        "tecnickcom/tcpdf": "^6.10",
         "twig/extra-bundle": "^3.29",
         "twig/intl-extra": "^3.30",
         "twig/markdown-extra": "^3.29",
@@ -99,5 +102,7 @@
         "symfony/maker-bundle": "^1.68",
         "symfony/stopwatch": "7.4.*",
         "symfony/web-profiler-bundle": "7.4.*"
-    }
+    },
+    "name": "symine/symine",
+    "description": "Symine - a Symfony port of the Redmine project management application"
 }

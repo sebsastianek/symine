@@ -1,0 +1,4 @@
+<div class="objects-selection"><div id="principals">
+{% for p in principals %}<label><input type="checkbox" name="user_ids[]" value="{{ p.id }}" /> {{ p.getName() }}</label>
+{% endfor %}
+</div></div>

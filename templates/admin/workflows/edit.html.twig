@@ -1,0 +1,44 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+{% include 'admin/workflows/_action_menu.html.twig' %}
+
+<h2>{{ l('label_workflow') }}</h2>
+
+<div class="tabs">
+  <ul>
+    <li><a class="selected" href="{{ path('workflows_edit') ~ tab_query }}">{{ l('label_status_transitions') }}</a></li>
+    <li><a href="{{ path('workflows_permissions') ~ tab_query }}">{{ l('label_fields_permissions') }}</a></li>
+  </ul>
+</div>
+
+{% include 'admin/workflows/_selectors.html.twig' with {form_action: path('workflows_edit')} %}
+
+{% if trackers and roles and statuses is not empty %}
+  <form id="workflow_form" action="{{ path('workflows_update') }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="patch" autocomplete="off" />
+  {{ csrf_field() }}
+    {% include 'admin/workflows/_hidden_scope.html.twig' %}
+    <div class="autoscroll">
+      {% include 'admin/workflows/_form.html.twig' with {name: 'always', table: tables.always} %}
+
+      {% for name in ['author', 'assignee'] %}
+      {% set present = tables[name].present %}
+      <fieldset class="collapsible" style="padding: 0;{% if loop.first %} margin-top: 0.5em;{% endif %}">
+        <legend onclick="toggleFieldset(this);" class="icon icon-{{ present ? 'expanded' : 'collapsed' }}">
+          {{ sprite_icon(present ? 'angle-down' : 'angle-right') }}
+          {{ l('label_additional_workflow_transitions_for_' ~ name) }}
+        </legend>
+        <div id="{{ name }}_workflows" style="margin: 0.5em 0 0.5em 0;">
+          {% include 'admin/workflows/_form.html.twig' with {name: name, table: tables[name]} %}
+        </div>
+      </fieldset>
+      {% if not present %}<script>
+//<![CDATA[
+hideFieldset($('#{{ name }}_workflows'))
+//]]>
+</script>{% endif %}
+      {% endfor %}
+    </div>
+    <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+  </form>
+{% endif %}
+{% endblock %}

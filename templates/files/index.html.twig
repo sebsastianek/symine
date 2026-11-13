@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<div class="contextual">
+{% if allowed_to('manage_files', project) %}
+<a class="icon icon-add" href="{{ path('file_new', {project_id: project.identifier}) }}">{{ sprite_icon('add', l('label_attachment_new')) }}</a>
+{% endif %}
+</div>
+
+<h2>{{ l('label_attachment_plural') }}</h2>
+
+<div class="autoscroll">
+  <table class="list files">
+    <thead><tr>
+      {% for h in headers %}
+      <th title="{{ l('label_sort_by', {value: '"' ~ h.caption ~ '"'}) }}"><a{% if h.css %} class="{{ h.css }}"{% endif %} href="{{ h.url }}">{{ sprite_icon(h.icon, h.caption) }}</a></th>
+      {% endfor %}
+      <th>{{ l('field_digest') }}</th>
+      <th></th>
+    </tr></thead>
+    <tbody>
+  {% for c in containers %}
+    {% if c.files|length > 0 %}
+    {% if c.version %}
+    <tr>
+      <th colspan="6">
+        <a class="icon icon-package" href="{{ path_exists('version_show') ? path('version_show', {id: c.version.id}) : '#' }}">{{ sprite_icon('package', c.version.name) }}</a>
+      </th>
+    </tr>
+    {% endif %}
+    {% for file in c.files %}
+    <tr class="file">
+      <td class="filename"><a title="{{ file.description }}" href="{{ attachment_url(file) }}">{{ file.filename }}</a></td>
+      <td class="created_on">{{ format_time(file.createdOn) }}</td>
+      <td class="filesize">{{ number_to_human_size(file.filesize) }}</td>
+      <td class="downloads">{{ file.downloads }}</td>
+      <td class="digest">{{ file.digest|length == 64 ? 'SHA256' : 'MD5' }}: {{ file.digest }}</td>
+      <td class="buttons">
+      <a class="icon-only icon-download" title="{{ l('button_download') }}" href="{{ attachment_url(file, true) }}">{{ sprite_icon('download', l('button_download')) }}</a>
+      {% if delete_allowed %}
+      <a class="icon-only icon-del" data-confirm="{{ l('text_are_you_sure') }}" rel="nofollow" data-method="delete" href="/attachments/{{ file.id }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+      {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+    {% endif %}
+  {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

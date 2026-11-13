@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+{% import 'versions/_macros.html.twig' as vm %}
+{% block header_tags %}{{ vm.context_menu_tags() }}{% endblock %}
+{% block content %}
+<div class="contextual">
+{% if allowed_to('manage_versions', version.project) %}<a class="icon icon-edit" href="{{ path('version_edit', {id: version.id}) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>{% endif %}
+{% if version.wikiPageTitle is not empty and version_wiki(version.project) and allowed_to('edit_wiki_pages', version.project) and path_exists('wiki_edit') %}
+<a class="icon icon-edit" href="{{ path('wiki_edit', {project_id: version.project.identifier, id: wiki_titleize(version.wikiPageTitle)}) }}">{{ sprite_icon('edit', l('button_edit_associated_wikipage', {page_title: version.wikiPageTitle})) }}</a>
+{% endif %}
+{% if allowed_to('manage_versions', version.project) %}<a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('version_destroy', {id: version.id, back_url: path('project_roadmap', {project_id: version.project.identifier})}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>{% endif %}
+{% set new_tracker = version_new_issue_tracker(version, project) %}
+{% if new_tracker and path_exists('issue_new') %}<a class="icon icon-add" href="{{ path('issue_new', {project_id: project.identifier, back_url: path('version_show', {id: version.id}), 'issue[fixed_version_id]': version.id, 'issue[tracker_id]': new_tracker.id}) }}">{{ sprite_icon('add', l('label_issue_new')) }}</a>{% endif %}
+{{ call_hook('view_versions_show_contextual', {version: version, project: project}) }}
+</div>
+
+<div id="roadmap" class="{{ version_css_classes(version) }}">
+  <h2 class="inline-flex">{{ version.name }}</h2>
+  <span class="badge badge-status-{{ version.status }}">{{ l('version_status_' ~ version.status) }}</span>
+
+{% include 'versions/_overview.html.twig' with {version: version} %}
+{% include 'versions/_wiki_content.html.twig' with {page: version_wiki_page(version), project: version.project} %}
+
+<div id="version-summary">
+{% set st = version_stats(version, true) %}
+{% if st.estimated_hours > 0 or can_view_time_entries %}
+{% set issues_url = path_exists('project_issues') ? 'project_issues' : null %}
+<fieldset class="time-tracking"><legend>{{ l('label_time_tracking') }}</legend>
+<table>
+<tr>
+    <th>{{ l('field_estimated_hours') }}</th>
+    <td class="total-hours">{{ vm.link_html(version_hours_html(st.estimated_hours), issues_url ? path(issues_url, {project_id: version.project.identifier, 'c': ['tracker', 'status', 'subject', 'estimated_hours'], fixed_version_id: version.id, set_filter: 1, status_id: '*', 't': ['estimated_hours']}) : null) }}</td>
+</tr>
+<tr>
+  <th>{{ l('field_estimated_remaining_hours') }}</th>
+  <td class="total-hours">
+    {{ vm.link_html(version_hours_html(st.estimated_remaining_hours), issues_url ? path(issues_url, {project_id: version.project.identifier, 'c': ['tracker', 'status', 'subject', 'estimated_remaining_hours'], fixed_version_id: version.id, set_filter: 1, status_id: '*', 't': ['estimated_remaining_hours']}) : null) }}
+  </td>
+</tr>
+{% if can_view_all_time_entries %}
+<tr>
+    <th>{{ l('label_spent_time') }}</th>
+    <td class="total-hours">{{ vm.link_html(version_hours_html(version_spent_hours(version)), path_exists('project_time_entries') ? path('project_time_entries', {project_id: version.project.identifier, 'issue.fixed_version_id': version.id, set_filter: 1}) : null) }}</td>
+</tr>
+{% endif %}
+</table>
+</fieldset>
+{% endif %}
+
+<div id="status_by">
+{% if has_fixed_issues %}{% include 'versions/_issue_counts.html.twig' with {version: version, criteria: criteria} %}{% endif %}
+</div>
+</div>
+
+{% if issues is not empty %}
+{{ vm.related_issues(issues, project) }}
+{% endif %}
+</div>
+
+<p class="other-formats hide-when-print">{{ l('label_export_to') }} <span><a class="txt" rel="nofollow" href="{{ path('version_show_format', {id: version.id, _format: 'txt'}) }}">TXT</a></span>
+</p>
+
+{{ call_hook('view_versions_show_bottom', {version: version}) }}
+{% endblock %}

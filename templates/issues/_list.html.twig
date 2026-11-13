@@ -1,0 +1,64 @@
+{#- issues/_list.html.erb ; params: issues, query, query_options -#}
+{% set query_options = query_options ?? {} %}
+<form data-cm-url="{{ path_exists('issues_context_menu') ? path('issues_context_menu') : '' }}" action="{{ app.request.pathInfo }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}<input type="hidden" name="back_url" value="{{ app.request.requestUri }}" autocomplete="off" />
+{{ query_columns_hidden_tags(query) }}
+<div class="autoscroll">
+<table class="list issues odd-even {{ query.cssClasses() }}">
+  <thead>
+    <tr>
+      <th class="checkbox hide-when-print">
+        <input type="checkbox" name="check_all" id="check_all" value="" class="toggle-selection" title="{{ l('button_check_all') }} / {{ l('button_uncheck_all') }}" />
+      </th>
+      {% for column in query.inlineColumns() %}
+        {{ query_column_header(query, column, query_options) }}
+      {% endfor %}
+      <th class="buttons hide-when-print"></th>
+    </tr>
+  </thead>
+  <tbody>
+  {% set inline_count = query.inlineColumns()|length %}
+  {% set block_columns = query.blockColumns() %}
+  {% set cycle = 0 %}
+  {% for row in grouped_issue_list(issues, query) %}
+  {% set issue = row.issue %}
+  {% if row.group_name is not null %}
+    {% set cycle = 0 %}
+    <tr class="group open">
+      <td colspan="{{ inline_count + 2 }}">
+        <span class="expander icon icon-expanded" onclick="toggleRowGroup(this);">{{ sprite_icon('angle-down') }}</span>
+        <span class="name">{{ row.group_name|raw }}</span>
+        {% if row.group_count is not null %}
+        <span class="badge badge-count count">{{ row.group_count }}</span>
+        {% endif %}
+        <span class="totals">{{ row.group_totals|raw }}</span>
+        <a href="#" onclick="toggleAllRowGroups(this); return false;" class="toggle-all">{{ l('button_collapse_all') }}/{{ l('button_expand_all') }}</a>
+      </td>
+    </tr>
+  {% endif %}
+  {% set cycle_class = cycle is odd ? 'even' : 'odd' %}
+  {% set cycle = cycle + 1 %}
+  <tr id="issue-{{ issue.id }}" class="hascontextmenu {{ cycle_class }} {{ issue_css_classes(issue) }} {{ row.level > 0 ? 'idnt idnt-' ~ row.level : '' }}">
+    <td class="checkbox hide-when-print"><input type="checkbox" name="ids[]" value="{{ issue.id }}" /></td>
+    {% for column in query.inlineColumns() %}
+    <td class="{{ column.cssClasses() }}">{{ query_column_content(query, column, issue) }}</td>
+    {% endfor %}
+    <td class="buttons hide-when-print"><a title="{{ l('button_actions') }}" class="icon-only icon-actions js-contextmenu " href="#">{{ sprite_icon('3-bullets', l('button_actions')) }}</a></td>
+  </tr>
+  {% for column in block_columns %}
+    {% set text = query_column_content(query, column, issue) %}
+    {% if text is not empty %}
+  <tr class="{{ cycle_class }}">
+    <td colspan="{{ inline_count + 2 }}" class="{{ column.cssClasses() }} block_column">
+      {% if block_columns|length > 1 %}
+        <span>{{ column.caption }}</span>
+      {% endif %}
+      {{ text|raw }}
+    </td>
+  </tr>
+    {% endif %}
+  {% endfor %}
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+</form>

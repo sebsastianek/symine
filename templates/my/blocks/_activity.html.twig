@@ -1,0 +1,4 @@
+{#- my/blocks/_activity.html.erb -#}
+<h3><a href="{{ path_exists('activity') ? path('activity', {from: (b.event_days|first ? (b.event_days|first).date|date('Y-m-d') : null), user_id: current_user().id}) : '#' }}">{{ l('label_activity') }}</a></h3>
+
+{% include 'activities/_activities.html.twig' with {event_days: b.event_days, project: null} only %}

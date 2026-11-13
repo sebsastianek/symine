@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_confirmation') }}</h2>
+
+<form action="{{ path('projects_bulk_destroy') }}?{{ ids|map(id => 'ids%5B%5D=' ~ id)|join('&') }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="delete" autocomplete="off" />{{ csrf_field() }}
+<div class="warning">
+
+<p>{{ head_html|raw }}</p>
+
+{% for item in projects_to_destroy %}
+  <p>{{ l('label_project') }}: <strong>{{ item.project.name }}</strong>
+    {% if item.descendants|length > 0 %}
+      <br />
+      {{ l('text_subprojects_bulk_destroy', {value: item.descendants|map(d => d.name)|join(', ')}) }}
+    {% endif %}
+  </p>
+{% endfor %}
+
+<p>{{ l('text_projects_bulk_destroy_confirm', {yes: l('general_text_Yes')}) }}</p>
+<p><input type="text" name="confirm" id="confirm" /></p>
+
+</div>
+
+<p>
+  <input type="submit" name="commit" value="{{ l('button_delete') }}" class="btn-alert btn-small" data-disable-with="{{ l('button_delete') }}" />
+  <a href="{{ path_exists('admin_projects') ? path('admin_projects') : path('projects_index') }}">{{ l('button_cancel') }}</a>
+</p>
+</form>
+{% endblock %}

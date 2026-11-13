@@ -1,0 +1,41 @@
+{% import 'versions/_macros.html.twig' as vm %}
+{% if back_url is defined and back_url %}<input type="hidden" name="back_url" value="{{ back_url }}" />{% endif %}
+{{ vm.errors(errors) }}
+
+<div class="box tabular">
+<p><label for="version_name">{{ l('field_name') }}<span class="required"> *</span></label><input maxlength="60" size="60" type="text" value="{{ version.name }}" name="version[name]" id="version_name" /></p>
+<p><label for="version_description">{{ l('field_description') }}</label><input size="60" type="text" value="{{ version.description }}" name="version[description]" id="version_description" /></p>
+{% if version.id %}
+  <p><label for="version_status">{{ l('field_status') }}</label><select name="version[status]" id="version_status">{% for s in ['open', 'locked', 'closed'] %}<option{% if version.status == s %} selected="selected"{% endif %} value="{{ s }}">{{ l('version_status_' ~ s) }}</option>
+{% endfor %}</select></p>
+{% endif %}
+<p><label for="version_wiki_page_title">{{ l('label_wiki_page') }}</label><input size="60" type="text"{% if version.wikiPageTitle %} value="{{ version.wikiPageTitle }}"{% endif %} name="version[wiki_page_title]" id="version_wiki_page_title"{% if not version_wiki(project) %} disabled="disabled"{% endif %} /></p>
+<p><label for="version_effective_date">{{ l('field_effective_date') }}</label><input max="9999-12-31" size="10"{% if version.effectiveDate %} value="{{ version.effectiveDate|date('Y-m-d') }}"{% endif %} type="date" name="version[effective_date]" id="version_effective_date" /><script>
+//<![CDATA[
+$(function() { $('#version_effective_date').addClass('date').datepickerFallback(datepickerOptions); });
+//]]>
+</script></p>
+<p><label for="version_sharing">{{ l('field_sharing') }}</label><select name="version[sharing]" id="version_sharing">{% for s in version_allowed_sharings(version) %}<option{% if version.sharing == s %} selected="selected"{% endif %} value="{{ s }}">{{ format_version_sharing(s) }}</option>
+{% endfor %}</select></p>
+{% if not version.id %}
+<p><label for="version_default_project_version">{{ l('field_default_version') }}</label><input name="version[default_project_version]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1" name="version[default_project_version]" id="version_default_project_version"{% if extra.default_project_version ?? false %} checked="checked"{% endif %} /></p>
+{% endif %}
+
+{% for field in version_custom_fields(version) %}
+  {% set fid = 'version_custom_field_values_' ~ field.id %}
+  {% set fname = 'version[custom_field_values][' ~ field.id ~ ']' %}
+  {% set value = cf_values[field.id] ?? null %}
+  <p><label for="{{ fid }}"><span>{{ field.name }}</span>{% if field.isRequired %}<span class="required"> *</span>{% endif %}</label>
+  {%- if field.fieldFormat == 'text' -%}
+    <textarea rows="3" class="text_cf" name="{{ fname }}" id="{{ fid }}">{{ value }}</textarea>
+  {%- elseif field.fieldFormat == 'bool' -%}
+    <select class="bool_cf" name="{{ fname }}" id="{{ fid }}"><option value="">{{ l('label_none') }}</option><option value="1"{% if value == '1' %} selected="selected"{% endif %}>{{ l('general_text_Yes') }}</option><option value="0"{% if value == '0' %} selected="selected"{% endif %}>{{ l('general_text_No') }}</option></select>
+  {%- elseif field.fieldFormat == 'list' -%}
+    <select class="list_cf" name="{{ fname }}{% if field.isMultiple() %}[]{% endif %}" id="{{ fid }}"{% if field.isMultiple() %} multiple="multiple"{% endif %}>{% if not field.isMultiple() %}<option value=""></option>{% endif %}{% for pv in field.getPossibleValues() %}<option value="{{ pv }}"{% if pv in (value is iterable ? value : [value]) %} selected="selected"{% endif %}>{{ pv }}</option>{% endfor %}</select>
+  {%- else -%}
+    <input type="{{ field.fieldFormat == 'date' ? 'date' : 'text' }}" class="{{ field.fieldFormat }}_cf" value="{{ value is iterable ? value|join(', ') : value }}" name="{{ fname }}" id="{{ fid }}" />
+  {%- endif -%}
+  </p>
+{% endfor %}
+
+</div>

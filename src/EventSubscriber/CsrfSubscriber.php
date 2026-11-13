@@ -39,7 +39,7 @@ final class CsrfSubscriber implements EventSubscriberInterface
             return;
         }
         // Login form and logout use their own security tokens
-        if (\in_array($request->attributes->get('_route'), ['signin', 'signout', 'mail_handler'], true)) {
+        if (\in_array($request->attributes->get('_route'), ['signin', 'signout', 'mail_handler', 'oauth_token', 'oauth_revoke', 'sys_projects', 'sys_create_project_repository', 'sys_fetch_changesets'], true)) {
             return;
         }
         // API requests (json/xml) without credentials are rejected later by authorization

@@ -1,0 +1,34 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<div class="contextual">
+<a class="icon icon-add" href="{{ path('auth_source_new') }}">{{ sprite_icon('add', l('label_auth_source_new')) }}</a>
+</div>
+
+<h2>{{ l('label_auth_source_plural') }}</h2>
+
+<table class="list">
+  <thead><tr>
+    <th>{{ l('field_name') }}</th>
+    <th>{{ l('field_type') }}</th>
+    <th>{{ l('field_host') }}</th>
+    <th>{{ l('label_user_plural') }}</th>
+    <th></th>
+  </tr></thead>
+  <tbody>
+{% for source in auth_sources %}
+  <tr id="auth-source-{{ source.id }}">
+    <td class="name"><a href="{{ path('auth_source_edit', {id: source.id}) }}">{{ source.name }}</a></td>
+    <td>LDAP</td>
+    <td>{{ source.host }}</td>
+    <td>{{ user_counts[source.id] ?? 0 }}</td>
+    <td class="buttons">
+      <a class="icon icon-test" href="{{ path('auth_source_test_connection', {id: source.id}) }}">{{ sprite_icon('arrow-right', l('button_test')) }}</a>
+      <a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('auth_source_destroy', {id: source.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+    </td>
+  </tr>
+{% endfor %}
+  </tbody>
+</table>
+
+{% include 'common/_pagination.html.twig' %}
+{% endblock %}

@@ -1,0 +1,86 @@
+{% import 'my/_macros.html.twig' as m %}
+<h2>{{ l('label_bulk_edit_selected_time_entries') }}</h2>
+
+{% if errors is not empty %}
+<div id="errorExplanation">
+  {{ sprite_icon('warning') }}
+  <span>
+    {{ l('notice_failed_to_save_time_entries', {count: unsaved_entries|length, total: saved_entries|length, ids: unsaved_entries|map(e => '#' ~ e.id)|join(', ')}) }}
+  </span>
+  <ul>
+  {% for msg in errors %}
+    <li>{{ msg }}</li>
+  {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<ul id="bulk-selection">
+{% for entry in entries %}
+  <li><a href="{{ path('time_entry_edit', {id: entry.id}) }}">{{ format_date(entry.spentOn) }} - {{ entry.project.name }}: {{ l('label_f_hour_plural', {value: format_hours(entry.hours)}) }} ({{ entry.user.getName() }})</a></li>
+{% endfor %}
+</ul>
+
+<form id="bulk_edit_form" action="{{ path('time_entries_bulk_update') }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+{% for entry in entries %}<input type="hidden" name="ids[]" value="{{ entry.id }}" autocomplete="off" />{% endfor %}
+<div class="box tabular">
+  <div>
+    <p>
+      <label>{{ l('field_project') }}</label>
+      <select name="time_entry[project_id]" id="time_entry_project_id" onchange="updateBulkEditFrom('{{ path('time_entries_bulk_edit')|e('js') }}')"><option value="">{{ l('label_no_change_option') }}</option>
+{% for p in target_projects %}<option value="{{ p.id }}"{% if target_project and target_project.id == p.id %} selected="selected"{% endif %}>{% for a in p.getAncestors() %}&#187; {% endfor %}{{ p.name }}</option>
+{% endfor %}</select>
+    </p>
+    <p>
+      <label for="time_entry_issue_id">{{ l('field_issue') }}</label>
+      <input size="6" type="text" name="time_entry[issue_id]" id="time_entry_issue_id" value="{{ (params.issue_id ?? '') != 'none' ? (params.issue_id ?? '') : '' }}" />
+      <label class="inline"><input type="checkbox" name="time_entry[issue_id]" value="none"{% if (params.issue_id ?? '') == 'none' %} checked="checked"{% endif %} data-disables="#time_entry_issue_id" />{{ l('button_clear') }}</label>
+      <span id="time_entry_issue"></span>
+    </p>
+
+    <p>
+      <label for="time_entry_spent_on">{{ l('field_spent_on') }}</label>
+      <input size="10" type="date" value="{{ params.spent_on ?? '' }}" name="time_entry[spent_on]" id="time_entry_spent_on" /><script>
+//<![CDATA[
+$(function() { $('#time_entry_spent_on').addClass('date').datepickerFallback(datepickerOptions); });
+//]]>
+</script>
+    </p>
+
+    <p>
+      <label for="time_entry_hours">{{ l('field_hours') }}</label>
+      <input size="6" type="text" value="{{ params.hours ?? '' }}" name="time_entry[hours]" id="time_entry_hours" />
+    </p>
+
+    {% if activities is not empty %}
+    <p>
+      <label for="time_entry_activity_id">{{ l('field_activity') }}</label>
+      <select name="time_entry[activity_id]" id="time_entry_activity_id"><option value="">{{ l('label_no_change_option') }}</option>{% for a in activities %}<option value="{{ a.id }}"{% if (params.activity_id ?? '') ~ '' == a.id ~ '' %} selected="selected"{% endif %}>{{ a.name }}</option>{% endfor %}</select>
+    </p>
+    {% endif %}
+
+    <p>
+      <label for="time_entry_comments">{{ l('field_comments') }}</label>
+      <input size="100" type="text" value="{{ params.comments ?? '' }}" name="time_entry[comments]" id="time_entry_comments" />
+    </p>
+
+    {% for field in custom_fields %}
+      <div class="form-field">
+        <label>{{ field.name }}</label>
+        {% set opts = cf_options(field, project) %}
+        {% set cur = (params.custom_field_values ?? {})[field.id] ?? '' %}
+        {% if field.fieldFormat in ['list', 'enumeration', 'user', 'version', 'bool'] %}
+        <select name="time_entry[custom_field_values][{{ field.id }}]{{ field.isMultiple() ? '[]' : '' }}" id="time_entry_custom_field_values_{{ field.id }}" class="{{ field.fieldFormat }}_cf cf_{{ field.id }}"{% if field.isMultiple() %} multiple="multiple"{% endif %}><option value="">{{ l('label_no_change_option') }}</option>
+        {% if not field.isRequired %}<option value="__none__">{{ l('label_none') }}</option>{% endif %}
+        {% for o in opts %}<option value="{{ o[0] }}">{{ o[1] }}</option>{% endfor %}</select>
+        {% else %}
+        <input type="text" name="time_entry[custom_field_values][{{ field.id }}]" id="time_entry_custom_field_values_{{ field.id }}" class="{{ field.fieldFormat }}_cf cf_{{ field.id }}" value="{{ cur is iterable ? '' : cur }}" />
+        {% if not field.isRequired %}<label class="inline"><input type="checkbox" name="time_entry[custom_field_values][{{ field.id }}]" value="__none__" data-disables="#time_entry_custom_field_values_{{ field.id }}" />{{ l('button_clear') }}</label>{% endif %}
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
+<p><input type="submit" name="commit" value="{{ l('button_submit') }}" /></p>
+</form>

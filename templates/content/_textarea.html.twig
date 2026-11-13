@@ -1,0 +1,3 @@
+{#- Fallback plain wiki textarea. Params: name, id, value, rows, cols, accesskey -#}
+<textarea name="{{ name }}" id="{{ id }}" cols="{{ cols ?? 60 }}" rows="{{ rows ?? 10 }}" class="wiki-edit"{% if accesskey ?? false %} accesskey="{{ accesskey }}"{% endif %} data-auto-complete="true">
+{{ value ?? '' }}</textarea>

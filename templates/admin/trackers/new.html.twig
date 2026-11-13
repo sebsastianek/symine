@@ -1,0 +1,9 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('trackers_index') }}">{{ l('label_tracker_plural') }}</a> &#187; {{ l('label_tracker_new') }}</h2>
+
+<form class="new_tracker" id="new_tracker" action="{{ path('tracker_create') }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+{% include 'admin/trackers/_form.html.twig' %}
+</form>
+{% endblock %}

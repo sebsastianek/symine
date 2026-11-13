@@ -1,0 +1,53 @@
+{% import 'imports/_macros.html.twig' as m %}
+<div class="splitcontent">
+  <div class="splitcontentleft">
+    <p>
+      <label for="import_mapping_unique_id">{{ l('field_unique_id') }}</label>
+      {{ m.mapping_select(columns, mapping, 'unique_id') }}
+    </p>
+    <p>
+      <label for="import_mapping_parent_issue_id">{{ l('field_parent_issue') }}</label>
+      {{ m.mapping_select(columns, mapping, 'parent_issue_id') }}
+    </p>
+    <p>
+      <label for="import_mapping_relation_duplicates">{{ l('label_duplicates') }}</label>
+      {{ m.mapping_select(columns, mapping, 'relation_duplicates') }}
+    </p>
+    <p>
+      <label for="import_mapping_relation_duplicated">{{ l('label_duplicated_by') }}</label>
+      {{ m.mapping_select(columns, mapping, 'relation_duplicated') }}
+    </p>
+    <p>
+      <label for="import_mapping_relation_blocks">{{ l('label_blocks') }}</label>
+      {{ m.mapping_select(columns, mapping, 'relation_blocks') }}
+    </p>
+    <p>
+      <label for="import_mapping_relation_blocked">{{ l('label_blocked_by') }}</label>
+      {{ m.mapping_select(columns, mapping, 'relation_blocked') }}
+    </p>
+  </div>
+
+  <div class="splitcontentright">
+    <p></p>
+    <p>
+      <label for="import_mapping_relation_relates">{{ l('label_relates_to') }}</label>
+      {{ m.mapping_select(columns, mapping, 'relation_relates') }}
+    </p>
+    <p>
+      <label for="import_mapping_relation_precedes">{{ l('label_precedes') }}</label>
+      {{ m.mapping_select(columns, mapping, 'relation_precedes') }}
+    </p>
+    <p>
+      <label for="import_mapping_relation_follows">{{ l('label_follows') }}</label>
+      {{ m.mapping_select(columns, mapping, 'relation_follows') }}
+    </p>
+    <p>
+      <label for="import_mapping_relation_copied_to">{{ l('label_copied_to') }}</label>
+      {{ m.mapping_select(columns, mapping, 'relation_copied_to') }}
+    </p>
+    <p>
+      <label for="import_mapping_relation_copied_from">{{ l('label_copied_from') }}</label>
+      {{ m.mapping_select(columns, mapping, 'relation_copied_from') }}
+    </p>
+  </div>
+</div>

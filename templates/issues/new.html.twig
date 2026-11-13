@@ -1,0 +1,49 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}<script src="/assets/attachments.js"></script><meta name="robots" content="noindex,follow,noarchive" />{% endblock %}
+{% block content %}
+<h2>{{ l('label_issue_new') }}</h2>
+
+{{ call_hook('view_issues_new_top', {issue: issue}) }}
+
+<form class="new_issue" id="issue-form" enctype="multipart/form-data" action="{{ form_project ? path('issue_create', {project_id: form_project.identifier}) : path('issues_create') }}" accept-charset="UTF-8" method="post">
+  {{ csrf_field() }}
+  {% include 'issues/_errors.html.twig' %}
+  {% if copy_from %}<input type="hidden" name="copy_from" id="copy_from" value="{{ copy_from.id }}" autocomplete="off" />{% endif %}
+  <div class="box tabular">
+    <div id="all_attributes">
+    {% include 'issues/_form.html.twig' %}
+    </div>
+
+    {% if copy_from and setting('link_copied_issue') == 'ask' %}
+    <p>
+      <label for="link_copy">{{ l('label_link_copied_issue') }}</label>
+      <input type="checkbox" name="link_copy" id="link_copy" value="1"{% if link_copy %} checked="checked"{% endif %} />
+    </p>
+    {% endif %}
+    {% if copy_from and setting('copy_attachments_on_issue_copy') == 'ask' and copy_from_has_attachments %}
+    <p>
+      <label for="copy_attachments">{{ l('label_copy_attachments') }}</label>
+      <input type="checkbox" name="copy_attachments" id="copy_attachments" value="1"{% if copy_attachments %} checked="checked"{% endif %} />
+    </p>
+    {% endif %}
+    {% if copy_from and not copy_from.isLeaf() %}
+    <p>
+      <label for="copy_subtasks">{{ l('label_copy_subtasks') }}</label>
+      <input type="checkbox" name="copy_subtasks" id="copy_subtasks" value="1"{% if copy_subtasks %} checked="checked"{% endif %} />
+    </p>
+    {% endif %}
+
+    <p id="attachments_form"><label>{{ l('label_attachment_plural') }}</label>{% include 'attachments/_form.html.twig' %}</p>
+
+    <div id="watchers_form_container">
+      {% include 'issues/_watchers_form.html.twig' %}
+    </div>
+  </div>
+
+  <input type="submit" name="commit" value="{{ l('button_create') }}" data-disable-with="{{ l('button_create') }}" />
+  {% if back_url and issue.parent %}
+    <input type="submit" name="follow" value="{{ l('button_create_and_follow') }}" data-disable-with="{{ l('button_create_and_follow') }}" />
+  {% endif %}
+  <input type="submit" name="continue" value="{{ l('button_create_and_continue') }}" data-disable-with="{{ l('button_create_and_continue') }}" />
+</form>
+{% endblock %}

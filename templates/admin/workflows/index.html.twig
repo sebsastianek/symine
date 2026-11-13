@@ -1,0 +1,37 @@
+{% extends 'admin/layout.html.twig' %}
+{% import 'admin/workflows/_macros.html.twig' as h %}
+{% block content %}
+<h2><a href="{{ path('workflows_edit') }}">{{ l('label_workflow') }}</a> &#187; {{ l('field_summary') }}</h2>
+
+{% if roles is empty or trackers is empty %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% else %}
+<div class="autoscroll">
+<table class="list">
+<thead>
+    <tr>
+    <th></th>
+    {% for role in roles %}
+    <th>
+        {% if role.isBuiltin() %}<em>{{ h.role_name(role) }}</em>{% else %}<span>{{ role.name }}</span>{% endif %}
+    </th>
+    {% endfor %}
+    </tr>
+</thead>
+<tbody>
+{% for tracker in trackers %}
+<tr>
+  <td class="name">{{ tracker.name }}</td>
+  {% for role in roles %}
+  {% set count = counts[tracker.id][role.id] ?? 0 %}
+    <td>
+      <a title="{{ l('button_edit') }}"{% if count == 0 %} class="decoration-red"{% endif %} href="{{ path('workflows_edit', {role_id: role.id, tracker_id: tracker.id}) }}">{{ count }}</a>
+    </td>
+  {% endfor %}
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% endif %}
+{% endblock %}

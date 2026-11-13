@@ -1,0 +1,16 @@
+{#- Port of watchers/_watchers.html.erb. Param: watched (Issue, WikiPage, Board, Message, News, Wiki) -#}
+{% set wtype = watchable_type_of(watched) %}
+{% set wproject = watchable_project(watched) %}
+{% if allowed_to('add_' ~ wtype ~ '_watchers', wproject) %}
+<div class="contextual">
+<a data-remote="true" data-method="get" href="{{ path('watchers_new', {object_type: wtype, object_id: watched.id}) }}">{{ l('button_add') }}</a>
+</div>
+{% endif %}
+
+{% if allowed_to('view_' ~ wtype ~ '_watchers', wproject) %}
+<h3>{{ l('label_' ~ wtype ~ '_watchers') }} ({{ watchable_watchers(watched)|length }})</h3>
+
+{{ watchers_list_for(watched) }}
+{% else %}
+<h3>{{ l('label_' ~ wtype ~ '_watchers') }}</h3>
+{% endif %}

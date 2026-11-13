@@ -1,0 +1,10 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('issue_statuses_index') }}">{{ l('label_issue_status_plural') }}</a> &#187; {{ l('label_issue_status_new') }}</h2>
+
+<form class="new_issue_status" id="new_issue_status" action="{{ path('issue_status_create') }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+  {% include 'admin/issue_statuses/_form.html.twig' %}
+  <input type="submit" name="commit" value="{{ l('button_create') }}" data-disable-with="{{ l('button_create') }}" />
+</form>
+{% endblock %}

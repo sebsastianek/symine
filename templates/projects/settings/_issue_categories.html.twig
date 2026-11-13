@@ -1,0 +1,29 @@
+<p>{% if allowed_to('manage_categories', project) %}<a class="icon icon-add" href="{{ path('issue_category_new', {project_id: project.identifier}) }}">{{ sprite_icon('add', l('label_issue_category_new')) }}</a>{% endif %}</p>
+
+{% if categories is not empty %}
+<table class="list">
+  <thead><tr>
+    <th>{{ l('label_issue_category') }}</th>
+    <th>{{ l('field_assigned_to') }}</th>
+    <th></th>
+  </tr></thead>
+  <tbody>
+{% for category in categories %}
+  {% if category.id %}
+  <tr>
+    <td class="name">{{ category.name }}</td>
+    <td>{{ category.assignedTo ? category.assignedTo.getName() : '' }}</td>
+    <td class="buttons">
+      {% if allowed_to('manage_categories', project) %}
+        <a class="icon icon-edit" href="{{ path('issue_category_edit', {id: category.id}) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>
+        <a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('issue_category_destroy', {id: category.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+      {% endif %}
+    </td>
+  </tr>
+  {% endif %}
+{% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}

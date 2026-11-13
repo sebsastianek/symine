@@ -1,0 +1,7 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('doorkeeper.authorizations.error.title') }}</h2>
+
+<p id="errorExplanation">{{ error_description }}</p>
+<p><a href="javascript:history.back()">{{ l('button_back') }}</a></p>
+{% endblock %}

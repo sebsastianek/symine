@@ -1,0 +1,38 @@
+{#- queries/_columns.html.erb ; params: query, tag_name (default "c[]") -#}
+{% set tag_name = tag_name ?? 'c[]' %}
+{% set tag_id = tag_name|replace({'][': '_', '[': '_', ']': '_'})|trim('_', 'right') %}
+{% set available_tag_id = 'available_' ~ tag_id %}
+{% set selected_tag_id = 'selected_' ~ tag_id %}
+
+<div class="query-columns">
+      <label for="{{ available_tag_id }}">{{ l('description_available_columns') }}</label>
+      <select name="available_columns[]" id="{{ available_tag_id }}" multiple="multiple" size="10" ondblclick="moveOptions(this.form.{{ available_tag_id }}, this.form.{{ selected_tag_id }});">
+{%- for column in query.availableInlineColumnsOptions() %}<option value="{{ column.name }}">{{ column.caption }}</option>{% if not loop.last %}{{ "\n" }}{% endif %}{% endfor %}</select>
+</div>
+<div class="buttons">
+      <button type="button" class="move-right" onclick="moveOptions(this.form.{{ available_tag_id }}, this.form.{{ selected_tag_id }});">{{ sprite_icon('arrow-narrow-right', null, 18, false, 'icon-rtl') }}</button>
+      <button type="button" class="move-left" onclick="moveOptions(this.form.{{ selected_tag_id }}, this.form.{{ available_tag_id }});">{{ sprite_icon('arrow-narrow-left', null, 18, false, 'icon-rtl') }}</button>
+</div>
+<div class="query-columns">
+      <label for="{{ selected_tag_id }}">{{ l('description_selected_columns') }}</label>
+      <select name="{{ tag_name }}" id="{{ selected_tag_id }}" multiple="multiple" size="10" ondblclick="moveOptions(this.form.{{ selected_tag_id }}, this.form.{{ available_tag_id }});">
+{%- for column in query.selectedInlineColumnsOptions() %}<option value="{{ column.name }}">{{ column.caption }}</option>{% if not loop.last %}{{ "\n" }}{% endif %}{% endfor %}</select>
+</div>
+<div class="buttons">
+      <button type="button" onclick="moveOptionTop(this.form.{{ selected_tag_id }});">&#8648;</button>
+      <button type="button" onclick="moveOptionUp(this.form.{{ selected_tag_id }});">&#8593;</button>
+      <button type="button" onclick="moveOptionDown(this.form.{{ selected_tag_id }});">&#8595;</button>
+      <button type="button" onclick="moveOptionBottom(this.form.{{ selected_tag_id }});">&#8650;</button>
+</div>
+
+<script>
+//<![CDATA[
+
+$(document).ready(function(){
+  $('.query-columns').closest('form').submit(function(){
+    $('#{{ selected_tag_id }} option:not(:disabled)').prop('selected', true);
+  });
+});
+
+//]]>
+</script>

@@ -1,0 +1,88 @@
+# Doorkeeper translations (doorkeeper-i18n 5.2.9 / doorkeeper 5.8.2, MIT), used by the OAuth2 provider.
+# Generated - merged into the "messages" domain.
+activerecord.attributes.doorkeeper/application.name: 名稱
+activerecord.attributes.doorkeeper/application.redirect_uri: 轉向網址
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.forbidden_uri: 被伺服器拒絕
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.fragment_present: '不能包含片段(#)'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.invalid_uri: 必須是有效的網址
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.relative_uri: 必須是絕對的網址
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.secured_uri: '必須是有 HTTPS/SSL 的網址'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.unspecified_scheme: '必須指定 URI scheme'
+activerecord.errors.models.doorkeeper/application.attributes.scopes.not_match_configured: 與伺服器設定不符
+doorkeeper.applications.buttons.authorize: 授權
+doorkeeper.applications.buttons.cancel: 取消
+doorkeeper.applications.buttons.destroy: 刪除
+doorkeeper.applications.buttons.edit: 編輯
+doorkeeper.applications.buttons.submit: 送出
+doorkeeper.applications.confirmations.destroy: 確定嗎？
+doorkeeper.applications.edit.title: 編輯應用
+doorkeeper.applications.form.error: 'Whoops! 確認表單內可能的錯誤'
+doorkeeper.applications.help.blank_redirect_uri: '如果你將 provider 設定為使用 Client Credentials、Resource Owner Password Credentials、或其他不需要 redirect URI 的 grant type，請將其留空。'
+doorkeeper.applications.help.confidential: '應用將被使用在 client secret 可以保持機密的地方。手機原生 app 和 SPA 應被視為無法保持機密。'
+doorkeeper.applications.help.redirect_uri: 每個網址必須只有一行
+doorkeeper.applications.help.scopes: 'scopes 之間要以空格分開。也可以是空的來使用 default scopes。'
+doorkeeper.applications.index.actions: Actions
+doorkeeper.applications.index.callback_url: 回應網址
+doorkeeper.applications.index.confidential: 'Confidential?'
+doorkeeper.applications.index.confidentiality.no: 'No'
+doorkeeper.applications.index.confidentiality.yes: 'Yes'
+doorkeeper.applications.index.name: 名稱
+doorkeeper.applications.index.new: 新應用
+doorkeeper.applications.index.title: 你的應用
+doorkeeper.applications.new.title: 新應用
+doorkeeper.applications.show.actions: 動作
+doorkeeper.applications.show.application_id: '應用 UID:'
+doorkeeper.applications.show.callback_urls: '回應網址:'
+doorkeeper.applications.show.confidential: 'Confidential:'
+doorkeeper.applications.show.not_defined: 'Not defined'
+doorkeeper.applications.show.scopes: 'Scopes:'
+doorkeeper.applications.show.secret: '私鑰:'
+doorkeeper.applications.show.secret_hashed: 'Secret hashed'
+doorkeeper.applications.show.title: '應用: %{name}'
+doorkeeper.authorizations.buttons.authorize: 授權
+doorkeeper.authorizations.buttons.deny: 拒絕
+doorkeeper.authorizations.error.title: 發生錯誤
+doorkeeper.authorizations.form_post.title: 送出表單
+doorkeeper.authorizations.new.able_to: '這個應用將會:'
+doorkeeper.authorizations.new.prompt: '授權 %{client_name} 使用您的帳戶?'
+doorkeeper.authorizations.new.title: 授權需求
+doorkeeper.authorizations.show.title: '授權碼:'
+doorkeeper.authorized_applications.buttons.revoke: 撤銷
+doorkeeper.authorized_applications.confirmations.revoke: '確認嗎?'
+doorkeeper.authorized_applications.index.application: 應用
+doorkeeper.authorized_applications.index.created_at: 建立時間
+doorkeeper.authorized_applications.index.date_format: '%Y-%m-%d %H:%M:%S'
+doorkeeper.authorized_applications.index.title: 你授權的應用
+doorkeeper.errors.messages.access_denied: 擁有者或認證伺服器拒絕此需求
+doorkeeper.errors.messages.admin_authenticator_not_configured: '禁止進入 admin 後台，因為 Doorkeeper.configure.admin_authenticator 並未設定.'
+doorkeeper.errors.messages.credential_flow_not_configured: '資源擁有者密碼認證流程失敗，因為 Doorkeeper.configure.resource_owner_from_credentials 並未設定'
+doorkeeper.errors.messages.forbidden_token.missing_scope: '取用此資源必須要有 scope "%{oauth_scopes}".'
+doorkeeper.errors.messages.invalid_client: 由於未知、不支援或是沒有客戶端認證而失敗
+doorkeeper.errors.messages.invalid_code_challenge_method: 'code challenge method 必須是純文字或 S256'
+doorkeeper.errors.messages.invalid_grant: 授權許可型態無效，或者轉向網址的授權許可無效、過期或已被撤銷
+doorkeeper.errors.messages.invalid_redirect_uri: 這個轉向網址無效
+doorkeeper.errors.messages.invalid_request.missing_param: '缺少必要的參數: %{value}.'
+doorkeeper.errors.messages.invalid_request.request_not_authorized: 請求需要被授權。可能是授權缺少必要參數、或是參數為無效數值
+doorkeeper.errors.messages.invalid_request.unknown: 這個請求少了一個必要的參數，可能是不支援的參數值或是其他格式錯誤
+doorkeeper.errors.messages.invalid_scope: 請求範圍無效、未知或格式錯誤
+doorkeeper.errors.messages.invalid_token.expired: 'Access Token 已過期'
+doorkeeper.errors.messages.invalid_token.revoked: 'Access Token 已被撤銷'
+doorkeeper.errors.messages.invalid_token.unknown: 'Access Token 是無效的'
+doorkeeper.errors.messages.resource_owner_authenticator_not_configured: '資源擁有者查詢失敗，因為 Doorkeeper.configure.resource_owner_authenticator 並未設定'
+doorkeeper.errors.messages.revoke.unauthorized: '你並沒有被授權可撤銷此 token'
+doorkeeper.errors.messages.server_error: 授權伺服器因不明原因無法完成此請求
+doorkeeper.errors.messages.temporarily_unavailable: 授權伺服器超載或維護中，無法處理此項請求
+doorkeeper.errors.messages.unauthorized_client: 這個應用並無被授權可以執行這個請求的方法
+doorkeeper.errors.messages.unsupported_grant_type: 授權伺服器不支援此授權許可型態
+doorkeeper.errors.messages.unsupported_response_mode: '不支援回應此 mode.'
+doorkeeper.errors.messages.unsupported_response_type: '不支援回應此 type.'
+doorkeeper.flash.applications.create.notice: 應用已建立
+doorkeeper.flash.applications.destroy.notice: 應用已刪除
+doorkeeper.flash.applications.update.notice: 應用已更新
+doorkeeper.flash.authorized_applications.destroy.notice: 應用已撤銷
+doorkeeper.layouts.admin.nav.applications: 應用
+doorkeeper.layouts.admin.nav.home: Home
+doorkeeper.layouts.admin.nav.oauth2_provider: 'OAuth2 Provider'
+doorkeeper.layouts.admin.title: Doorkeeper
+doorkeeper.layouts.application.title: 'OAuth 認證需求'
+doorkeeper.pre_authorization.status: Pre-authorization

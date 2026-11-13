@@ -1,0 +1,56 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}<link rel="alternate" type="application/atom+xml" title="ATOM" href="{{ atom_absolute_url }}" />
+{% endblock %}
+{% block sidebar %}
+<form id="activity_scope_form" action="{{ path(route, route_params) }}" accept-charset="UTF-8" method="get">
+<h3>{{ l('label_activity') }}</h3>
+<p>
+  {{ l('label_days_to_html', {days: days, date: '<input type="date" name="from" id="from" value="' ~ date_to|date_modify('-1 day')|date('Y-m-d') ~ '" max="9999-12-31" size="10" />'})|raw }}
+  <script>
+//<![CDATA[
+$(function() { $('#from').addClass('date').datepickerFallback(datepickerOptions); });
+//]]>
+</script>
+</p>
+<p>
+  {{ l('label_user') }}
+  <select name="user_id" id="user_id"><option value="" label=" "></option>{% for a in authors %}<option value="{{ a.id }}"{% if user_id == a.id ~ '' %} selected="selected"{% endif %}>{{ a.name }}</option>
+{% endfor %}</select>
+</p>
+<ul>
+{% for t in event_types %}
+  <li>
+    <input type="checkbox" name="show_{{ t }}" id="show_{{ t }}" value="1"{% if t in scope %} checked="checked"{% endif %} />
+    <label for="show_{{ t }}">
+      <a href="{{ path(route, route_params|merge({('show_' ~ t): 1})|merge(user_id ? {user_id: user_id} : {})|merge(from_param ? {from: from_param} : {})) }}">{{ l('label_' ~ singular_types[t] ~ '_plural') }}</a>
+    </label>
+  </li>
+{% endfor %}
+</ul>
+{% if show_subprojects_option %}
+    <input type="hidden" name="with_subprojects" value="0" autocomplete="off" />
+    <p><label><input type="checkbox" name="with_subprojects" id="with_subprojects" value="1"{% if with_subprojects %} checked="checked"{% endif %} /> {{ l('label_subproject_plural') }}</label></p>
+{% endif %}
+<p><input type="submit" name="submit" value="{{ l('button_apply') }}" class="button-small" data-disable-with="{{ l('button_apply') }}" /></p>
+</form>
+{% endblock %}
+{% block content %}
+<h2>{% if author %}{{ l('label_user_activity', {value: link_to_user(author)})|raw }}{% else %}{{ l('label_activity') }}{% endif %}</h2>
+
+<p class="subtitle">{{ l('label_date_from_to', {start: format_date(date_from), end: format_date(date_to|date_modify('-1 day'))}) }}</p>
+
+{% include 'activities/_activities.html.twig' %}
+{% if event_days is empty %}<p class="nodata">{{ l('label_no_data') }}</p>{% endif %}
+
+<span class="pagination">
+  <ul class="pages">
+    <li class="previous page">
+<a title="{{ l('label_date_from_to', {start: format_date(date_to|date_modify('-' ~ (2 * days) ~ ' days')), end: format_date(date_to|date_modify('-' ~ (days + 1) ~ ' days'))}) }}" accesskey="p" href="{{ prev_url }}">« {{ l('label_previous') }}</a>
+    </li>{% if next_url %}<li class="next page">
+<a title="{{ l('label_date_from_to', {start: format_date(date_to), end: format_date(date_to|date_modify('+' ~ (days - 1) ~ ' days'))}) }}" accesskey="n" href="{{ next_url }}">{{ l('label_next') }} »</a></li>{% endif %}
+  </ul>
+</span>
+&nbsp;
+<p class="other-formats hide-when-print">{{ l('label_export_to') }}  <span><a class="atom" rel="nofollow" href="{{ atom_url }}">Atom</a></span>
+</p>
+{% endblock %}

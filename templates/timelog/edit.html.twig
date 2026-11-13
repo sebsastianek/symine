@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+{% import 'queries/_macros.html.twig' as qm %}
+{% block header_tags %}{{ qm.calendar_headers() }}{% endblock %}
+{% block content %}
+<h2>{{ l('label_spent_time') }}</h2>
+
+<form class="edit_time_entry" id="edit_time_entry_{{ entry.id }}" enctype="multipart/form-data" action="{{ path('time_entry_update', {id: entry.id}) }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="patch" autocomplete="off" />{{ csrf_field() }}
+  {% include 'timelog/_form.html.twig' %}
+  <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+  <a href="{{ back_url ?: path('project_time_entries', {project_id: entry.project.identifier}) }}">{{ l('button_cancel') }}</a>
+</form>
+{% endblock %}

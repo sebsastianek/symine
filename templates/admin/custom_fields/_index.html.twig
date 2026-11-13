@@ -1,0 +1,31 @@
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+<table class="list custom_fields">
+  <thead><tr>
+    <th>{{ l('field_name') }}</th>
+    <th>{{ l('field_field_format') }}</th>
+    <th>{{ l('field_is_required') }}</th>
+    {% if tab.name == 'IssueCustomField' %}
+      <th>{{ l('field_is_for_all') }}</th>
+      <th>{{ l('label_used_by') }}</th>
+    {% endif %}
+    <th></th>
+  </tr></thead>
+  <tbody>
+  {% for custom_field in custom_fields_by_type[tab.name] ?? [] %}
+    <tr>
+      <td class="name"><a href="{{ path('custom_field_edit', {id: custom_field.id}) }}">{{ custom_field.name }}</a></td>
+      <td>{{ l(field_format_label(custom_field.fieldFormat)) }}</td>
+      <td>{{ f.checked_image(custom_field.isRequired) }}</td>
+      {% if tab.name == 'IssueCustomField' %}
+      <td>{{ f.checked_image(custom_field.isForAll) }}</td>
+      <td>{% if not custom_field.isForAll %}{{ l('label_x_projects', {count: projects_count[custom_field.id] ?? 0}) }}{% endif %}</td>
+      {% endif %}
+      <td class="buttons">
+        <span class="icon-only icon-sort-handle sort-handle" data-reorder-url="{{ path('custom_field_update', {id: custom_field.id}) }}" data-reorder-param="custom_field" title="{{ l('button_sort') }}">{{ sprite_icon('reorder', '') }}</span>
+        <a href="#" onclick="location.href = '{{ path('custom_field_new', {copy: custom_field.id}) }}&type=' + encodeURIComponent(($('.tabs a.selected').attr('id')||'').split('tab-').pop()); return false;" class="icon icon-copy">{{ sprite_icon('copy', l('button_copy')) }}</a>
+        <a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('custom_field_destroy', {id: custom_field.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>

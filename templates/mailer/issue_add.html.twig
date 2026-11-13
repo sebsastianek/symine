@@ -1,0 +1,6 @@
+{% extends 'mailer/layout.html.twig' %}
+{% block content %}
+{{ l('text_issue_added', {id: '<a href="' ~ (issue_url|e) ~ '">#' ~ issue.id ~ '</a>', author: issue.author.name|e})|raw }}
+<hr />
+{% include 'mailer/_issue.html.twig' %}
+{% endblock %}

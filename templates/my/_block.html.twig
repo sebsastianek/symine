@@ -1,0 +1,2 @@
+{#- MyHelper#render_block: b = MyPageService::blockData() -#}
+<div class="mypage-box" id="block-{{ b.block }}"><div class="contextual"><span class="icon-only icon-sort-handle sort-handle" title="{{ l('button_move') }}">{{ sprite_icon('reorder', '') }}</span><a class="icon-only icon-close" title="{{ l('button_delete') }}" data-remote="true" rel="nofollow" data-method="post" href="{{ path('my_remove_block', {block: b.block}) }}">{{ sprite_icon('close', l('button_delete')) }}</a></div>{% include b.template with {b: b, block: b.block} only %}</div>

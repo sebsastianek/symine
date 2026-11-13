@@ -1,0 +1,18 @@
+{% extends 'mailer/layout.html.twig' %}
+{% block content %}
+{% if journal.privateNotes %}
+  ({{ l('field_private_notes') }})
+{% endif %}
+{{ l('text_issue_updated', {id: '<a href="' ~ (issue_url|e) ~ '">#' ~ issue.id ~ '</a>', author: journal.user.name|e})|raw }}
+<hr />
+
+<ul class="journal details">
+{% for string in details_html %}
+  <li>{{ string|raw }}</li>
+{% endfor %}
+</ul>
+
+{{ mail.textilizable(journal.notes, issue.project)|raw }}
+<hr />
+{% include 'mailer/_issue.html.twig' %}
+{% endblock %}

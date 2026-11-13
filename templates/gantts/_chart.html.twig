@@ -1,0 +1,112 @@
+{#- gantts/_chart.html.erb -#}
+{% set gantt_route = project ? 'project_gantt' : 'gantt' %}
+{% set route_params = project ? {project_id: project.identifier} : {} %}
+{% set req = app.request.query.all %}
+{% set subjects_html = gantt.subjects() %}
+{% if gantt.truncated %}
+  <p class="warning">{{ l('notice_gantt_chart_truncated', {max: gantt.maxRows}) }}</p>
+{% endif %}
+{% set resize_handle %}<div class="ui-resizable-handle ui-resizable-e" data-gantt--column-target="handle" data-action="dblclick-&gt;gantt--column#fitWidth:prevent" aria-hidden="true"></div>{% endset %}
+
+<div class="gantt-chart" style="{{ gantt.chartStyle() }}" data-controller="gantt--chart" data-action="gantt--options:toggle-display@document-&gt;gantt--chart#handleOptionsDisplay gantt--options:toggle-relations@document-&gt;gantt--chart#handleOptionsRelations gantt--options:toggle-progress@document-&gt;gantt--chart#handleOptionsProgress gantt--subjects:toggle-tree-&gt;gantt--chart#handleSubjectTreeChanged mouseover-&gt;gantt--chart#highlightRow mouseout-&gt;gantt--chart#unhighlightRow resize@window-&gt;gantt--chart#handleWindowResize" data-gantt--chart-manually-resized-class="is-manually-resized" data-gantt--chart-issue-relation-types-value="{{ constant('App\\Helper\\Gantt::DRAW_TYPES')|json_encode }}" data-gantt--chart-show-selected-columns-value="{{ query.drawSelectedColumns() ? 'true' : 'false' }}" data-gantt--chart-show-relations-value="{{ query.drawRelations() ? 'true' : 'false' }}" data-gantt--chart-show-progress-value="{{ query.drawProgressLine() ? 'true' : 'false' }}">
+  <div data-gantt--chart-target="subjectColumn" data-action="resize@window-&gt;gantt--column#handleWindowResize gantt--column:resize-start-&gt;gantt--chart#handleSubjectColumnResizeStart gantt--column:resize-&gt;gantt--chart#handleSubjectColumnResize" data-controller="gantt--column" data-gantt--column-min-width-value="100" data-gantt-column="subjects" class="gantt-column" style="--gantt-column-width:var(--gantt-subject-width)">
+    <section class="gantt-pane">
+      <header aria-hidden="true"></header>
+      <div class="gantt-pane-body" data-controller="gantt--subjects">
+        <form data-cm-url="{{ path('issues_context_menu') }}" action="{{ app.request.pathInfo }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+          <input type="hidden" name="back_url" value="{{ app.request.requestUri }}" autocomplete="off" />
+          {{ subjects_html|raw }}
+        </form>
+      </div>
+    </section>
+    {{ resize_handle }}
+  </div>
+
+  {% for column in gantt.selectedColumns() %}
+    {% set column_name = column.name|replace({'.': '_'}) %}
+  <div class="gantt-column gantt-selected-column"{% if not query.drawSelectedColumns() %} hidden="hidden"{% endif %} data-gantt--chart-target="selectedColumn" data-controller="gantt--column" data-action="resize@window-&gt;gantt--column#handleWindowResize" data-gantt--column-min-width-value="20" data-gantt-column="{{ column_name }}" style="--gantt-column-width:50px">
+      <section class="gantt-pane">
+        <header>{{ column.caption }}</header>
+        <div class="gantt-pane-body">
+          {{ gantt.selectedColumnContent(column)|raw }}
+        </div>
+      </section>
+      {{ resize_handle }}
+  </div>
+  {% endfor %}
+
+  <div class="gantt-timeline">
+    <div class="gantt-timeline-canvas">
+      <header>
+        <div class="gantt-header-row" data-gantt-period="month">
+          {% for period in gantt.monthPeriods() %}
+            <div class="gantt-period{{ period.spans_body ? ' gantt-period-spans-body' : '' }}{{ period.last ? ' gantt-period-last' : '' }}"
+                 style="--gantt-period-width:{{ period.width }}px">
+              <a title="{{ i18n.monthName(period.date.format('n')) }} {{ period.date.format('Y') }}" href="{{ path(gantt_route, route_params|merge({month: period.date.format('n'), months: gantt.months, year: period.date.format('Y'), zoom: gantt.zoom})) }}">{{ period.date.format('Y') }}-{{ period.date.format('n') }}</a>
+            </div>
+          {% endfor %}
+        </div>
+
+        {% if gantt.showWeeks() %}
+          <div class="gantt-header-row" data-gantt-period="week">
+            {% for period in gantt.weekPeriods() %}
+              <div class="gantt-period{{ period.spans_body ? ' gantt-period-spans-body' : '' }}{{ period.last ? ' gantt-period-last' : '' }}"
+                   style="--gantt-period-width:{{ period.width }}px">
+                <small>{% if period.date and period.width >= 16 %}{{ period.date.format('W')|number_format }}{% endif %}</small>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% if gantt.showDayNumbers() %}
+          <div class="gantt-header-row" data-gantt-period="day-number">
+            {% for period in gantt.dayNumberPeriods() %}
+              <div class="gantt-period{{ period.non_working ? ' gantt-period-non-working' : '' }}{{ period.last ? ' gantt-period-last' : '' }}"
+                   style="--gantt-period-width:{{ period.width }}px">{{ period.date.format('j') }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        {% if gantt.showDays() %}
+          <div class="gantt-header-row" data-gantt-period="day">
+            {% for period in gantt.dayLetterPeriods() %}
+              <div class="gantt-period gantt-period-spans-body{{ period.non_working ? ' gantt-period-non-working' : '' }}{{ period.last ? ' gantt-period-last' : '' }}"
+                   style="--gantt-period-width:{{ period.width }}px">{{ gantt.dayLetter(period.date) }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </header>
+
+      <div class="gantt-timeline-body">
+        <form data-cm-url="{{ path('issues_context_menu') }}" action="{{ app.request.pathInfo }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+          <input type="hidden" name="back_url" value="{{ app.request.requestUri }}" autocomplete="off" />
+          {{ gantt.lines()|raw }}
+        </form>
+
+        {% if gantt.todayStart() is not null %}
+          <div class="gantt-today" data-gantt--chart-target="today" style="--gantt-today-start:{{ gantt.todayStart() }}px" aria-hidden="true"></div>
+        {% endif %}
+
+        <div class="gantt-relations" data-gantt--chart-target="relations" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<span class="pagination">
+  <ul class="pages">
+    <li class="previous page">
+      <a accesskey="p" href="{{ path(gantt_route, route_params|merge(req)|merge(gantt.paramsPrevious())) }}">« {{ l('label_previous') }}</a>
+    </li><li class="next page">
+      <a accesskey="n" href="{{ path(gantt_route, route_params|merge(req)|merge(gantt.paramsNext())) }}">{{ l('label_next') }} »</a>
+    </li>
+  </ul>
+</span>
+
+{% if export_allowed ?? false %}
+{% set export_params = route_params|merge(req|filter((v, k) => k != 'page' and k != 'format'))|merge(gantt.params()) %}
+<p class="other-formats hide-when-print">{{ l('label_export_to') }}
+  <span><a class="pdf" rel="nofollow" href="{{ path(gantt_route ~ '_export', export_params|merge({_format: 'pdf'})) }}">PDF</a></span>
+  <span><a class="png" rel="nofollow" href="{{ path(gantt_route ~ '_export', export_params|merge({_format: 'png'})) }}">PNG</a></span>
+</p>
+{% endif %}

@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+{% block main_menu %}{% endblock %}
+{% block content %}
+<h2>{{ l('twofa_label_deactivation_confirmation') }}</h2>
+
+<div class="splitcontentleft">
+  <form id="twofa_form" action="{{ path('twofa_deactivate', {scheme: scheme_name}) }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+    {% include 'twofa/_twofa_code_form.html.twig' %}
+    <input type="submit" name="submit_otp" value="{{ l('button_disable') }}" data-disable-with="{{ l('button_disable') }}" />
+    {% if resendable %}<a rel="nofollow" data-method="post" href="{{ path('twofa_deactivate_init', {scheme: scheme_name}) }}">{{ l('twofa_resend_code') }}</a>{% endif %}
+  </form>
+</div>
+{% endblock %}
+{% block sidebar %}{% include 'my/_sidebar.html.twig' %}{% endblock %}

@@ -28,6 +28,9 @@ security:
             provider: symine_users
             user_checker: App\Security\UserChecker
             entry_point: App\Security\LoginEntryPoint
+            # LDAP users / on-the-fly registration (declines every other login, handled by form_login)
+            custom_authenticators:
+                - App\Security\LdapAuthenticator
             form_login:
                 login_path: signin
                 check_path: signin
@@ -48,6 +51,9 @@ security:
                 path: signout
                 target: home
                 enable_csrf: true
+                # the "Sign out" link is a rails-ujs data-method="post" link: it sends the global token as _token
+                csrf_parameter: _token
+                csrf_token_id: symine
             login_throttling:
                 max_attempts: 10
                 interval: '5 minutes'

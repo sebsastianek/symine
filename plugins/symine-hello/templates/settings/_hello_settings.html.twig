@@ -1,0 +1,9 @@
+<p>
+  <label for="settings_greeting">{{ l('field_hello_greeting') }}</label>
+  <input type="text" name="settings[greeting]" id="settings_greeting" value="{{ settings.greeting ?? '' }}" size="30" />
+</p>
+<p>
+  <label for="settings_show_on_issues">{{ l('field_hello_show_on_issues') }}</label>
+  <input type="hidden" name="settings[show_on_issues]" value="0" />
+  <input type="checkbox" name="settings[show_on_issues]" id="settings_show_on_issues" value="1"{% if (settings.show_on_issues ?? '') == '1' %} checked="checked"{% endif %} />
+</p>

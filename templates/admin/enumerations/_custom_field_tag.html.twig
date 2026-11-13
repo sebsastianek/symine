@@ -1,0 +1,13 @@
+{#- Simplified custom_field_tag_with_label(prefix, custom_value) -#}
+{%- set tag_id = prefix ~ '_custom_field_values_' ~ cf.id -%}
+{%- set tag_name = prefix ~ '[custom_field_values][' ~ cf.id ~ ']' ~ (cf.isMultiple() ? '[]' : '') -%}
+<label for="{{ tag_id }}"><span{% if cf.description %} title="{{ cf.description }}" class="field-description"{% endif %}>{{ cf.name }}</span>{% if cf.isRequired %} <span class="required">*</span>{% endif %}</label>
+{%- if cf.fieldFormat == 'text' -%}
+<textarea id="{{ tag_id }}" name="{{ tag_name }}" class="text_cf" rows="3">{{ value }}</textarea>
+{%- elseif cf.fieldFormat in ['list', 'bool', 'enumeration', 'user', 'version'] -%}
+{%- set values = value is iterable ? value : [value] -%}
+{%- if cf.isMultiple() %}<input type="hidden" name="{{ tag_name }}" value="" autocomplete="off" />{% endif -%}
+<select id="{{ tag_id }}" name="{{ tag_name }}" class="{{ cf.fieldFormat }}_cf"{% if cf.isMultiple() %} multiple="multiple"{% endif %}>{% if not cf.isMultiple() %}<option value="">{% if cf.isRequired %}--- {{ l('actionview_instancetag_blank_option') }} ---{% endif %}</option>{% endif %}{% for o in options %}<option value="{{ o[0] }}"{% if (o[0] ~ '') in values %} selected="selected"{% endif %}>{{ o[1] }}</option>{% endfor %}</select>
+{%- else -%}
+<input type="{{ cf.fieldFormat == 'date' ? 'date' : 'text' }}" id="{{ tag_id }}" name="{{ tag_name }}" value="{{ value }}" class="{{ cf.fieldFormat }}_cf"{% if cf.fieldFormat == 'date' %} size="10"{% endif %} />
+{%- endif -%}

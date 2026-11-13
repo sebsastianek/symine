@@ -1,0 +1,60 @@
+{#- users/index.html.erb -#}
+{% extends 'admin/layout.html.twig' %}
+{% import 'queries/_macros.html.twig' as qm %}
+{% block header_tags %}{{ qm.calendar_headers() }}{{ qm.context_menu_tags() }}{% endblock %}
+{% block content %}
+<div class="contextual">
+<a class="icon icon-add" href="{{ path('user_new') }}">{{ sprite_icon('add', l('label_user_new')) }}</a>
+{% if can_import and path_exists('new_users_import') %}
+  <span class="drdn"><span class="drdn-trigger"><span class="icon-only icon-actions" title="{{ l('button_actions') }}">{{ sprite_icon('3-bullets', l('button_actions')) }}</span></span><div class="drdn-content"><div class="drdn-items">
+      <a class="icon icon-import" href="{{ path('new_users_import') }}">{{ sprite_icon('import', l('button_import')) }}</a>
+</div></div></span>
+{% endif %}
+</div>
+
+<h2>{{ query.isNew() ? l('label_user_plural') : query.name() }}</h2>
+{% if not query.isNew() and query.record.description %}<p class="subtitle">{{ query.record.description }}</p>{% endif %}
+
+<form id="query_form" action="{{ path('users_index') }}" accept-charset="UTF-8" method="get">
+{% include 'queries/_query_form.html.twig' with {query: query, project: null} %}
+</form>
+
+{% if query.isValid() %}
+  {% if users is empty %}
+    <p class="nodata">{{ l('label_no_data') }}</p>
+  {% else %}
+    {{ user_query_totals(query) }}
+    {% include 'admin/users/_list.html.twig' %}
+    {% include 'common/_pagination.html.twig' with {pager: pager} %}
+  {% endif %}
+  {% set qp = app.request.query.all %}
+<p class="other-formats hide-when-print">{{ l('label_export_to') }}
+  <span><a class="csv" rel="nofollow" onclick="showModal('csv-export-options', '350px'); return false;" href="{{ path('users_index', qp|merge({_format: 'csv'})) }}">CSV</a></span>
+</p>
+
+  <div id="csv-export-options" style="display:none;">
+    <h3 class="title">{{ l('label_export_options', {export_format: 'CSV'}) }}</h3>
+    <form id="csv-export-form" action="{{ path('users_index', {_format: 'csv'}) }}" accept-charset="UTF-8" method="get">
+    {{ query_as_hidden_field_tags(query) }}
+    <input type="hidden" name="query_name" id="query_name" value="{{ query.name() }}" autocomplete="off" />
+    <p>
+      <label><input type="radio" name="c[]" id="c__" value="" checked="checked" /> {{ l('description_selected_columns') }}</label><br />
+      <label><input type="radio" name="c[]" id="c__all_inline" value="all_inline" /> {{ l('description_all_columns') }}</label>
+    </p>
+    <p><label>{{ l('label_encoding') }} <select name="encoding" id="encoding"><option selected="selected" value="UTF-8">UTF-8</option>
+{% if l('general_csv_encoding')|upper != 'UTF-8' %}<option value="{{ l('general_csv_encoding') }}">{{ l('general_csv_encoding') }}</option>{% endif %}</select></label></p>
+    <p><label>{{ l('label_fields_separator') }} <select name="field_separator" id="field_separator"><option selected="selected" value=",">{{ l('label_comma_char') }}</option>
+<option value=";">{{ l('label_semi_colon_char') }}</option></select></label></p>
+    <p class="buttons">
+      <input type="submit" value="{{ l('button_export') }}" onclick="hideModal(this);" />
+      <a href="#" onclick="hideModal(this);; return false;">{{ l('button_cancel') }}</a>
+    </p>
+    </form>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block sidebar %}
+{{ render_sidebar_queries(query, null, 'UserQuery', 'users_index') }}
+{{ parent() }}
+{% endblock %}

@@ -1,0 +1,11 @@
+{%- set links = [] -%}
+{%- set dropdown -%}
+{{ copy_object_url_link(url('issue_show', {id: issue.id}) ~ '#note-' ~ journal.indice) }}
+{%- if journal.hasNotes() and issue_journal_editable(journal) %} <a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" data-remote="true" rel="nofollow" data-method="put" href="{{ path('journal_update', {id: journal.id, 'journal[notes]': ''}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>{% endif -%}
+{%- endset -%}
+{{ reaction_button(journal) }}{% if journal.hasNotes() and setting('reactions_enabled') %} {% endif %}
+{%- if journal.hasNotes() -%}
+{%- if reply_links ?? false %}{{ quote_reply_button(path('issue_quoted', {id: issue.id, journal_id: journal.id, journal_indice: journal.indice}), true) }} {% endif -%}
+{%- if issue_journal_editable(journal) %}<a title="{{ l('button_edit') }}" class="icon-only icon-edit" data-remote="true" data-method="get" href="{{ path('journal_edit', {id: journal.id}) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>{% endif -%}
+{%- endif -%}
+{{ actions_dropdown(dropdown) }}

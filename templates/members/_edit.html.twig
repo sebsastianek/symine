@@ -1,0 +1,18 @@
+<form class="edit_membership" id="edit_membership_{{ member.id }}" action="{{ path('member_update', {id: member.id}) }}"{% if xhr %} data-remote="true"{% endif %} method="post"><input type="hidden" name="_method" value="put" autocomplete="off" />{{ csrf_field() }}
+  <p>
+    {% for role in roles %}
+    <label class="block">
+      <input type="checkbox" name="membership[role_ids][]" value="{{ role.id }}"{% if member.hasRole(role) %} checked="checked"{% endif %}{% if not members_manager.isRoleEditable(member, role) %} disabled="disabled"{% endif %} /> {{ role.name }}
+      {%- set inh = members_manager.roleInheritance(member, role) -%}
+      {%- if inh|length > 0 %}
+      <em class="info">{{ inh|map(h => h.isGroup is defined and h.isGroup() ? l('label_inherited_from_group', {name: h.getName()}) : l('label_inherited_from_parent_project'))|reduce((c, x) => x in c ? c : c|merge([x]), [])|join(', ') }}</em>
+      {%- endif %}
+    </label>
+    {% endfor %}
+  </p>
+  <input type="hidden" name="membership[role_ids][]" value="" />
+  <p>
+    <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+    {% if xhr %}<a href="#" onclick="$('#member-{{ member.id }}-roles').show(); $('#member-{{ member.id }}-form').empty(); return false;; return false;">{{ l('button_cancel') }}</a>{% endif %}
+  </p>
+</form>

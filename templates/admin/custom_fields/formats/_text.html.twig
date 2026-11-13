@@ -1,0 +1,8 @@
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+{% include 'admin/custom_fields/formats/_regexp.html.twig' %}
+<p>{{ f.check_box('text_formatting', custom_field.getFormatOption('text_formatting') == 'full', l('setting_text_formatting'), 'full', '') }}</p>
+{% if type == 'IssueCustomField' %}
+<p>{{ f.check_box('full_width_layout', custom_field.getFormatOption('full_width_layout') == '1', l('field_full_width_layout')) }}</p>
+{% endif %}
+<p>{{ f.label('default_value', l('field_default_value')) }}<textarea rows="5" name="custom_field[default_value]" id="custom_field_default_value">
+{{ custom_field.defaultValue }}</textarea></p>

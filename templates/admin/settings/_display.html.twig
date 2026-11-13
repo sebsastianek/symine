@@ -1,0 +1,59 @@
+{% import 'admin/settings/_macros.html.twig' as s %}
+<form action="{{ path('settings_edit', {tab: 'display'}) }}" accept-charset="UTF-8" enctype="multipart/form-data" method="post">{{ csrf_field() }}
+
+<div class="box tabular settings">
+<p>{{ s.select(values, 'ui_theme', opts.themes, {blank: 'label_default', label: 'label_theme'}) }}</p>
+
+<p>
+  {{ s.label('favicon') }}
+  <input type="file" name="settings[favicon]" id="settings_favicon" accept=".ico,.png" />
+  <em class="info">{{ l('text_setting_favicon_format', {max_size: number_to_human_size(65536)}) }}</em>
+</p>
+
+<p>{{ s.select(values, 'default_language', opts.languages) }}</p>
+
+<p>{{ s.check_box(values, 'force_default_language_for_anonymous') }}</p>
+
+<p>{{ s.check_box(values, 'force_default_language_for_loggedin') }}</p>
+
+<p>{{ s.select(values, 'start_of_week', opts.start_of_week, {blank: 'label_language_based'}) }}</p>
+
+<p>{{ s.select(values, 'date_format', opts.date_formats, {blank: 'label_language_based'}) }}</p>
+
+<p>{{ s.select(values, 'time_format', opts.time_formats, {blank: 'label_language_based'}) }}</p>
+
+<p>{{ s.select(values, 'timespan_format', opts.timespan_formats) }}</p>
+
+<p>{{ s.select(values, 'user_format', opts.user_formats) }}</p>
+
+<p>{{ s.check_box(values, 'avatar_enabled') }}</p>
+
+<p>{{ s.check_box(values, 'gravatar_enabled', {attrs: 'data-enables="#settings_gravatar_default"'}) }}
+<em class="info">{{ l('text_setting_gravatar_enabled_fallback') }}
+{{ l('text_avatar_server_config_html', {url: 'https://www.gravatar.com'})|raw }}</em></p>
+
+<p>
+  {{ s.select(values, 'gravatar_default', opts.gravatar_defaults) }}
+  <em class="{{ values.gravatar_default == 'initials' ? 'info' : 'hidden' }}">
+    {{ l('text_setting_gravatar_default_initials_html', {url: 'https://www.gravatar.com'})|raw }}
+  </em>
+</p>
+
+<p>{{ s.check_box(values, 'thumbnails_enabled', {attrs: 'data-enables="#settings_thumbnails_size"'}) }}</p>
+
+<p>{{ s.text_field(values, 'thumbnails_size', {size: 6}) }}</p>
+
+<p>{{ s.select(values, 'new_item_menu_tab', opts.new_item_menu_tab) }}</p>
+
+<p>{{ s.check_box(values, 'wiki_tablesort_enabled') }}</p>
+</div>
+
+<input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>
+
+<script>
+  $('#settings_gravatar_default').on('change', function(e){
+    const em = e.target.parentElement.getElementsByTagName('em')[0];
+    if (e.target.value === 'initials') { em.classList.remove('hidden'); em.classList.add('info'); } else { em.classList.add('hidden'); em.classList.remove('info'); }
+  });
+</script>

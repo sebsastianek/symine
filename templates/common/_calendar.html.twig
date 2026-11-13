@@ -1,0 +1,43 @@
+{#- common/_calendar.html.erb ; params: calendar, project -#}
+<form data-cm-url="{{ path_exists('issues_context_menu') ? path('issues_context_menu') : '' }}" action="{{ app.request.pathInfo }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}<input type="hidden" name="back_url" value="{{ app.request.requestUri }}" autocomplete="off" />
+<ul class="cal">
+  <li scope="col" title="{{ l('label_week') }}" class="calhead week-number"></li>
+  {% for i in 0..6 %}
+    <li scope="col" class="calhead">{{ l('date.day_names.' ~ ((calendar.firstWday + i) % 7)) }}</li>
+  {% endfor %}
+  {% for week in calendar.weeks() %}
+    <li class='week-number'>
+      <span class="label-week">{{ l('label_week') }}</span> {{ calendar.weekNumber(week|first) }}
+    </li>
+    {% for day in week %}
+    <li class="{{ calendar.dayCssClasses(day) }} calbody">
+      <p class="day-num">
+        <span class="day-value">{{ day|date('j') }}</span>
+        <span class="abbr-day">({{ l('date.abbr_day_names.' ~ (day|date('N') % 7)) }})</span>
+      </p>
+      {% for i in calendar.eventsOn(day) %}
+        {% if i.subject is defined %}
+          {% set starting = i.startDate and i.startDate|date('Y-m-d') == day|date('Y-m-d') %}
+          {% set ending = i.dueDate and i.dueDate|date('Y-m-d') == day|date('Y-m-d') %}
+          <div class="{{ issue_css_classes(i) }} tooltip hascontextmenu{{ starting ? ' starting' : '' }}{{ ending ? ' ending' : '' }}">
+            {% if not (project and project.id == i.project.id) %}{{ i.project.name }} -{% endif %}
+            {% if starting and starting != ending %}{{ sprite_icon('bullet-go', null, 18, false, 'icon-rtl') }}{% endif %}
+            {% if ending and starting != ending %}{{ sprite_icon('bullet-end', null, 18, false, 'icon-rtl') }}{% endif %}
+            {% if starting and ending %}{{ sprite_icon('bullet-go-end') }}{% endif %}
+            {{ link_to_issue(i, {truncate: 30}) }}
+            <span class="tip">{{ link_to_issue(i) }}<br /><br /><strong>{{ l('field_project') }}</strong>: {{ link_to_project(i.project) }}<br /><strong>{{ l('field_status') }}</strong>: {{ i.status.name }}{% if i.isClosed() %} ({{ format_date(i.closedOn) }}){% endif %}<br /><strong>{{ l('field_start_date') }}</strong>: {{ format_date(i.startDate) }}<br /><strong>{{ l('field_due_date') }}</strong>: {{ format_date(i.dueDate) }}<br /><strong>{{ l('field_assigned_to') }}</strong>: {% if i.assignedTo %}{{ avatar(i.assignedTo, 13) }}{% endif %} {{ i.assignedTo ? i.assignedTo.getName() : '' }}<br /><strong>{{ l('field_priority') }}</strong>: {{ i.priority.name }}</span>
+            <input type="checkbox" name="ids[]" value="{{ i.id }}" style="display:none;" />
+</div>
+        {% else %}
+          <span class="icon icon-package">
+            {{ sprite_icon('package') }}
+            {% if not (project and project.id == i.project.id) %}{{ i.project.name }} -{% endif %}
+            {{ link_to_version(i) }}
+          </span>
+        {% endif %}
+      {% endfor %}
+    </li>
+    {% endfor %}
+  {% endfor %}
+</ul>
+</form>

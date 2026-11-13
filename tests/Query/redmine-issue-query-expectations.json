@@ -1,0 +1,1989 @@
+{
+ "jsmith": {
+  "status_id=*": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=o": [
+   18,
+   17,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=c": [
+   19
+  ],
+  "status_id=*&project_id=1": [
+   19,
+   17,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&tracker_id=2": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&tracker_id=!2": [
+   19,
+   18,
+   17,
+   13
+  ],
+  "status_id=*&assigned_to_id=me": [
+   17
+  ],
+  "status_id=*&assigned_to_id=!*": [
+   19,
+   18,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&assigned_to_id=*": [
+   17,
+   13
+  ],
+  "status_id=*&author_id=me": [
+   19,
+   18,
+   16,
+   15,
+   13
+  ],
+  "status_id=*&author_id=7": [
+   17,
+   14
+  ],
+  "status_id=*&subject=~wish": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&subject=^Wish": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&subject=$emails": [
+   16
+  ],
+  "status_id=*&subject=!~wish": [
+   19,
+   18,
+   17,
+   13
+  ],
+  "status_id=*&subject=*~cart wish": [
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&description=*": [
+   13
+  ],
+  "status_id=*&description=!*": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&notes=~working": [
+   13
+  ],
+  "status_id=*&notes=*": [
+   19,
+   13
+  ],
+  "status_id=*&done_ratio=>=30": [
+   15,
+   14,
+   13
+  ],
+  "status_id=*&done_ratio=<=30": [
+   19,
+   18,
+   17,
+   16,
+   13
+  ],
+  "status_id=*&done_ratio=><0|40": [
+   19,
+   18,
+   17,
+   16,
+   14,
+   13
+  ],
+  "status_id=*&estimated_hours=>=3": [
+   15,
+   13
+  ],
+  "status_id=*&estimated_hours=!*": [
+   19,
+   18,
+   17,
+   14
+  ],
+  "status_id=*&spent_time=*": [
+   13
+  ],
+  "status_id=*&spent_time=!*": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&start_date=>=2026-11-05": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&start_date=<=2026-11-05": [
+   13
+  ],
+  "status_id=*&start_date=><2026-11-01|2026-11-10": [
+   15,
+   14,
+   13
+  ],
+  "status_id=*&created_on=>=2026-11-07": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&updated_on=*": [
+   19,
+   16,
+   14,
+   13
+  ],
+  "status_id=*&updated_on=!*": [
+   18,
+   17,
+   15
+  ],
+  "status_id=*&closed_on=*": [
+   19
+  ],
+  "status_id=*&watcher_id=me": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&watcher_id=7": [
+   13
+  ],
+  "status_id=*&updated_by=me": [
+   19,
+   14
+  ],
+  "status_id=*&last_updated_by=me": [
+   19,
+   14
+  ],
+  "status_id=*&last_updated_by=6": [
+   13
+  ],
+  "status_id=*&fixed_version_id=1": [
+   13
+  ],
+  "status_id=*&fixed_version_id=!*": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&fixed_version.status=open": [
+   13
+  ],
+  "status_id=*&category_id=*": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&member_of_group=*": [
+   13
+  ],
+  "status_id=*&member_of_group=10": [
+   13
+  ],
+  "status_id=*&assigned_to_role=*": [
+   17,
+   13
+  ],
+  "status_id=*&assigned_to_role=!*": [
+   19,
+   18,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&author.role=3": [
+   19,
+   16,
+   15,
+   13
+  ],
+  "status_id=*&author.group=10": [],
+  "status_id=*&cf_1=PostgreSQL": [
+   13
+  ],
+  "status_id=*&cf_1=!PostgreSQL": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&cf_1=*": [
+   13
+  ],
+  "status_id=*&cf_1=!*": [
+   18,
+   17,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&cf_2=Linux": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&relates=*": [
+   17,
+   13
+  ],
+  "status_id=*&relates=13": [
+   17
+  ],
+  "status_id=*&blocks=19": [
+   13
+  ],
+  "status_id=*&blocked=13": [
+   19
+  ],
+  "status_id=*&blocked=*o": [
+   19
+  ],
+  "status_id=*&precedes=*": [
+   15
+  ],
+  "status_id=*&follows=*": [
+   16
+  ],
+  "status_id=*&relates=!*": [
+   19,
+   18,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&relates==p1": [
+   17
+  ],
+  "status_id=*&parent_id=14": [
+   16,
+   15
+  ],
+  "status_id=*&parent_id=~14": [
+   16,
+   15
+  ],
+  "status_id=*&parent_id=!*": [
+   19,
+   18,
+   17,
+   14,
+   13
+  ],
+  "status_id=*&child_id=15": [
+   14
+  ],
+  "status_id=*&child_id=*": [
+   14
+  ],
+  "status_id=*&issue_id=13,14,19": [
+   19,
+   14,
+   13
+  ],
+  "status_id=*&issue_id=>=15": [
+   19,
+   18,
+   17,
+   16,
+   15
+  ],
+  "status_id=*&attachment=*": [
+   13
+  ],
+  "status_id=*&attachment=~notes": [
+   13
+  ],
+  "status_id=*&attachment=!*": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&is_private=1": [
+   17
+  ],
+  "status_id=*&is_private=0": [
+   19,
+   18,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&project.status=1": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&priority_id=4": [
+   16,
+   14
+  ],
+  "status_id=*&status_id=ev2": [
+   13
+  ],
+  "status_id=*&tracker_id=cf1": [],
+  "status_id=*&any_searchable=wish": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&any_searchable=coupon": [
+   13
+  ],
+  "status_id=*&sort=priority:desc,id": [
+   17,
+   14,
+   16,
+   13,
+   18,
+   19,
+   15
+  ],
+  "status_id=*&sort=assigned_to,id:desc": [
+   19,
+   18,
+   16,
+   15,
+   14,
+   13,
+   17
+  ],
+  "status_id=*&sort=tracker,subject": [
+   13,
+   18,
+   17,
+   14,
+   16,
+   15,
+   19
+  ],
+  "status_id=*&sort=fixed_version,id": [
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19
+  ],
+  "status_id=*&sort=cf_1:desc,id": [
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19
+  ],
+  "status_id=*&sort=spent_hours:desc,id": [
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19
+  ],
+  "status_id=*&sort=due_date,id": [
+   17,
+   18,
+   19,
+   13,
+   15,
+   14,
+   16
+  ],
+  "status_id=*&sort=parent,id": [
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19
+  ],
+  "status_id=*&sort=updated_on:desc": [
+   19,
+   13,
+   14,
+   16,
+   18,
+   17,
+   15
+  ],
+  "status_id=*&sort=author,id": [
+   13,
+   15,
+   16,
+   18,
+   19,
+   14,
+   17
+  ],
+  "status_id=*&sort=category,id": [
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   13
+  ],
+  "status_id=*&sort=done_ratio:desc,id": [
+   15,
+   14,
+   13,
+   16,
+   17,
+   18,
+   19
+  ],
+  "status_id=*&sort=total_estimated_hours:desc,id": [
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19
+  ],
+  "status_id=*&sort=last_updated_by,id": [
+   15,
+   16,
+   17,
+   18,
+   13,
+   14,
+   19
+  ],
+  "status_id=*&group_by=status": [
+   18,
+   17,
+   16,
+   15,
+   14,
+   13,
+   19
+  ],
+  "status_id=*&group_by=assigned_to": [
+   19,
+   18,
+   16,
+   15,
+   14,
+   13,
+   17
+  ],
+  "status_id=*&group_by=cf_1": [
+   18,
+   17,
+   16,
+   15,
+   14,
+   13
+  ]
+ },
+ "admin": {
+  "status_id=*": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=o": [
+   18,
+   17,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=c": [
+   19
+  ],
+  "status_id=*&project_id=1": [
+   19,
+   17,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&tracker_id=2": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&tracker_id=!2": [
+   19,
+   18,
+   17,
+   13
+  ],
+  "status_id=*&assigned_to_id=me": [],
+  "status_id=*&assigned_to_id=!*": [
+   19,
+   18,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&assigned_to_id=*": [
+   17,
+   13
+  ],
+  "status_id=*&author_id=me": [],
+  "status_id=*&author_id=7": [
+   17,
+   14
+  ],
+  "status_id=*&subject=~wish": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&subject=^Wish": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&subject=$emails": [
+   16
+  ],
+  "status_id=*&subject=!~wish": [
+   19,
+   18,
+   17,
+   13
+  ],
+  "status_id=*&subject=*~cart wish": [
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&description=*": [
+   13
+  ],
+  "status_id=*&description=!*": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&notes=~working": [
+   13
+  ],
+  "status_id=*&notes=*": [
+   19,
+   13
+  ],
+  "status_id=*&done_ratio=>=30": [
+   15,
+   14,
+   13
+  ],
+  "status_id=*&done_ratio=<=30": [
+   19,
+   18,
+   17,
+   16,
+   13
+  ],
+  "status_id=*&done_ratio=><0|40": [
+   19,
+   18,
+   17,
+   16,
+   14,
+   13
+  ],
+  "status_id=*&estimated_hours=>=3": [
+   15,
+   13
+  ],
+  "status_id=*&estimated_hours=!*": [
+   19,
+   18,
+   17,
+   14
+  ],
+  "status_id=*&spent_time=*": [
+   13
+  ],
+  "status_id=*&spent_time=!*": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&start_date=>=2026-11-05": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&start_date=<=2026-11-05": [
+   13
+  ],
+  "status_id=*&start_date=><2026-11-01|2026-11-10": [
+   15,
+   14,
+   13
+  ],
+  "status_id=*&created_on=>=2026-11-07": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&updated_on=*": [
+   19,
+   16,
+   14,
+   13
+  ],
+  "status_id=*&updated_on=!*": [
+   18,
+   17,
+   15
+  ],
+  "status_id=*&closed_on=*": [
+   19
+  ],
+  "status_id=*&watcher_id=me": [],
+  "status_id=*&watcher_id=7": [
+   13
+  ],
+  "status_id=*&updated_by=me": [],
+  "status_id=*&last_updated_by=me": [],
+  "status_id=*&last_updated_by=6": [
+   13
+  ],
+  "status_id=*&fixed_version_id=1": [
+   13
+  ],
+  "status_id=*&fixed_version_id=!*": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&fixed_version.status=open": [
+   13
+  ],
+  "status_id=*&category_id=*": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&member_of_group=*": [
+   13
+  ],
+  "status_id=*&member_of_group=10": [
+   13
+  ],
+  "status_id=*&assigned_to_role=*": [
+   17,
+   13
+  ],
+  "status_id=*&assigned_to_role=!*": [
+   19,
+   18,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&author.role=3": [
+   19,
+   16,
+   15,
+   13
+  ],
+  "status_id=*&author.group=10": [],
+  "status_id=*&cf_1=PostgreSQL": [
+   13
+  ],
+  "status_id=*&cf_1=!PostgreSQL": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&cf_1=*": [
+   13
+  ],
+  "status_id=*&cf_1=!*": [
+   18,
+   17,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&cf_2=Linux": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&relates=*": [
+   17,
+   13
+  ],
+  "status_id=*&relates=13": [
+   17
+  ],
+  "status_id=*&blocks=19": [
+   13
+  ],
+  "status_id=*&blocked=13": [
+   19
+  ],
+  "status_id=*&blocked=*o": [
+   19
+  ],
+  "status_id=*&precedes=*": [
+   15
+  ],
+  "status_id=*&follows=*": [
+   16
+  ],
+  "status_id=*&relates=!*": [
+   19,
+   18,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&relates==p1": [
+   17
+  ],
+  "status_id=*&parent_id=14": [
+   16,
+   15
+  ],
+  "status_id=*&parent_id=~14": [
+   16,
+   15
+  ],
+  "status_id=*&parent_id=!*": [
+   19,
+   18,
+   17,
+   14,
+   13
+  ],
+  "status_id=*&child_id=15": [
+   14
+  ],
+  "status_id=*&child_id=*": [
+   14
+  ],
+  "status_id=*&issue_id=13,14,19": [
+   19,
+   14,
+   13
+  ],
+  "status_id=*&issue_id=>=15": [
+   19,
+   18,
+   17,
+   16,
+   15
+  ],
+  "status_id=*&attachment=*": [
+   13
+  ],
+  "status_id=*&attachment=~notes": [
+   13
+  ],
+  "status_id=*&attachment=!*": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&is_private=1": [
+   17
+  ],
+  "status_id=*&is_private=0": [
+   19,
+   18,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&project.status=1": [
+   19,
+   18,
+   17,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&priority_id=4": [
+   16,
+   14
+  ],
+  "status_id=*&status_id=ev2": [
+   13
+  ],
+  "status_id=*&tracker_id=cf1": [],
+  "status_id=*&any_searchable=wish": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&any_searchable=coupon": [
+   13
+  ],
+  "status_id=*&sort=priority:desc,id": [
+   17,
+   14,
+   16,
+   13,
+   18,
+   19,
+   15
+  ],
+  "status_id=*&sort=assigned_to,id:desc": [
+   19,
+   18,
+   16,
+   15,
+   14,
+   13,
+   17
+  ],
+  "status_id=*&sort=tracker,subject": [
+   13,
+   18,
+   17,
+   14,
+   16,
+   15,
+   19
+  ],
+  "status_id=*&sort=fixed_version,id": [
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19
+  ],
+  "status_id=*&sort=cf_1:desc,id": [
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19
+  ],
+  "status_id=*&sort=spent_hours:desc,id": [
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19
+  ],
+  "status_id=*&sort=due_date,id": [
+   17,
+   18,
+   19,
+   13,
+   15,
+   14,
+   16
+  ],
+  "status_id=*&sort=parent,id": [
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19
+  ],
+  "status_id=*&sort=updated_on:desc": [
+   19,
+   13,
+   14,
+   16,
+   18,
+   17,
+   15
+  ],
+  "status_id=*&sort=author,id": [
+   13,
+   15,
+   16,
+   18,
+   19,
+   14,
+   17
+  ],
+  "status_id=*&sort=category,id": [
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   13
+  ],
+  "status_id=*&sort=done_ratio:desc,id": [
+   15,
+   14,
+   13,
+   16,
+   17,
+   18,
+   19
+  ],
+  "status_id=*&sort=total_estimated_hours:desc,id": [
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19
+  ],
+  "status_id=*&sort=last_updated_by,id": [
+   15,
+   16,
+   17,
+   18,
+   13,
+   14,
+   19
+  ],
+  "status_id=*&group_by=status": [
+   18,
+   17,
+   16,
+   15,
+   14,
+   13,
+   19
+  ],
+  "status_id=*&group_by=assigned_to": [
+   19,
+   18,
+   16,
+   15,
+   14,
+   13,
+   17
+  ],
+  "status_id=*&group_by=cf_1": [
+   18,
+   17,
+   16,
+   15,
+   14,
+   13
+  ]
+ },
+ "dlopper": {
+  "status_id=*": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=o": [
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=c": [
+   19
+  ],
+  "status_id=*&project_id=1": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&tracker_id=2": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&tracker_id=!2": [
+   19,
+   13
+  ],
+  "status_id=*&assigned_to_id=me": [
+   13
+  ],
+  "status_id=*&assigned_to_id=!*": [
+   19,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&assigned_to_id=*": [
+   13
+  ],
+  "status_id=*&author_id=me": [],
+  "status_id=*&author_id=7": [
+   14
+  ],
+  "status_id=*&subject=~wish": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&subject=^Wish": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&subject=$emails": [
+   16
+  ],
+  "status_id=*&subject=!~wish": [
+   19,
+   13
+  ],
+  "status_id=*&subject=*~cart wish": [
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&description=*": [
+   13
+  ],
+  "status_id=*&description=!*": [
+   19,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&notes=~working": [
+   13
+  ],
+  "status_id=*&notes=*": [
+   19,
+   13
+  ],
+  "status_id=*&done_ratio=>=30": [
+   15,
+   14,
+   13
+  ],
+  "status_id=*&done_ratio=<=30": [
+   19,
+   16,
+   13
+  ],
+  "status_id=*&done_ratio=><0|40": [
+   19,
+   16,
+   14,
+   13
+  ],
+  "status_id=*&estimated_hours=>=3": [
+   15,
+   13
+  ],
+  "status_id=*&estimated_hours=!*": [
+   19,
+   14
+  ],
+  "status_id=*&spent_time=*": [
+   13
+  ],
+  "status_id=*&spent_time=!*": [
+   19,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&start_date=>=2026-11-05": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&start_date=<=2026-11-05": [
+   13
+  ],
+  "status_id=*&start_date=><2026-11-01|2026-11-10": [
+   15,
+   14,
+   13
+  ],
+  "status_id=*&created_on=>=2026-11-07": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&updated_on=*": [
+   19,
+   16,
+   14,
+   13
+  ],
+  "status_id=*&updated_on=!*": [
+   15
+  ],
+  "status_id=*&closed_on=*": [
+   19
+  ],
+  "status_id=*&watcher_id=me": [],
+  "status_id=*&watcher_id=7": [],
+  "status_id=*&updated_by=me": [
+   13
+  ],
+  "status_id=*&last_updated_by=me": [
+   13
+  ],
+  "status_id=*&last_updated_by=6": [
+   13
+  ],
+  "status_id=*&fixed_version_id=1": [
+   13
+  ],
+  "status_id=*&fixed_version_id=!*": [
+   19,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&fixed_version.status=open": [
+   13
+  ],
+  "status_id=*&category_id=*": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&member_of_group=*": [
+   13
+  ],
+  "status_id=*&member_of_group=10": [
+   13
+  ],
+  "status_id=*&assigned_to_role=*": [
+   13
+  ],
+  "status_id=*&assigned_to_role=!*": [
+   19,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&author.role=3": [
+   19,
+   16,
+   15,
+   13
+  ],
+  "status_id=*&author.group=10": [],
+  "status_id=*&cf_1=PostgreSQL": [
+   13
+  ],
+  "status_id=*&cf_1=!PostgreSQL": [
+   19,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&cf_1=*": [
+   13
+  ],
+  "status_id=*&cf_1=!*": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&cf_2=Linux": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&relates=*": [
+   13
+  ],
+  "status_id=*&relates=13": [],
+  "status_id=*&blocks=19": [
+   13
+  ],
+  "status_id=*&blocked=13": [
+   19
+  ],
+  "status_id=*&blocked=*o": [
+   19
+  ],
+  "status_id=*&precedes=*": [
+   15
+  ],
+  "status_id=*&follows=*": [
+   16
+  ],
+  "status_id=*&relates=!*": [
+   19,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&relates==p1": [],
+  "status_id=*&parent_id=14": [
+   16,
+   15
+  ],
+  "status_id=*&parent_id=~14": [
+   16,
+   15
+  ],
+  "status_id=*&parent_id=!*": [
+   19,
+   14,
+   13
+  ],
+  "status_id=*&child_id=15": [
+   14
+  ],
+  "status_id=*&child_id=*": [
+   14
+  ],
+  "status_id=*&issue_id=13,14,19": [
+   19,
+   14,
+   13
+  ],
+  "status_id=*&issue_id=>=15": [
+   19,
+   16,
+   15
+  ],
+  "status_id=*&attachment=*": [
+   13
+  ],
+  "status_id=*&attachment=~notes": [
+   13
+  ],
+  "status_id=*&attachment=!*": [
+   19,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&is_private=1": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&is_private=0": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&project.status=1": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&priority_id=4": [
+   16,
+   14
+  ],
+  "status_id=*&status_id=ev2": [
+   13
+  ],
+  "status_id=*&tracker_id=cf1": [],
+  "status_id=*&any_searchable=wish": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&any_searchable=coupon": [
+   13
+  ],
+  "status_id=*&sort=priority:desc,id": [
+   14,
+   16,
+   13,
+   19,
+   15
+  ],
+  "status_id=*&sort=assigned_to,id:desc": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&sort=tracker,subject": [
+   13,
+   14,
+   16,
+   15,
+   19
+  ],
+  "status_id=*&sort=fixed_version,id": [
+   13,
+   14,
+   15,
+   16,
+   19
+  ],
+  "status_id=*&sort=cf_1:desc,id": [
+   13,
+   14,
+   15,
+   16,
+   19
+  ],
+  "status_id=*&sort=spent_hours:desc,id": [
+   13,
+   14,
+   15,
+   16,
+   19
+  ],
+  "status_id=*&sort=due_date,id": [
+   19,
+   13,
+   15,
+   14,
+   16
+  ],
+  "status_id=*&sort=parent,id": [
+   13,
+   14,
+   15,
+   16,
+   19
+  ],
+  "status_id=*&sort=updated_on:desc": [
+   19,
+   13,
+   14,
+   16,
+   15
+  ],
+  "status_id=*&sort=author,id": [
+   13,
+   15,
+   16,
+   19,
+   14
+  ],
+  "status_id=*&sort=category,id": [
+   14,
+   15,
+   16,
+   19,
+   13
+  ],
+  "status_id=*&sort=done_ratio:desc,id": [
+   15,
+   14,
+   13,
+   16,
+   19
+  ],
+  "status_id=*&sort=total_estimated_hours:desc,id": [
+   13,
+   14,
+   15,
+   16,
+   19
+  ],
+  "status_id=*&sort=last_updated_by,id": [
+   15,
+   16,
+   13,
+   14,
+   19
+  ],
+  "status_id=*&group_by=status": [
+   16,
+   15,
+   14,
+   13,
+   19
+  ],
+  "status_id=*&group_by=assigned_to": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&group_by=cf_1": [
+   16,
+   15,
+   14,
+   13
+  ]
+ },
+ "anonymous": {
+  "status_id=*": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=o": [
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=c": [
+   19
+  ],
+  "status_id=*&project_id=1": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&tracker_id=2": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&tracker_id=!2": [
+   19,
+   13
+  ],
+  "status_id=*&assigned_to_id=me": [],
+  "status_id=*&assigned_to_id=!*": [
+   19,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&assigned_to_id=*": [
+   13
+  ],
+  "status_id=*&author_id=me": [],
+  "status_id=*&author_id=7": [
+   14
+  ],
+  "status_id=*&subject=~wish": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&subject=^Wish": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&subject=$emails": [
+   16
+  ],
+  "status_id=*&subject=!~wish": [
+   19,
+   13
+  ],
+  "status_id=*&subject=*~cart wish": [
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&description=*": [
+   13
+  ],
+  "status_id=*&description=!*": [
+   19,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&notes=~working": [],
+  "status_id=*&notes=*": [
+   19
+  ],
+  "status_id=*&done_ratio=>=30": [
+   15,
+   14,
+   13
+  ],
+  "status_id=*&done_ratio=<=30": [
+   19,
+   16,
+   13
+  ],
+  "status_id=*&done_ratio=><0|40": [
+   19,
+   16,
+   14,
+   13
+  ],
+  "status_id=*&estimated_hours=>=3": [
+   15,
+   13
+  ],
+  "status_id=*&estimated_hours=!*": [
+   19,
+   14
+  ],
+  "status_id=*&spent_time=*": [
+   13
+  ],
+  "status_id=*&spent_time=!*": [
+   19,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&start_date=>=2026-11-05": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&start_date=<=2026-11-05": [
+   13
+  ],
+  "status_id=*&start_date=><2026-11-01|2026-11-10": [
+   15,
+   14,
+   13
+  ],
+  "status_id=*&created_on=>=2026-11-07": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&updated_on=*": [
+   19,
+   16,
+   14,
+   13
+  ],
+  "status_id=*&updated_on=!*": [
+   15
+  ],
+  "status_id=*&closed_on=*": [
+   19
+  ],
+  "status_id=*&watcher_id=me": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&watcher_id=7": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&updated_by=me": [],
+  "status_id=*&last_updated_by=me": [],
+  "status_id=*&last_updated_by=6": [],
+  "status_id=*&fixed_version_id=1": [
+   13
+  ],
+  "status_id=*&fixed_version_id=!*": [
+   19,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&fixed_version.status=open": [
+   13
+  ],
+  "status_id=*&category_id=*": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&member_of_group=*": [
+   13
+  ],
+  "status_id=*&member_of_group=10": [
+   13
+  ],
+  "status_id=*&assigned_to_role=*": [
+   13
+  ],
+  "status_id=*&assigned_to_role=!*": [
+   19,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&author.role=3": [
+   19,
+   16,
+   15,
+   13
+  ],
+  "status_id=*&author.group=10": [],
+  "status_id=*&cf_1=PostgreSQL": [
+   13
+  ],
+  "status_id=*&cf_1=!PostgreSQL": [
+   19,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&cf_1=*": [
+   13
+  ],
+  "status_id=*&cf_1=!*": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&cf_2=Linux": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&relates=*": [
+   13
+  ],
+  "status_id=*&relates=13": [],
+  "status_id=*&blocks=19": [
+   13
+  ],
+  "status_id=*&blocked=13": [
+   19
+  ],
+  "status_id=*&blocked=*o": [
+   19
+  ],
+  "status_id=*&precedes=*": [
+   15
+  ],
+  "status_id=*&follows=*": [
+   16
+  ],
+  "status_id=*&relates=!*": [
+   19,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&relates==p1": [],
+  "status_id=*&parent_id=14": [
+   16,
+   15
+  ],
+  "status_id=*&parent_id=~14": [
+   16,
+   15
+  ],
+  "status_id=*&parent_id=!*": [
+   19,
+   14,
+   13
+  ],
+  "status_id=*&child_id=15": [
+   14
+  ],
+  "status_id=*&child_id=*": [
+   14
+  ],
+  "status_id=*&issue_id=13,14,19": [
+   19,
+   14,
+   13
+  ],
+  "status_id=*&issue_id=>=15": [
+   19,
+   16,
+   15
+  ],
+  "status_id=*&attachment=*": [
+   13
+  ],
+  "status_id=*&attachment=~notes": [
+   13
+  ],
+  "status_id=*&attachment=!*": [
+   19,
+   16,
+   15,
+   14
+  ],
+  "status_id=*&is_private=1": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&is_private=0": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&project.status=1": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&priority_id=4": [
+   16,
+   14
+  ],
+  "status_id=*&status_id=ev2": [
+   13
+  ],
+  "status_id=*&tracker_id=cf1": [],
+  "status_id=*&any_searchable=wish": [
+   16,
+   15,
+   14
+  ],
+  "status_id=*&any_searchable=coupon": [
+   13
+  ],
+  "status_id=*&sort=priority:desc,id": [
+   14,
+   16,
+   13,
+   19,
+   15
+  ],
+  "status_id=*&sort=assigned_to,id:desc": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&sort=tracker,subject": [
+   13,
+   14,
+   16,
+   15,
+   19
+  ],
+  "status_id=*&sort=fixed_version,id": [
+   13,
+   14,
+   15,
+   16,
+   19
+  ],
+  "status_id=*&sort=cf_1:desc,id": [
+   13,
+   14,
+   15,
+   16,
+   19
+  ],
+  "status_id=*&sort=spent_hours:desc,id": [
+   13,
+   14,
+   15,
+   16,
+   19
+  ],
+  "status_id=*&sort=due_date,id": [
+   19,
+   13,
+   15,
+   14,
+   16
+  ],
+  "status_id=*&sort=parent,id": [
+   13,
+   14,
+   15,
+   16,
+   19
+  ],
+  "status_id=*&sort=updated_on:desc": [
+   19,
+   13,
+   14,
+   16,
+   15
+  ],
+  "status_id=*&sort=author,id": [
+   13,
+   15,
+   16,
+   19,
+   14
+  ],
+  "status_id=*&sort=category,id": [
+   14,
+   15,
+   16,
+   19,
+   13
+  ],
+  "status_id=*&sort=done_ratio:desc,id": [
+   15,
+   14,
+   13,
+   16,
+   19
+  ],
+  "status_id=*&sort=total_estimated_hours:desc,id": [
+   13,
+   14,
+   15,
+   16,
+   19
+  ],
+  "status_id=*&sort=last_updated_by,id": [
+   13,
+   15,
+   16,
+   14,
+   19
+  ],
+  "status_id=*&group_by=status": [
+   16,
+   15,
+   14,
+   13,
+   19
+  ],
+  "status_id=*&group_by=assigned_to": [
+   19,
+   16,
+   15,
+   14,
+   13
+  ],
+  "status_id=*&group_by=cf_1": [
+   16,
+   15,
+   14,
+   13
+  ]
+ }
+}

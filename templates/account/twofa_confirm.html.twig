@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<div id="login-form">
+
+  <h3>{{ l('setting_twofa') }}</h3>
+  <p>{{ l('twofa_label_enter_otp') }}</p>
+
+  <form id="twofa_form" onsubmit="return keepAnchorOnSignIn(this);" action="{{ path('twofa_login') }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+
+
+    <label for="twofa_code">
+      {{ l('twofa_label_code') }}
+      {% if resendable %}<a class="lost_password" rel="nofollow" data-method="post" href="{{ path('twofa_resend') }}">{{ l('twofa_resend_code') }}</a>{% endif %}
+    </label>
+    <input type="text" name="twofa_code" id="twofa_code" tabindex="1" autocomplete="one-time-code" autofocus="autofocus" />
+
+    <input type="submit" name="submit_otp" value="{{ l('button_login') }}" tabindex="2" id="login-submit" data-disable-with="{{ l('button_login') }}" />
+  </form>
+
+</div>
+{% endblock %}

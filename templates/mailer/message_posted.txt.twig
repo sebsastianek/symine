@@ -1,0 +1,15 @@
+{% extends 'mailer/layout.txt.twig' %}
+{% block content %}
+{{ message_url }}
+{{ message.author ? message.author.name : '' }}
+
+{{ message.content }}
+
+{% set attachments = mail.attachmentsOf('Message', message.id) %}
+{% if attachments is not empty %}
+{{ mail.textSeparator(l('label_attachment_plural')) }}
+{% for attachment in attachments %}
+{{ attachment.filename }} ({{ mail.humanSize(attachment.filesize) }})
+{% endfor %}
+{% endif %}
+{% endblock %}

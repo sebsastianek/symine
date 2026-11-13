@@ -1,0 +1,10 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('enumerations_index') }}">{{ l(option_name) }}</a> &#187; {{ l('label_enumeration_new') }}</h2>
+
+<form class="new_enumeration" id="new_enumeration" enctype="multipart/form-data" action="{{ path('enumeration_create') }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+  <input autocomplete="off" type="hidden" value="{{ type }}" name="enumeration[type]" id="enumeration_type" />
+  {% include 'admin/enumerations/_form.html.twig' %}
+  <input type="submit" name="commit" value="{{ l('button_create') }}" data-disable-with="{{ l('button_create') }}" />
+</form>
+{% endblock %}

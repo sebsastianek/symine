@@ -1,0 +1,113 @@
+{% include 'admin/users/_error_messages.html.twig' %}
+
+<div id="user_form">
+<!--[form:user]-->
+<div class="splitcontent">
+<div class="splitcontentleft">
+<fieldset class="box tabular">
+  <legend>{{ l('label_information_plural') }}</legend>
+  <p><label for="user_login">{{ l('field_login') }}<span class="required"> *</span></label><input size="25" type="text" value="{{ edited_user.login }}" name="user[login]" id="user_login" /></p>
+  {% set fn %}<p><label for="user_firstname">{{ l('field_firstname') }}<span class="required"> *</span></label><input type="text" value="{{ edited_user.firstname }}" name="user[firstname]" id="user_firstname" /></p>{% endset %}
+  {% set ln %}<p><label for="user_lastname">{{ l('field_lastname') }}<span class="required"> *</span></label><input type="text" value="{{ edited_user.lastname }}" name="user[lastname]" id="user_lastname" /></p>{% endset %}
+  {% if settings.string('user_format') starts with 'lastname' %}{{ ln }}{{ fn }}{% else %}{{ fn }}{{ ln }}{% endif %}
+  <p><label for="user_mail">{{ l('field_mail') }}<span class="required"> *</span></label><input type="text" value="{{ posted_mail ?? edited_user.getMail() }}" name="user[mail]" id="user_mail" /></p>
+  {% if not settings.bool('force_default_language_for_loggedin') %}
+  <p><label for="user_language">{{ l('field_language') }}</label><select name="user[language]" id="user_language">
+    <option value="">(auto)</option>
+    {% for code, name in languages %}<option value="{{ code }}"{% if edited_user.language == code %} selected="selected"{% endif %}>{{ name }}</option>{% endfor %}
+  </select></p>
+  {% endif %}
+
+  {% for field in custom_fields %}
+    <p>{% include 'admin/users/_custom_field.html.twig' with {field: field, value: custom_values[field.id] ?? null, prefix: 'user', options: cf_options[field.id] ?? []} only %}</p>
+  {% endfor %}
+
+  <p><label for="user_admin">{{ l('field_admin') }}</label><input name="user[admin]" type="hidden" value="0"{% if edited_user.id and edited_user.id == current_user().id %} disabled="disabled"{% endif %} /><input type="checkbox" value="1" name="user[admin]" id="user_admin"{% if edited_user.admin %} checked="checked"{% endif %}{% if edited_user.id and edited_user.id == current_user().id %} disabled="disabled"{% endif %} /></p>
+  {{ call_hook('view_users_form', {user: edited_user, form: null}) }}
+</fieldset>
+
+<fieldset class="box tabular">
+  <legend>{{ l('label_authentication') }}</legend>
+  {% if auth_sources|length > 0 %}
+  <p><label for="user_auth_source_id">{{ l('field_auth_source') }}</label><select onchange="if (this.value=='') {$('#password_fields').show();} else {$('#password_fields').hide();}" name="user[auth_source_id]" id="user_auth_source_id">
+    <option value="">{{ l('label_internal') }}</option>
+    {% for a in auth_sources %}<option value="{{ a.id }}"{% if edited_user.authSourceId == a.id %} selected="selected"{% endif %}>{{ a.name }}</option>{% endfor %}
+  </select></p>
+  {% endif %}
+  <div id="password_fields" style="{{ edited_user.authSourceId ? 'display:none;' : '' }}">
+  <p>
+    <label for="user_password">{{ l('field_password') }}{% if is_new %}<span class="required"> *</span>{% endif %}</label><input size="25" autocomplete="new-password" type="password" name="user[password]" id="user_password" />
+    <em class="info">{{ l('text_caracters_minimum', {count: settings.int('password_min_length')}) }}</em>
+    {% set classes = settings.array('password_required_char_classes') %}
+    {% if classes|length > 0 %}
+      <em class="info">{{ l('text_characters_must_contain', {character_classes: classes|map(c => l('label_password_char_class_' ~ c))|join(', ')}) }}</em>
+    {% endif %}
+  </p>
+  <p><label for="user_password_confirmation">{{ l('field_password_confirmation') }}{% if is_new %}<span class="required"> *</span>{% endif %}</label><input size="25" autocomplete="new-password" type="password" name="user[password_confirmation]" id="user_password_confirmation" /></p>
+  <p><label for="user_generate_password">{{ l('field_generate_password') }}</label><input name="user[generate_password]" type="hidden" value="0" /><input type="checkbox" value="1" name="user[generate_password]" id="user_generate_password"{% if generate_password %} checked="checked"{% endif %} /></p>
+  <p><label for="user_must_change_passwd">{{ l('field_must_change_passwd') }}</label><input name="user[must_change_passwd]" type="hidden" value="0" /><input type="checkbox" value="1" name="user[must_change_passwd]" id="user_must_change_passwd"{% if edited_user.mustChangePasswd %} checked="checked"{% endif %} /></p>
+  </div>
+  {% if settings.string('twofa') != '0' and not is_new %}
+  <p>
+    <label>{{ l('setting_twofa') }}</label>
+    {% if edited_user.twofaScheme %}
+      {{ l('twofa_currently_active', {twofa_scheme_name: l('twofa__' ~ edited_user.twofaScheme ~ '__name')}) }}<br/>
+      {% if edited_user.id == current_user().id %}
+        <a rel="nofollow" data-method="post" href="{{ path('twofa_deactivate_init', {scheme: edited_user.twofaScheme}) }}">{{ l('button_disable') }}</a>
+      {% else %}
+        <a rel="nofollow" data-method="post" href="{{ path('twofa_admin_deactivate', {user_id: edited_user.id}) }}">{{ l('button_disable') }}</a>
+      {% endif %}
+    {% else %}
+      {{ l('twofa_not_active') }}
+    {% endif %}
+  </p>
+  {% endif %}
+</fieldset>
+<p class="mobile-hide">
+  {% if is_new %}
+    <input type="submit" name="commit" value="{{ l('button_create') }}" />
+    <input type="submit" name="continue" value="{{ l('button_create_and_continue') }}" />
+  {% else %}
+    <input type="submit" name="commit" value="{{ l('button_save') }}" />
+  {% endif %}
+</p>
+</div>
+
+<div class="splitcontentright">
+<fieldset class="box">
+  <legend>{{ l('field_mail_notification') }}</legend>
+  {% include 'admin/users/_mail_notifications.html.twig' %}
+</fieldset>
+
+<fieldset class="box">
+  <legend>{{ l('label_auto_watch_on') }}</legend>
+  {% set aw = pref.get('auto_watch_on', []) %}
+  <input type="hidden" name="pref[auto_watch_on][]" value="" />
+  {% for o in auto_watch_on_options %}
+    <p><input type="checkbox" value="{{ o }}" name="pref[auto_watch_on][]" id="pref_auto_watch_on_{{ o }}"{% if o in aw %} checked="checked"{% endif %} /> <label for="pref_auto_watch_on_{{ o }}">{{ l('label_auto_watch_on_' ~ o) }}</label></p>
+  {% endfor %}
+</fieldset>
+
+<fieldset class="box tabular">
+  <legend>{{ l('label_preferences') }}</legend>
+  {% include 'admin/users/_preferences.html.twig' %}
+  {{ call_hook('view_users_form_preferences', {user: edited_user, form: null}) }}
+</fieldset>
+</div>
+</div>
+</div>
+<div style="clear:left;"></div>
+<!--[eoform:user]-->
+
+<script>
+$(document).ready(function(){
+  $('#user_generate_password').change(function(){
+    var passwd = $('#user_password, #user_password_confirmation');
+    if ($(this).is(':checked')){
+      passwd.val('').attr('disabled', true);
+    }else{
+      passwd.removeAttr('disabled');
+    }
+  }).trigger('change');
+});
+</script>

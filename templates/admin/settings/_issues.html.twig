@@ -1,0 +1,93 @@
+{% import 'admin/settings/_macros.html.twig' as s %}
+<form action="{{ path('settings_edit', {tab: 'issues'}) }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+
+<div class="box tabular settings">
+<p>{{ s.check_box(values, 'cross_project_issue_relations') }}</p>
+
+<p>{{ s.select(values, 'link_copied_issue', opts.yes_no_ask) }}</p>
+
+<p>{{ s.select(values, 'copy_attachments_on_issue_copy', opts.yes_no_ask) }}</p>
+
+<p>{{ s.select(values, 'cross_project_subtasks', opts.cross_project_subtasks) }}</p>
+
+<p>{{ s.check_box(values, 'close_duplicate_issues') }}</p>
+
+<p>{{ s.check_box(values, 'issue_group_assignment', {attrs: 'data-enables="#settings_assignee_dropdown_display_format"'}) }}</p>
+
+<p>{{ s.select(values, 'assignee_dropdown_display_format', opts.assignee_dropdown_formats) }}</p>
+
+<p>{{ s.check_box(values, 'default_issue_start_date_to_creation_date') }}</p>
+
+{% set due_enabled = posted.default_issue_due_date_offset_enabled is defined ? posted.default_issue_due_date_offset_enabled != '0' : (values.default_issue_due_date_offset ~ '') != '' %}
+<p>
+  <label for="settings_default_issue_due_date_offset_enabled">
+    {{ l('label_enable_default_issue_due_date_offset') }}
+  </label>
+  <input type="hidden" name="settings[default_issue_due_date_offset_enabled]" value="0" autocomplete="off" />
+  <input type="checkbox" name="settings[default_issue_due_date_offset_enabled]" id="settings_default_issue_due_date_offset_enabled" value="1" data-enables="#settings_default_issue_due_date_offset"{% if due_enabled %} checked="checked"{% endif %} />
+</p>
+<p>
+  <label>&nbsp;</label>
+  {{ s.text_field(values, 'default_issue_due_date_offset', {label: false, size: 6, attrs: due_enabled ? '' : 'disabled="disabled"'}) }}
+  {{ l('label_days_relative_to_today') }}
+</p>
+
+<p>{{ s.check_box(values, 'display_subprojects_issues') }}</p>
+
+<p>{{ s.select(values, 'issue_done_ratio', opts.issue_done_ratio) }}</p>
+
+<p>{{ s.select(values, 'issue_done_ratio_interval', opts.done_ratio_intervals) }}</p>
+
+<p>
+  {{ s.multiselect(values, 'non_working_week_days', opts.week_days, {inline: true}) }}
+</p>
+
+<p>{{ s.text_field(values, 'issues_export_limit', {size: 6}) }}</p>
+
+<p>{{ s.text_field(values, 'gantt_items_limit', {size: 6}) }}</p>
+
+<p>{{ s.text_field(values, 'gantt_months_limit', {size: 6}) }}</p>
+</div>
+
+<fieldset class="box">
+  <legend>{{ l('label_parent_task_attributes') }}</legend>
+  <div class="tabular settings">
+    <p>{{ s.select(values, 'parent_issue_dates', opts.parent_attributes, {label_text: l('field_start_date') ~ ' / ' ~ l('field_due_date')}) }}</p>
+
+    <p>{{ s.select(values, 'parent_issue_priority', opts.parent_attributes, {label: 'field_priority'}) }}</p>
+
+    <p>{{ s.select(values, 'parent_issue_done_ratio', opts.parent_attributes, {label: 'field_done_ratio'}) }}</p>
+  </div>
+</fieldset>
+
+<fieldset class="box">
+  <legend>{{ l('setting_issue_list_default_columns') }}</legend>
+  <div id="list-definition">
+    <div>
+      {{ s.columns('settings[issue_list_default_columns]', opts.issue_columns, values.issue_list_default_columns) }}
+    </div>
+  </div>
+
+  <p>{{ s.multiselect(values, 'issue_list_default_totals', opts.issue_totals_choices, {inline: true, label: 'label_total_plural'}) }}</p>
+
+  <p>
+    <label>{{ l('label_default_query') }}</label>
+    {{ s.select(values, 'default_issue_query', opts.issue_queries, {label: false}) }}
+  </p>
+</fieldset>
+
+<fieldset class="box">
+  <legend>{{ l('setting_related_issues_default_columns') }}</legend>
+  <div id="list-definition">
+    <div>
+      {{ s.columns('settings[related_issues_default_columns]', opts.related_issues_columns, values.related_issues_default_columns) }}
+    </div>
+  </div>
+
+  <div class="tabular settings">
+    <p>{{ s.check_box(values, 'display_related_issues_table_headers') }}</p>
+  </div>
+</fieldset>
+
+<input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>

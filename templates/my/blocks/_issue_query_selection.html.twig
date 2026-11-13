@@ -1,0 +1,19 @@
+<h3>
+  {{ l('label_issue_plural') }}
+</h3>
+
+<div id="{{ block }}-settings">
+  <form action="{{ path('my_update_page') }}" accept-charset="UTF-8" data-remote="true" method="post">{{ csrf_field() }}
+    <div class="box">
+      <p>
+        <label>
+          {{ l('label_query') }}
+          <select name="settings[{{ block }}][query_id]" id="settings_{{ block }}_query_id"><option></option>{% for q in b.queries %}<option value="{{ q.id }}"{% if ((b.settings.query_id ?? '') ~ '') == (q.id ~ '') %} selected="selected"{% endif %}>{{ q.name }}</option>{% endfor %}</select>
+        </label>
+      </p>
+    </div>
+    <p>
+      <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+    </p>
+  </form>
+</div>

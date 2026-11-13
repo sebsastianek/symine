@@ -1,0 +1,10 @@
+<div class="document-item document-{{ document.id }}">
+  <h4 class="title">{{ sprite_icon('document') }}<a href="{{ path('document_show', {id: document.id}) }}">{{ document.title }}</a></h4>
+  <div class="updated_on"><em>{{ format_time(updated_on[document.id] ?? document.createdOn) }}</em></div>
+
+  <div class="wiki description">
+    {%- set desc = document.description ?? '' -%}
+    {%- set m = desc|length > 250 ? desc|slice(0, 250) ~ (desc|slice(250)|split("\n")|first) ~ '...' : desc -%}
+    {{ textilizable(m, document.project) }}
+  </div>
+</div>

@@ -1,0 +1,54 @@
+{% import 'admin/settings/_macros.html.twig' as s %}
+<form action="{{ path('settings_edit') }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+
+<div class="box tabular settings">
+<p>{{ s.text_field(values, 'app_title', {size: 30}) }}</p>
+
+<div class="form-field">{{ s.textarea(values, 'welcome_text', {cols: 60, rows: 5, wiki: true}) }}</div>
+
+
+<p>{{ s.text_field(values, 'per_page_options', {size: 20}) }}
+<em class="info">{{ l('text_comma_separated') }}</em></p>
+
+<p>{{ s.text_field(values, 'search_results_per_page', {size: 6}) }}
+
+<p>{{ s.text_field(values, 'activity_days_default', {size: 6}) }} {{ l('label_day_plural') }}</p>
+
+<p>{{ s.text_field(values, 'host_name', {size: 60}) }}
+<em class="info">{{ l('label_example') }}: {{ guessed_host_and_path }}</em></p>
+
+<p>{{ s.select(values, 'protocol', [['HTTP', 'http'], ['HTTPS', 'https']]) }}</p>
+
+<p>{{ s.select(values, 'text_formatting', opts.text_formattings, {blank: 'label_none'}) }}
+  <span id="common_mark_info" class="{{ values.text_formatting != 'common_mark' ? 'hidden' : '' }}">
+    <label class="block">
+      <input type="checkbox" value="" disabled="disabled" />
+      Hardbreaks
+    </label>
+    <em class="info">
+      {{ l('text_setting_config_change') }}
+    </em>
+  </span>
+</p>
+
+<p>{{ s.check_box(values, 'cache_formatted_text') }}</p>
+
+<p>{{ s.select(values, 'wiki_compression', [['Gzip', 'gzip']], {blank: 'label_none'}) }}</p>
+
+<p>{{ s.text_field(values, 'feeds_limit', {size: 6}) }}</p>
+
+<p>{{ s.check_box(values, 'reactions_enabled') }}</p>
+
+{{ call_hook('view_settings_general_form') }}
+</div>
+
+<input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>
+
+<script>
+  $('#settings_text_formatting').on('change', function(e){
+    const formatter = e.target.value;
+    const parent_block = document.getElementById("common_mark_info");
+    if (formatter == "common_mark") { parent_block.classList.remove('hidden'); } else { parent_block.classList.add('hidden'); }
+  });
+</script>

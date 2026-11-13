@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_board') }}</h2>
+
+<form class="edit_board" id="edit_board_{{ board.id }}" action="{{ path('board_update', {project_id: project.identifier, id: board.id}) }}" accept-charset="UTF-8" method="post">
+<input type="hidden" name="_method" value="patch" autocomplete="off" />
+{{ csrf_field() }}
+  {% include 'boards/_form.html.twig' %}
+  <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>
+{% endblock %}

@@ -1,0 +1,119 @@
+{#- gantts/_query_form.html.erb -#}
+{% set gantt_route = project ? 'project_gantt' : 'gantt' %}
+{% set route_params = project ? {project_id: project.identifier} : {} %}
+{% set req = app.request.query.all %}
+{% set form_params = route_params|merge({month: req.month ?? null, year: req.year ?? null, months: req.months ?? null}|filter(v => v is not null)) %}
+<form id="query_form" data-gantt-target="form" action="{{ path(gantt_route, form_params) }}" accept-charset="UTF-8" method="get">
+  <input type="hidden" name="set_filter" id="set_filter" value="1" autocomplete="off" />
+  <input type="hidden" name="gantt" id="gantt" value="1" autocomplete="off" />
+
+  <div id="query_form_with_buttons" class="hide-when-print">
+    <div id="query_form_content">
+      <fieldset id="filters" class="collapsible {{ query.isNew() ? '' : 'collapsed' }}">
+        <legend onclick="toggleFieldset(this);" class="icon icon-{{ query.isNew() ? 'expanded' : 'collapsed' }}">
+          {{ sprite_icon(query.isNew() ? 'angle-down' : 'angle-right', null, 18, false, query.isNew() ? null : 'icon-rtl') }}
+          {{ l('label_filter_plural') }}
+        </legend>
+        <div style="{{ query.isNew() ? '' : 'display: none;' }}">
+          {% include 'queries/_filters.html.twig' with {query: query} %}
+        </div>
+      </fieldset>
+
+      <fieldset id="options" class="collapsible collapsed"
+                data-controller="gantt--options"
+                data-gantt--options-unavailable-columns-value="{{ ['tracker', 'id', 'subject']|json_encode }}">
+
+        <legend onclick="toggleFieldset(this);" class="icon icon-collapsed">
+          {{ sprite_icon('angle-right', null, 18, false, 'icon-rtl') }}
+          {{ l('label_options') }}
+        </legend>
+
+        <div style="display: none;">
+          <div>
+            <fieldset>
+              <legend>{{ l('field_column_names') }}</legend>
+              <div id="list-definition">
+                <div>
+                  <label for="draw_selected_columns">
+                    <input name="query[draw_selected_columns]" type="hidden" value="0" autocomplete="off" /><input id="draw_selected_columns" data-enables="#list-definition .query-columns select, #list-definition .query-columns input" data-action="change-&gt;gantt--options#toggleDisplay" data-gantt--options-target="display" type="checkbox" value="1"{% if query.drawSelectedColumns() %} checked="checked"{% endif %} name="query[draw_selected_columns]" />
+                    {{ l('label_display') }}
+                  </label>
+                </div>
+                <div>
+                  {% include 'queries/_columns.html.twig' with {query: query, tag_name: 'c[]'} %}
+                </div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>{{ l('label_related_issues') }}</legend>
+              <label for="draw_relations">
+                <input name="query[draw_relations]" type="hidden" value="0" autocomplete="off" /><input id="draw_relations" data-action="change-&gt;gantt--options#toggleRelations" data-gantt--options-target="relations" type="checkbox" value="1"{% if query.drawRelations() %} checked="checked"{% endif %} name="query[draw_relations]" />
+                <span style="background-color: #fa5252">&nbsp;&nbsp;&nbsp;</span>
+                {{ l('label_blocks') }}
+                <span style="background-color: #1c7ed6">&nbsp;&nbsp;&nbsp;</span>
+                {{ l('label_precedes') }}
+              </label>
+            </fieldset>
+
+            <fieldset>
+              <legend>{{ l('label_gantt_progress_line') }}</legend>
+              <label for="draw_progress_line">
+                <input name="query[draw_progress_line]" type="hidden" value="0" autocomplete="off" /><input id="draw_progress_line" data-action="change-&gt;gantt--options#toggleProgress" data-gantt--options-target="progress" type="checkbox" value="1"{% if query.drawProgressLine() %} checked="checked"{% endif %} name="query[draw_progress_line]" />
+                {{ l('label_display') }}
+              </label>
+            </fieldset>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+
+    <p class="contextual">
+      <span>
+        {% if gantt.zoom < 4 %}
+        <a class="icon icon-zoom-in" href="{{ path(gantt_route, route_params|merge(req)|merge(gantt.params()|merge({zoom: gantt.zoom + 1}))) }}">{{ sprite_icon('zoom-in', l('text_zoom_in')) }}</a>
+        {% else %}
+        <span class="icon icon-zoom-in">{{ sprite_icon('zoom-in', l('text_zoom_in')) }}</span>
+        {% endif %}
+        {% if gantt.zoom > 1 %}
+        <a class="icon icon-zoom-out" href="{{ path(gantt_route, route_params|merge(req)|merge(gantt.params()|merge({zoom: gantt.zoom - 1}))) }}">{{ sprite_icon('zoom-out', l('text_zoom_out')) }}</a>
+        {% else %}
+        <span class="icon icon-zoom-out">{{ sprite_icon('zoom-out', l('text_zoom_out')) }}</span>
+        {% endif %}
+      </span>
+      <span>
+        {% set py = gantt.monthFrom == 1 ? gantt.yearFrom - 1 : gantt.yearFrom %}
+        {% set pm = gantt.monthFrom == 1 ? 12 : gantt.monthFrom - 1 %}
+        {% set ny = gantt.monthFrom == 12 ? gantt.yearFrom + 1 : gantt.yearFrom %}
+        {% set nm = gantt.monthFrom == 12 ? 1 : gantt.monthFrom + 1 %}
+        <a accesskey="p" href="{{ path(gantt_route, route_params|merge(req)|merge({year: py, month: pm})) }}">« {{ i18n.monthName(pm) }}{% if pm == 12 %} {{ py }}{% endif %}</a> |
+        <a accesskey="n" href="{{ path(gantt_route, route_params|merge(req)|merge({year: ny, month: nm})) }}">{{ i18n.monthName(nm) }}{% if nm == 1 %} {{ ny }}{% endif %} »</a>
+      </span>
+    </p>
+
+    <p class="buttons">
+      <input type="number" name="months" id="months" value="{{ gantt.months }}" min="1" max="{{ gantt_months_limit }}" autocomplete="false" />
+      {{ l('label_months_from') }}
+      <select id="month" name="month">
+{% for m in 1..12 %}<option value="{{ m }}"{% if m == gantt.monthFrom %} selected="selected"{% endif %}>{{ i18n.monthName(m) }}</option>
+{% endfor %}</select>
+
+      <select id="year" name="year">
+{% for y in (gantt.yearFrom - 5)..(gantt.yearFrom + 5) %}<option value="{{ y }}"{% if y == gantt.yearFrom %} selected="selected"{% endif %}>{{ y }}</option>
+{% endfor %}</select>
+
+      <input type="hidden" name="zoom" id="zoom" value="{{ gantt.zoom }}" autocomplete="off" />
+
+      <a href="#" onclick="$(&quot;#query_form&quot;).submit(); return false;" class="icon icon-checked">{{ sprite_icon('checked', l('button_apply')) }}</a>
+      <a class="icon icon-reload" href="{{ path(gantt_route, route_params|merge({set_filter: 1})) }}">{{ sprite_icon('reload', l('button_clear')) }}</a>
+      {% if query.isNew() and can_save_queries %}
+        {% set new_query_url = project ? path('project_query_new', {project_id: project.identifier}) : path('query_new') %}
+        <a href="#" onclick="$(&#39;#query_form&#39;).attr(&#39;action&#39;, &#39;{{ new_query_url|e('js') }}&#39;).submit();; return false;" class="icon icon-save">{{ sprite_icon('save', l('button_save_object', {object_name: l('label_query')})|capitalize) }}</a>
+      {% endif %}
+      {% if not query.isNew() and query.isEditableBy() %}
+        <a class="icon icon-edit" href="{{ path('query_edit', {id: query.record.id, gantt: 1}) }}">{{ sprite_icon('edit', l('button_edit_object', {object_name: l('label_query')})|capitalize) }}</a>
+        <a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('query_destroy', {id: query.record.id, gantt: 1}) }}">{{ sprite_icon('del', l('button_delete_object', {object_name: l('label_query')})|capitalize) }}</a>
+      {% endif %}
+    </p>
+  </div>
+</form>

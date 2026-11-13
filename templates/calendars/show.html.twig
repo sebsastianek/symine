@@ -1,0 +1,13 @@
+{#- calendars/show.html.erb -#}
+{% extends 'base.html.twig' %}
+{% import 'queries/_macros.html.twig' as qm %}
+{% block header_tags %}
+{{ qm.calendar_headers() }}
+{{ qm.context_menu_tags() }}
+{% endblock %}
+{% block content %}
+{% include 'calendars/_show_content.html.twig' %}
+{% endblock %}
+{% block sidebar %}
+{% include 'issues/_sidebar.html.twig' %}
+{% endblock %}

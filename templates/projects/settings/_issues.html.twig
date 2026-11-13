@@ -1,0 +1,47 @@
+<form class="edit_project" id="project_issue_tracking" action="{{ path('project_update', {id: project.identifier}) }}" method="post"><input type="hidden" name="_method" value="patch" autocomplete="off" />{{ csrf_field() }}
+  <input type="hidden" name="tab" id="tab" value="issues" autocomplete="off" />
+
+  {% if trackers|length > 0 %}
+  <fieldset class="box tabular" id="project_trackers"><legend><a href="#" onclick="toggleCheckboxesBySelector('#project_trackers input[type=checkbox]'); return false;" title="{{ l('button_check_all') }} / {{ l('button_uncheck_all') }}" class="icon icon-checked">{{ sprite_icon('checked', '') }}</a>{{ l('label_tracker_plural') }}</legend>
+  {% if current_user().admin and path_exists('trackers_index') %}
+    <div class="contextual"><a class="icon icon-settings" href="{{ path('trackers_index') }}">{{ sprite_icon('settings', l('label_administration')) }}</a></div>
+  {% endif %}
+  {% for tracker in trackers %}
+    <label class="floating">
+      <input type="checkbox" name="project[tracker_ids][]" value="{{ tracker.id }}"{% if project.hasTracker(tracker) %} checked="checked"{% endif %} />
+      <span>{{ tracker.name }}</span>
+    </label>
+  {% endfor %}
+  <input type="hidden" name="project[tracker_ids][]" id="project_tracker_ids_" value="" autocomplete="off" />
+  </fieldset>
+  {% endif %}
+
+  {% if issue_custom_fields|length > 0 %}
+  <fieldset class="box tabular" id="project_issue_custom_fields"><legend><a href="#" onclick="toggleCheckboxesBySelector('#project_issue_custom_fields input[type=checkbox]:enabled'); return false;" title="{{ l('button_check_all') }} / {{ l('button_uncheck_all') }}" class="icon icon-checked">{{ sprite_icon('checked', '') }}</a>{{ l('label_custom_field_plural') }}</legend>
+  {% if current_user().admin and path_exists('custom_fields_index') %}
+    <div class="contextual"><a class="icon icon-settings" href="{{ path('custom_fields_index') }}">{{ sprite_icon('settings', l('label_administration')) }}</a></div>
+  {% endif %}
+  {% for cf in issue_custom_fields %}
+    <label class="floating">
+      <input type="checkbox" name="project[issue_custom_field_ids][]" value="{{ cf.id }}"{% if cf.isForAll %} disabled="disabled"{% endif %}{% if cf.isForAll or cf.id in all_issue_custom_field_ids %} checked="checked"{% endif %} />
+      <span>{{ cf.name }}</span>
+    </label>
+  {% endfor %}
+  <input type="hidden" name="project[issue_custom_field_ids][]" id="project_issue_custom_field_ids_" value="" autocomplete="off" />
+  </fieldset>
+  {% endif %}
+
+  <div class="box tabular">
+    {%- set grouped = default_version_options|reduce((carry, v) => carry|merge({(v.project.name): (carry[v.project.name] ?? [])|merge([v])}), {}) -%}
+    <p><label for="project_default_version_id">{{ l('field_default_version') }}</label><select name="project[default_version_id]" id="project_default_version_id"><option value="">{{ l('label_none') }}</option>
+{% if grouped|length > 1 %}{% for pname, vs in grouped %}<optgroup label="{{ pname }}">{% for v in vs %}<option value="{{ v.id }}"{% if project.defaultVersion and project.defaultVersion.id == v.id %} selected="selected"{% endif %}>{{ v.name }}</option>{% endfor %}</optgroup>{% endfor %}{% else %}{% for v in default_version_options %}<option value="{{ v.id }}"{% if project.defaultVersion and project.defaultVersion.id == v.id %} selected="selected"{% endif %}>{{ v.name }}</option>
+{% endfor %}{% endif %}</select></p>
+    <p><label for="project_default_assigned_to_id">{{ l('field_default_assigned_to') }}</label><select name="project[default_assigned_to_id]" id="project_default_assigned_to_id"><option value="">{{ l('label_none') }}</option>
+{{ principals_options(default_assignee_options, project.defaultAssignedTo) }}</select></p>
+    <p><label for="project_default_issue_query_id">{{ l('field_default_issue_query') }}</label><select name="project[default_issue_query_id]" id="project_default_issue_query_id"><option value="">{{ l('label_none') }}</option>
+<optgroup label="{{ l('label_default_queries.for_all_projects') }}">{% for q in issue_queries_global %}<option value="{{ q.id }}"{% if project.defaultIssueQueryId == q.id %} selected="selected"{% endif %}>{{ q.name }}</option>
+{% endfor %}</optgroup><optgroup label="{{ l('label_default_queries.for_current_project') }}">{% for q in issue_queries_project %}<option value="{{ q.id }}"{% if project.defaultIssueQueryId == q.id %} selected="selected"{% endif %}>{{ q.name }}</option>{% endfor %}</optgroup></select><em class="info">{{ l('text_allowed_queries_to_select') }}</em></p>
+  </div>
+
+  <p><input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" /></p>
+</form>

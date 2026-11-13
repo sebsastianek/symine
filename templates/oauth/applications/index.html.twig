@@ -1,0 +1,37 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<div class="contextual">
+<a class="icon icon-add" href="{{ path('new_oauth_application') }}">{{ sprite_icon('add', l('doorkeeper.applications.index.new')) }}</a>
+</div>
+
+<h2>{{ l('label_oauth_application_plural') }}</h2>
+
+{% if applications is not empty %}
+<div class="autoscroll">
+<table class="list">
+  <thead><tr>
+    <th>{{ l('doorkeeper.applications.index.name') }}</th>
+    <th>{{ l('doorkeeper.applications.index.callback_url') }}</th>
+    <th><span class="translation_missing" title="translation missing: en.doorkeeper.applications.index.scopes">Scopes</span></th>
+    <th></th>
+  </tr></thead>
+  <tbody>
+  {% for application in applications %}
+    {% set callbacks = application.getRedirectUris()|join(', ') %}
+    <tr id="application_{{ application.id }}" class="{{ cycle(['odd', 'even'], loop.index0) }}">
+      <td class="name"><span><a href="{{ path('oauth_application', {id: application.id}) }}">{{ application.name }}</a></span></td>
+      <td class="description">{{ callbacks|length > 50 ? callbacks|slice(0, 47) ~ '...' : callbacks }}</td>
+      <td class="description">{{ application.getScopes()|map(s => l('permission_' ~ s))|join(', ') }}</td>
+      <td class="buttons">
+        <a class="icon icon-edit" href="{{ path('edit_oauth_application', {id: application.id}) }}">{{ sprite_icon('edit', l('doorkeeper.applications.buttons.edit')) }}</a>
+        <a data-confirm="{{ l('doorkeeper.applications.confirmations.destroy') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('oauth_application_destroy', {id: application.id}) }}">{{ sprite_icon('del', l('doorkeeper.applications.buttons.destroy')) }}</a>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+  <p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}
+{% if path_exists('project_activity') %}<link rel="alternate" type="application/atom+xml" title="ATOM" href="{{ path('project_activity', {id: project.identifier, _format: 'atom', show_messages: 1}) }}" />{% endif %}
+{% endblock %}
+{% block content %}
+<div class="contextual">
+  {% if allowed_to('manage_boards', project) and path_exists('project_settings') %}
+  <a class="icon icon-settings" href="{{ path('project_settings', {id: project.identifier, tab: 'boards'}) }}">{{ sprite_icon('settings', l('label_settings')) }}</a>
+  {% endif %}
+</div>
+
+<h2>{{ l('label_board_plural') }}</h2>
+
+<table class="list boards">
+  <thead><tr>
+    <th>{{ l('label_board') }}</th>
+    <th>{{ l('label_topic_plural') }}</th>
+    <th>{{ l('label_message_plural') }}</th>
+    <th>{{ l('label_message_last') }}</th>
+  </tr></thead>
+  <tbody>
+{% for node in tree %}
+  {% set board = node[0] %}{% set level = node[1] %}
+    <tr class="board{% if level > 0 %} idnt idnt-{{ level }}{% endif %}">
+    <td class="name">
+      <a class="board icon icon-comment" href="{{ path('board_show', {project_id: project.identifier, id: board.id}) }}">{{ sprite_icon('comment', board.name) }}</a>
+      <p class="description">{{ board.description }}</p>
+    </td>
+    <td class="topic-count">{{ board.topicsCount }}</td>
+    <td class="message-count">{{ board.messagesCount }}</td>
+    <td class="last-message">
+      {% if board.lastMessage %}
+      {{ authoring(board.lastMessage.createdOn, board.lastMessage.author) }}<br />
+      {% include 'boards/_link_to_message.html.twig' with {m: board.lastMessage} %}
+      {% endif %}
+    </td>
+  </tr>
+{% endfor %}
+  </tbody>
+</table>
+
+{% if path_exists('project_activity') %}
+<p class="other-formats hide-when-print">{{ l('label_export_to') }}  <span><a class="atom" rel="nofollow" href="{{ path('project_activity', {id: project.identifier, _format: 'atom', show_messages: 1}) }}">Atom</a></span>
+</p>
+{% endif %}
+{% endblock %}

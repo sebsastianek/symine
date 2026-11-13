@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_repository') }}</h2>
+
+<p>{{ l('text_repository_usernames_mapping')|nl2br }}</p>
+
+{% if committers|length == 0 %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% else %}
+
+<form action="/repositories/{{ repository.id }}/committers" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+<table class="list">
+<thead>
+  <tr>
+    <th>{{ l('field_login') }}</th>
+    <th>{{ l('label_user') }}</th>
+  </tr>
+</thead>
+<tbody>
+{% for c in committers %}
+  <tr>
+    <td>{{ c[0] }}</td>
+    <td>
+      <input type="hidden" name="committers[{{ loop.index0 }}][]" value="{{ c[0] }}" autocomplete="off" />
+      <select name="committers[{{ loop.index0 }}][]"><option value="">-- {{ l('actionview_instancetag_blank_option') }} --</option>
+      {% for u in users %}<option value="{{ u.id }}"{% if u.id == c[1] %} selected="selected"{% endif %}>{{ u.getName() }}</option>{% endfor %}
+      </select>
+    </td>
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+<p><input type="submit" value="{{ l('button_save') }}" /></p>
+</form>
+
+{% endif %}
+{% endblock %}

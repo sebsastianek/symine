@@ -1,0 +1,37 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2>{{ l('label_add_projects') }}</h2>
+
+<form action="{{ path('membership_create', {type: type, principal_id: principal.id}) }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+<fieldset class="box">
+  <legend><a title="{{ l('button_check_all') }}/{{ l('button_uncheck_all') }}" class="icon-only icon-checked" href="#" onclick="toggleCheckboxesBySelector(&quot;.projects-selection input:enabled&quot;); return false;">{{ sprite_icon('checked', l('button_check_all') ~ '/' ~ l('button_uncheck_all'), 18, true) }}</a>{{ l('label_project_plural') }}</legend>
+  <div class="objects-selection">
+    <div class="projects-selection">
+    <ul class="projects root">
+    {% for p in projects %}
+      {% set level = p.getAncestors()|length %}
+      <li class="{{ level == 0 ? 'root' : 'child' }}" style="{{ level > 0 ? 'margin-left: ' ~ (level * 1.5) ~ 'em' : '' }}"><div class="{{ level == 0 ? 'root' : 'child' }}">
+      <label>
+        <input type="checkbox" name="membership[project_ids][]" value="{{ p.id }}"{% if p.id in member_project_ids %} disabled="disabled"{% endif %} /> {{ p.name }}
+      </label></div></li>
+    {% endfor %}
+    </ul>
+    </div>
+  </div>
+</fieldset>
+
+<fieldset class="box">
+  <legend><a title="{{ l('button_check_all') }}/{{ l('button_uncheck_all') }}" class="icon-only icon-checked" href="#" onclick="toggleCheckboxesBySelector(&quot;.roles-selection input&quot;); return false;">{{ sprite_icon('checked', l('button_check_all') ~ '/' ~ l('button_uncheck_all'), 18, true) }}</a>{{ l('label_role_plural') }}</legend>
+  <div class="roles-selection">
+  {% for role in roles %}
+    <label>
+      <input type="checkbox" name="membership[role_ids][]" value="{{ role.id }}" />
+      {{ role.name }}
+    </label>
+  {% endfor %}
+  </div>
+</fieldset>
+<p><input type="submit" value="{{ l('button_add') }}" /></p>
+</form>
+{% endblock %}

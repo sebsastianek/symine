@@ -1,0 +1,28 @@
+{% import 'versions/_macros.html.twig' as vm %}
+{% set criterias = version_status_by_criterias() %}
+{% set criteria = criteria in criterias ? criteria : 'tracker' %}
+{% set counts = version_status_by(version, criteria) %}
+<form id="status_by_form" action="{{ path('version_show', {id: version.id}) }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}<fieldset>
+<legend>
+{% set select %}<select name="status_by" id="status_by_select" data-remote="true" data-method="post" data-url="{{ path('version_status_by', {id: version.id}) }}">{% for c in criterias %}<option{% if c == criteria %} selected="selected"{% endif %} value="{{ c }}">{{ l('field_' ~ c) }}</option>{% endfor %}</select>{% endset %}
+{{ l('label_issues_by', {value: '__SELECT__'})|replace({'__SELECT__': select})|raw }}
+</legend>
+{% if counts is empty %}
+    <p><em>{{ l('label_no_data') }}</em></p>
+{% else %}
+    <table>
+    {% for count in counts %}
+    <tr>
+        <td style="width:130px; text-align:right;">
+          {% set url = path_exists('project_issues') ? path('project_issues', {project_id: version.project.identifier, fixed_version_id: version.id, set_filter: 1, status_id: '*', (criteria ~ '_id'): (count.id ?? '!*')}) : null %}
+          {{ vm.link_if(true, count.group is null ? l('label_none') : count.label, url) }}
+        </td>
+        <td style="width:240px;">
+            {{ vm.progress_bar(count.closed / count.total * 100, count.closed ~ '/' ~ count.total) }}
+        </td>
+    </tr>
+    {% endfor %}
+    </table>
+{% endif %}
+</fieldset>
+</form>

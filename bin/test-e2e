@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Runs the Playwright e2e suite (e2e/) against a fresh Symine server (PHP built-in server, var/e2e.db).
+#   bin/test-e2e                         # whole suite
+#   bin/test-e2e tests/issues            # a directory / file (paths relative to e2e/)
+#   bin/test-e2e --grep @parity          # any Playwright CLI option
+#   E2E_BASE_URL=http://localhost:3300 bin/test-e2e --grep @parity   # against another server (e.g. reference Redmine)
+#   E2E_TOKEN=pdf E2E_PORT=8771 bin/test-e2e tests/pdf               # isolated DB/cache/port for parallel runs
+# HTML report: var/e2e-report (var/e2e-<token>-report with E2E_TOKEN).
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT/e2e"
+if [ ! -d node_modules/@playwright/test ] || [ package.json -nt node_modules/.package-lock.json ]; then
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-audit --no-fund
+fi
+exec npx playwright test "$@"

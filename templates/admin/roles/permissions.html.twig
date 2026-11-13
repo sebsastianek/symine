@@ -1,0 +1,91 @@
+{% extends 'admin/layout.html.twig' %}
+{% import 'admin/workflows/_macros.html.twig' as h %}
+{% block content %}
+<h2><a href="{{ path('roles_index') }}">{{ l('label_role_plural') }}</a> &#187; {{ l('label_permissions_report') }}</h2>
+
+<div class="hide-when-print">
+  <fieldset id="filters" class="collapsible collapsed">
+    <legend onclick="toggleFieldset(this);" class="icon icon-collapsed">
+      {{ sprite_icon('angle-right') }}
+      {{ l('label_filter_plural') }}
+    </legend>
+    <div style="display: none;">
+      <form action="{{ path('roles_permissions') }}" accept-charset="UTF-8" method="get">
+        <fieldset>
+          <legend>{{ h.toggle_checkboxes_link('#filters input[type=checkbox]:enabled') }}</legend>
+          {% set role_ids = roles|map(r => r.id) %}
+          {% for role in all_roles %}
+            <label>
+              <input type="checkbox" name="ids[]" id="ids_" value="{{ role.id }}"{% if role.id in role_ids %} checked="checked"{% endif %} />
+              {{ h.role_name(role) }}
+            </label>
+          {% endfor %}
+        </fieldset>
+        <p>
+          <input type="submit" value="{{ l('button_apply') }}" data-disable-with="{{ l('button_apply') }}" />
+          <a class="icon icon-reload" href="{{ path('roles_permissions') }}">{{ l('button_clear') }}</a>
+        </p>
+      </form>
+    </div>
+  </fieldset>
+</div>
+
+<form id="permissions_form" action="{{ path('roles_update_permissions') }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+{% for role in roles %}
+    <input type="hidden" name="permissions[{{ role.id }}][]" value="" autocomplete="off" />
+{% endfor %}
+<div class="autoscroll">
+<table class="list permissions">
+<thead>
+    <tr>
+    <th>{{ l('label_permissions') }}</th>
+    {% for role in roles %}
+    <th>
+        {{ h.toggle_checkboxes_link('input.role-' ~ role.id) }}
+        {% if role.isBuiltin() %}<em>{{ h.role_name(role) }}</em>{% else %}<span>{{ role.name }}</span>{% endif %}
+    </th>
+    {% endfor %}
+    </tr>
+</thead>
+<tbody>
+{% for group in perms_by_module %}
+    {% if group.module != '' %}
+        <tr class="group open">
+          <td>
+            <span class="expander icon icon-expanded" onclick="toggleRowGroup(this);">{{ sprite_icon('angle-down') }}</span>
+            {{ group.label }}
+          </td>
+          {% for role in roles %}
+          <td class="role">{{ h.role_name(role) }}</td>
+          {% endfor %}
+        </tr>
+    {% endif %}
+    {% for perm in group.permissions %}
+        <tr class="permission-{{ perm.name }}">
+        <td class="name">
+            {{ h.toggle_checkboxes_link('.permission-' ~ perm.name ~ ' input') }}
+            {{ perm.label }}
+        </td>
+        {% for role in roles %}
+          {% if perm.name in setable[role.id] %}
+            <td title="{{ perm.label }} ({{ h.role_name(role) }})">
+              <input type="checkbox" name="permissions[{{ role.id }}][]" value="{{ perm.name }}" class="role-{{ role.id }}"{% if role.hasPermission(perm.name) %} checked="checked"{% endif %} />
+            </td>
+          {% else %}
+            <td></td>
+          {% endif %}
+        {% endfor %}
+        </tr>
+    {% endfor %}
+{% endfor %}
+</tbody>
+</table>
+</div>
+<p>{{ h.check_all_links('permissions_form') }}</p>
+<p><input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" /></p>
+</form>
+<p class="other-formats">{{ l('label_export_to') }}
+<span><a class="csv" rel="nofollow" href="{{ path('roles_permissions', {_format: 'csv'}|merge(app.request.query.all)) }}">CSV</a></span>
+</p>
+{% endblock %}

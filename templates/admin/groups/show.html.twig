@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<div class="contextual">
+{% if current_user().admin %}<a class="icon icon-edit" href="{{ path('group_edit', {id: group.id}) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>{% endif %}
+</div>
+
+<h2>{{ group.getName() }}</h2>
+
+{% if custom_values|length > 0 %}
+  <ul>
+    {% for cv in custom_values %}
+      <li><span class="label">{{ cv.field.name }}:</span> {{ cv.value }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<h3>{{ l('label_member_plural') }}</h3>
+<ul>
+{% for user in users %}
+    <li>{{ link_to_user(user) }}</li>
+{% endfor %}
+</ul>
+{% endblock %}

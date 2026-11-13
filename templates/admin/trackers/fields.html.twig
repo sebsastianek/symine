@@ -1,0 +1,75 @@
+{% extends 'admin/layout.html.twig' %}
+{% import 'admin/workflows/_macros.html.twig' as h %}
+{% block content %}
+<h2><a href="{{ path('trackers_index') }}">{{ l('label_tracker_plural') }}</a> &#187; {{ l('field_summary') }}</h2>
+
+{% if trackers is not empty %}
+  <form action="{{ path('trackers_fields') }}" accept-charset="UTF-8" method="post">
+  {{ csrf_field() }}
+    <div class="autoscroll">
+    <table class="list tracker-summary">
+    <thead>
+      <tr>
+        <th></th>
+        {% for tracker in trackers %}
+        <th>
+          {{ h.toggle_checkboxes_link('input.tracker-' ~ tracker.id) }}
+          {{ tracker.name }}
+        </th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="group open">
+        <td colspan="{{ trackers|length + 1 }}">
+          <span class="expander icon icon-expanded" onclick="toggleRowGroup(this);">{{ sprite_icon('angle-down') }}</span>
+          {{ l('field_core_fields') }}
+        </td>
+      </tr>
+      {% for field, field_name in core_fields %}
+      <tr>
+        <td class="name">
+          {{ h.toggle_checkboxes_link('input.core-field-' ~ field) }}
+          {{ field_name }}
+        </td>
+        {% for tracker in trackers %}
+        <td title="{{ tracker.name }}: {{ field_name }}">
+          <input type="checkbox" name="trackers[{{ tracker.id }}][core_fields][]" value="{{ field }}" class="tracker-{{ tracker.id }} core-field-{{ field }}"{% if field in tracker.getCoreFields() %} checked="checked"{% endif %} />
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+      {% if custom_fields is not empty %}
+        <tr class="group open">
+          <td colspan="{{ trackers|length + 1 }}">
+            <span class="expander icon icon-expanded" onclick="toggleRowGroup(this);">{{ sprite_icon('angle-down') }}</span>
+            {{ l('label_custom_field_plural') }}
+          </td>
+        </tr>
+        {% for field in custom_fields %}
+        <tr>
+          <td class="name">
+            {{ h.toggle_checkboxes_link('input.custom-field-' ~ field.id) }}
+            {{ field.name }}
+          </td>
+          {% for tracker in trackers %}
+          <td title="{{ tracker.name }}: {{ field.name }}">
+            <input type="checkbox" name="trackers[{{ tracker.id }}][custom_field_ids][]" value="{{ field.id }}" class="tracker-{{ tracker.id }} custom-field-{{ field.id }}"{% if field.id in cf_ids[tracker.id] %} checked="checked"{% endif %} />
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      {% endif %}
+    </tbody>
+    </table>
+    </div>
+    <p><input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" /></p>
+    {% for tracker in trackers %}
+      <input type="hidden" name="trackers[{{ tracker.id }}][core_fields][]" id="trackers_{{ tracker.id }}_core_fields_" value="" autocomplete="off" />
+      <input type="hidden" name="trackers[{{ tracker.id }}][custom_field_ids][]" id="trackers_{{ tracker.id }}_custom_field_ids_" value="" autocomplete="off" />
+    {% endfor %}
+  </form>
+{% else %}
+  <p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}
+{% endblock %}

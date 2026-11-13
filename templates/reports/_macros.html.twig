@@ -1,0 +1,12 @@
+{#- ReportsHelper#aggregate_path / aggregate_link -#}
+{% macro aggregate_path(project, field, row, options) -%}
+{%- set target = row.project ?? project -%}
+{%- set params = {set_filter: 1}|merge({(field): (row.id ?? '!*')})|merge(options ?? {}) -%}
+{%- set keys = params|keys|sort -%}
+{%- set sorted = {} -%}{%- for k in keys %}{% set sorted = sorted|merge({(k): params[k]}) %}{% endfor -%}
+{{- path('project_issues', {project_id: target.identifier}) ~ '?' ~ sorted|url_encode -}}
+{%- endmacro %}
+
+{% macro aggregate_link(count, url) -%}
+{%- if count > 0 %}<a href="{{ url }}">{{ count }}</a>{% else %}-{% endif -%}
+{%- endmacro %}

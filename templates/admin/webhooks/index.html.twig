@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<div class="contextual">
+  <a href="{{ path('webhook_new') }}" class="icon icon-add">{{ sprite_icon('add', l('label_webhook_new')) }}</a>
+</div>
+
+<h2>{{ l('label_webhook_plural') }}</h2>
+
+{% include 'admin/webhooks/_list.html.twig' with {webhooks: webhooks, show_author: false, back_url: null} %}
+{% endblock %}

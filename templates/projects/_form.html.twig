@@ -1,0 +1,67 @@
+{#- projects/_form.html.erb. Needs form_project and the variables of ProjectsController::formVars -#}
+{%- set p = form_project -%}
+{% if errors is defined and errors|length > 0 %}
+<div id="errorExplanation"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+{% endif %}
+
+<div class="box tabular">
+<!--[form:project]-->
+<p><label for="project_name">{{ l('field_name') }}<span class="required"> *</span></label><input size="60" type="text" value="{{ p.name }}" name="project[name]" id="project_name" /></p>
+
+<p><label for="project_description">{{ l('field_description') }}</label>
+{%- set ta -%}{% include 'issues/_wiki_textarea.html.twig' ignore missing with {name: 'project[description]', id: 'project_description', value: p.description, rows: 8} only %}{%- endset -%}
+{%- if ta|trim is not empty %}{{ ta }}{% else %}<textarea rows="8" class="wiki-edit" name="project[description]" id="project_description">
+{{ p.description }}</textarea>{% endif %}</p>
+<p><label for="project_identifier">{{ l('field_identifier') }}<span class="required"> *</span></label><input size="60"{% if identifier_frozen %} disabled="disabled"{% endif %} maxlength="100" type="text" value="{{ p.identifier }}" name="project[identifier]" id="project_identifier" />
+{% if not identifier_frozen %}
+  <em class="info">{{ l('text_length_between', {min: 1, max: 100}) }} {{ l('text_project_identifier_info')|raw }}</em>
+{% endif %}</p>
+<p><label for="project_homepage">{{ l('field_homepage') }}</label><input size="60" type="text" value="{{ p.homepage }}" name="project[homepage]" id="project_homepage" /></p>
+<p>
+  <label for="project_is_public">{{ l('field_is_public') }}</label><input name="project[is_public]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1"{% if p.isPublic %} checked="checked"{% endif %}{% if not safe_is_public %} disabled="disabled"{% endif %} name="project[is_public]" id="project_is_public" />
+  <em class="info">{{ settings.loginRequired() ? l('text_project_is_public_non_member') : l('text_project_is_public_anonymous') }}</em>
+</p>
+
+{% if parent_options|length > 0 or (allow_root and allowed_parents|length > 1) %}
+    <p><label for="project_parent_id">{{ l('field_parent') }}</label><select name="project[parent_id]" id="project_parent_id">{% if allow_root %}<option value=''>&nbsp;</option>{% endif %}{{ project_tree_options(parent_options, p.parent) }}</select></p>
+{% endif %}
+
+{% if safe_inherit_members %}
+<p><label for="project_inherit_members">{{ l('field_inherit_members') }}</label><input name="project[inherit_members]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1"{% if p.inheritMembers %} checked="checked"{% endif %} name="project[inherit_members]" id="project_inherit_members" /></p>
+{% endif %}
+
+{% for field in custom_fields %}
+  <p>{% include 'projects/_custom_field_tag.html.twig' with {field: field, value: custom_values[field.id] ?? null, name: 'project[custom_field_values][' ~ field.id ~ ']', id: 'project_custom_field_values_' ~ field.id, project: p.id ? p : null} only %}</p>
+{% endfor %}
+{{ call_hook('view_projects_form', {project: p, form: null}) }}
+</div>
+
+{% if safe_modules %}
+<fieldset class="box tabular" id="project_modules"><legend><a href="#" onclick="toggleCheckboxesBySelector('#project_modules input[type=&quot;checkbox&quot;]'); return false;" title="{{ l('button_check_all') }} / {{ l('button_uncheck_all') }}" class="icon icon-checked">{{ sprite_icon('checked', '') }}</a>{{ l('label_module_plural') }}</legend>
+{% for m in available_modules %}
+    <label class="floating">
+    <input type="checkbox" name="project[enabled_module_names][]" id="project_enabled_module_names_{{ m }}" value="{{ m }}"{% if p.isModuleEnabled(m) %} checked="checked"{% endif %} />
+    {{ l('project_module_' ~ m) }}
+    </label>
+{% endfor %}
+<input type="hidden" name="project[enabled_module_names][]" id="project_enabled_module_names_" value="" autocomplete="off" />
+</fieldset>
+{% endif %}
+<!--[eoform:project]-->
+
+{% if not identifier_frozen %}
+<script src="/assets/project_identifier.js"></script>
+{% endif %}
+{% if inherit_confirm %}
+<script>
+$(document).ready(function() {
+  $("#project_inherit_members").change(function(){
+    if (!$(this).is(':checked')) {
+      if (!confirm({{ l('text_own_membership_delete_confirmation')|json_encode|raw }})) {
+        $("#project_inherit_members").attr("checked", true);
+      }
+    }
+  });
+});
+</script>
+{% endif %}

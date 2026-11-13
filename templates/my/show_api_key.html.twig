@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_api_access_key') }}</h2>
+
+<div class="box">
+  <pre>{{ api_key }}</pre>
+</div>
+
+<p><a href="{{ path('my_account') }}">{{ l('button_back') }}</a></p>
+{% endblock %}

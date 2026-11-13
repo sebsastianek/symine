@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}{% include 'repositories/_header_tags.html.twig' %}{% endblock %}
+{% block content %}
+<div class="contextual">
+  {% include 'repositories/_navigation.html.twig' %}
+</div>
+
+<h2 class="breadcrumbs">{% include 'repositories/_breadcrumbs.html.twig' with {kind: entry ? entry.kind : null} %}</h2>
+
+{% include 'repositories/_link_to_functions.html.twig' %}
+
+{% include 'repositories/_properties.html.twig' %}
+
+{% if changesets|length > 0 %}
+  {% include 'repositories/_revisions.html.twig' with {revisions: changesets} %}
+{% endif %}
+{% endblock %}

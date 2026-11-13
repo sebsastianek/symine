@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}<script src="/assets/context_menu.js"></script>
+<link rel="stylesheet" href="/assets/context_menu.css" media="all" />{% endblock %}
+{% block content %}
+<div class="contextual">
+  <form id="block-form" action="{{ path('my_add_block') }}" accept-charset="UTF-8" data-remote="true" method="post">{{ csrf_field() }}
+    <label for="block-select">{{ l('button_add') }}</label>:
+    {% include 'my/_block_select.html.twig' %}
+  </form>
+  {{ call_hook('view_my_page_contextual', {user: current_user()}) }}
+</div>
+
+<h2>{{ l('label_my_page') }}</h2>
+
+<div id="my-page" class="splitcontent">
+{% for group in groups %}
+  <div id="list-{{ group }}" class="block-receiver splitcontent{{ group }}">
+    {% for b in blocks[group] %}{% include 'my/_block.html.twig' with {b: b} %}{% endfor %}
+  </div>
+{% endfor %}
+{{ call_hook('view_my_page_splitcontent', {user: current_user()}) }}
+</div>
+
+<script>
+//<![CDATA[
+$(document).ready(function(){
+  $('#block-select').val('');
+  $('.block-receiver').sortable({
+    connectWith: '.block-receiver',
+    tolerance: 'pointer',
+    handle: '.sort-handle',
+    start: function(event, ui){$(this).parent().addClass('dragging');},
+    stop: function(event, ui){$(this).parent().removeClass('dragging');},
+    update: function(event, ui){
+      // trigger the call on the list that receives the block only
+      if ($(this).find(ui.item).length > 0) {
+        $.ajax({
+          url: "{{ path('my_order_blocks') }}",
+          type: 'post',
+          data: {
+            'group': $(this).attr('id').replace(/^list-/, ''),
+            'blocks': $.map($(this).children(), function(el){return $(el).attr('id').replace(/^block-/, '');})
+          }
+        });
+      }
+    }
+  });
+});
+//]]>
+</script>
+{% endblock %}

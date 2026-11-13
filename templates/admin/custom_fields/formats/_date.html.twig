@@ -1,0 +1,15 @@
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+{% set default_value_mode = custom_field.getFormatOption('default_value_mode') ?: 'fixed_date' %}
+<div data-controller="custom-field-default-value">
+  <p>
+    {{ f.select('default_value_mode', [[l('label_absolute'), 'fixed_date'], [l('label_relative'), 'date_offset']], default_value_mode, l('field_default_value_mode'), false, 'data-custom-field-default-value-target="mode" data-action="custom-field-default-value#update"') }}
+  </p>
+  <p class="indent" data-custom-field-default-value-target="fixedDate" {{ default_value_mode != 'fixed_date' ? 'hidden' : '' }}>
+    <label for="custom_field_default_value">{{ l('field_default_value') }}</label><input size="10" data-custom-field-default-value-target="fixedDateInput" type="date" value="{{ default_value_mode == 'fixed_date' ? custom_field.defaultValue : '' }}" name="custom_field[default_value]" id="custom_field_default_value"{% if default_value_mode != 'fixed_date' %} disabled="disabled"{% endif %} />
+  </p>
+  <p class="indent" data-custom-field-default-value-target="dateOffset" {{ default_value_mode != 'date_offset' ? 'hidden' : '' }}>
+    <label for="custom_field_default_value_offset">{{ l('field_default_value') }}</label><input id="custom_field_default_value_offset" size="6" data-custom-field-default-value-target="dateOffsetInput" type="text" value="{{ default_value_mode == 'date_offset' ? custom_field.defaultValue : '' }}" name="custom_field[default_value]"{% if default_value_mode != 'date_offset' %} disabled="disabled"{% endif %} />
+    {{ l('label_days_relative_to_today') }}
+  </p>
+</div>
+<p>{{ f.text_field('url_pattern', custom_field.getFormatOption('url_pattern'), l('label_link_values_to'), 50) }}</p>

@@ -1,0 +1,5 @@
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+<p>
+  {{ f.text_field('extensions_allowed', custom_field.getFormatOption('extensions_allowed'), l('setting_attachment_extensions_allowed'), 50) }}
+  <em class="info">{{ l('text_comma_separated') }} {{ l('label_example') }}: txt, png</em>
+</p>

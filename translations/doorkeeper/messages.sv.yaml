@@ -1,0 +1,88 @@
+# Doorkeeper translations (doorkeeper-i18n 5.2.9 / doorkeeper 5.8.2, MIT), used by the OAuth2 provider.
+# Generated - merged into the "messages" domain.
+activerecord.attributes.doorkeeper/application.name: Namn
+activerecord.attributes.doorkeeper/application.redirect_uri: Omdirigerings-URI
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.forbidden_uri: 'är förbjuden av servern.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.fragment_present: 'kan inte innehålla ett fragment.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.invalid_uri: 'måste vara en giltig URI.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.relative_uri: 'måste vara en absolut URI.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.secured_uri: 'måste vara en HTTPS/SSL URI.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.unspecified_scheme: 'måste specificera ett schema.'
+activerecord.errors.models.doorkeeper/application.attributes.scopes.not_match_configured: 'matchar inte det som är konfigurerat på servern.'
+doorkeeper.applications.buttons.authorize: Auktorisera
+doorkeeper.applications.buttons.cancel: Avbryt
+doorkeeper.applications.buttons.destroy: 'Ta bort'
+doorkeeper.applications.buttons.edit: Redigera
+doorkeeper.applications.buttons.submit: Skicka
+doorkeeper.applications.confirmations.destroy: 'Är du säker?'
+doorkeeper.applications.edit.title: 'Redigera applikation'
+doorkeeper.applications.form.error: 'Hoppsan! Kontrollera ditt formulär för eventuella fel'
+doorkeeper.applications.help.blank_redirect_uri: 'Lämna det tomt om du har konfigurerat din provider att använda Client Credentials, Resource Owner Password Credentials eller någon annan grant-typ som inte kräver omdirigerings-URI.'
+doorkeeper.applications.help.confidential: 'Applikationen kommer att användas där klienthemligheten kan hållas konfidentiell. Native mobilappar och Single Page Apps anses vara icke-konfidentiella.'
+doorkeeper.applications.help.redirect_uri: 'Använd en rad per URI'
+doorkeeper.applications.help.scopes: 'Separera scope med mellanslag. Lämna tomt för att använda standard-scope.'
+doorkeeper.applications.index.actions: Åtgärder
+doorkeeper.applications.index.callback_url: Callback-URL
+doorkeeper.applications.index.confidential: 'Konfidentiell?'
+doorkeeper.applications.index.confidentiality.no: Nej
+doorkeeper.applications.index.confidentiality.yes: Ja
+doorkeeper.applications.index.name: Namn
+doorkeeper.applications.index.new: 'Ny applikation'
+doorkeeper.applications.index.title: 'Dina applikationer'
+doorkeeper.applications.new.title: 'Ny applikation'
+doorkeeper.applications.show.actions: Åtgärder
+doorkeeper.applications.show.application_id: 'UID:'
+doorkeeper.applications.show.callback_urls: 'Callback-URL:er:'
+doorkeeper.applications.show.confidential: 'Konfidentiell:'
+doorkeeper.applications.show.not_defined: 'Inte definierad'
+doorkeeper.applications.show.scopes: 'Scope:'
+doorkeeper.applications.show.secret: 'Hemlighet:'
+doorkeeper.applications.show.secret_hashed: 'Hemlighet hashad'
+doorkeeper.applications.show.title: 'Applikation: %{name}'
+doorkeeper.authorizations.buttons.authorize: Auktorisera
+doorkeeper.authorizations.buttons.deny: Neka
+doorkeeper.authorizations.error.title: 'Ett fel har uppstått'
+doorkeeper.authorizations.form_post.title: 'Skicka detta formulär'
+doorkeeper.authorizations.new.able_to: 'Denna applikation kommer att kunna:'
+doorkeeper.authorizations.new.prompt: 'Auktorisera %{client_name} att använda ditt konto?'
+doorkeeper.authorizations.new.title: 'Auktorisering krävs'
+doorkeeper.authorizations.show.title: 'Auktoriseringskod:'
+doorkeeper.authorized_applications.buttons.revoke: Återkalla
+doorkeeper.authorized_applications.confirmations.revoke: 'Är du säker?'
+doorkeeper.authorized_applications.index.application: Applikation
+doorkeeper.authorized_applications.index.created_at: Skapad
+doorkeeper.authorized_applications.index.date_format: '%Y-%m-%d %H:%M:%S'
+doorkeeper.authorized_applications.index.title: 'Dina auktoriserade applikationer'
+doorkeeper.errors.messages.access_denied: 'Resursägaren eller auktoriseringsservern nekade begäran.'
+doorkeeper.errors.messages.admin_authenticator_not_configured: 'Åtkomst till admin-panelen är förbjuden på grund av att Doorkeeper.configure.admin_authenticator inte är konfigurerat.'
+doorkeeper.errors.messages.credential_flow_not_configured: 'Resource Owner Password Credentials-flödet misslyckades på grund av att Doorkeeper.configure.resource_owner_from_credentials inte är konfigurerat.'
+doorkeeper.errors.messages.forbidden_token.missing_scope: 'Åtkomst till denna resurs kräver scope "%{oauth_scopes}".'
+doorkeeper.errors.messages.invalid_client: 'Klientautentisering misslyckades på grund av okänd klient, ingen klientautentisering inkluderad, eller stöds inte autentiseringsmetod.'
+doorkeeper.errors.messages.invalid_code_challenge_method: 'Code challenge-metoden måste vara plain eller S256.'
+doorkeeper.errors.messages.invalid_grant: 'Den tillhandahållna auktoriseringsbeviljandet är ogiltigt, har gått ut, har återkallats, matchar inte omdirigerings-URI:n som användes i auktoriseringsbegäran, eller utfärdades till en annan klient.'
+doorkeeper.errors.messages.invalid_redirect_uri: 'Den begärda omdirigerings-URI:n är felaktigt formaterad eller matchar inte klientens omdirigerings-URI.'
+doorkeeper.errors.messages.invalid_request.missing_param: 'Saknar obligatorisk parameter: %{value}.'
+doorkeeper.errors.messages.invalid_request.request_not_authorized: 'Begäran måste vara auktoriserad. Obligatorisk parameter för auktorisering av begäran saknas eller är ogiltig.'
+doorkeeper.errors.messages.invalid_request.unknown: 'Begäran saknar en obligatorisk parameter, innehåller ett parametervärde som inte stöds, eller är på annat sätt felaktigt formaterad.'
+doorkeeper.errors.messages.invalid_scope: 'Det begärda scopet är ogiltigt, okänt eller felaktigt formaterat.'
+doorkeeper.errors.messages.invalid_token.expired: 'Åtkomsttoken har gått ut'
+doorkeeper.errors.messages.invalid_token.revoked: 'Åtkomsttoken har återkallats'
+doorkeeper.errors.messages.invalid_token.unknown: 'Åtkomsttoken är ogiltig'
+doorkeeper.errors.messages.resource_owner_authenticator_not_configured: 'Resource Owner-sökning misslyckades på grund av att Doorkeeper.configure.resource_owner_authenticator inte är konfigurerat.'
+doorkeeper.errors.messages.revoke.unauthorized: 'Du är inte auktoriserad att återkalla denna token'
+doorkeeper.errors.messages.server_error: 'Auktoriseringsservern stötte på ett oväntat tillstånd som förhindrade den från att uppfylla begäran.'
+doorkeeper.errors.messages.temporarily_unavailable: 'Auktoriseringsservern kan för närvarande inte hantera begäran på grund av tillfällig överbelastning eller underhåll av servern.'
+doorkeeper.errors.messages.unauthorized_client: 'Klienten är inte auktoriserad att utföra denna begäran med denna metod.'
+doorkeeper.errors.messages.unsupported_grant_type: 'Auktoriseringsbeviljandetypen stöds inte av auktoriseringsservern.'
+doorkeeper.errors.messages.unsupported_response_mode: 'Auktoriseringsservern stöder inte detta respons-läge.'
+doorkeeper.errors.messages.unsupported_response_type: 'Auktoriseringsservern stöder inte denna respons-typ.'
+doorkeeper.flash.applications.create.notice: 'Applikation skapad.'
+doorkeeper.flash.applications.destroy.notice: 'Applikation borttagen.'
+doorkeeper.flash.applications.update.notice: 'Applikation uppdaterad.'
+doorkeeper.flash.authorized_applications.destroy.notice: 'Applikation återkallad.'
+doorkeeper.layouts.admin.nav.applications: Applikationer
+doorkeeper.layouts.admin.nav.home: Hem
+doorkeeper.layouts.admin.nav.oauth2_provider: 'OAuth2 Provider'
+doorkeeper.layouts.admin.title: Doorkeeper
+doorkeeper.layouts.application.title: 'OAuth-auktorisering krävs'
+doorkeeper.pre_authorization.status: Förauktorisering

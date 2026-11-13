@@ -1,0 +1,19 @@
+<fieldset class="box tabular">
+  <legend>{{ l('label_fields_mapping') }}</legend>
+  <div id="fields-mapping">
+    {% include 'imports/_time_entries_fields_mapping.html.twig' %}
+  </div>
+</fieldset>
+
+<script>
+$(document).ready(function() {
+  $('#fields-mapping').on('change', '#import_mapping_project_id', function(){
+    $.ajax({
+      url: {{ path('import_mapping_js', {id: import.filename, _format: 'js'})|json_encode|raw }},
+      type: 'post',
+      headers: {'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')},
+      data: $('#import-form').serialize()
+    });
+  });
+});
+</script>

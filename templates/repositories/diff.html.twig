@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}{% include 'repositories/_header_tags.html.twig' %}{% endblock %}
+{% block content %}
+{% if changeset and changeset_to is null %}
+{% include 'repositories/_revision_nav.html.twig' %}
+{% include 'repositories/_changeset.html.twig' %}
+{% else %}
+<h2>{{ l('label_revision') }} {{ diff_format_revisions }} {{ path }}</h2>
+{% endif %}
+
+<form action="{{ repo_url('diff', repository, {path: path, rev: rev}) }}" accept-charset="UTF-8" method="get">
+  {% if app.request.query.has('rev_to') %}<input type="hidden" name="rev_to" id="rev_to" value="{{ app.request.query.get('rev_to') }}" />{% endif %}
+  <p>
+    {{ l('label_view_diff') }}:
+    <label><input type="radio" name="type" id="type_inline" value="inline"{% if diff_type != 'sbs' %} checked="checked"{% endif %} onchange="this.form.submit()" /> {{ l('label_diff_inline') }}</label>
+    <label><input type="radio" name="type" id="type_sbs" value="sbs"{% if diff_type == 'sbs' %} checked="checked"{% endif %} onchange="this.form.submit()" /> {{ l('label_diff_side_by_side') }}</label>
+  </p>
+</form>
+
+{% include 'repositories/_diff.html.twig' %}
+
+<p class="other-formats hide-when-print">{{ l('label_export_to') }}
+<span><a class="diff" rel="nofollow" href="{{ app.request.pathInfo }}?{{ app.request.query.all|merge({format: 'diff'})|url_encode }}">Unified diff</a></span>
+</p>
+{% endblock %}

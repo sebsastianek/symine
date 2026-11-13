@@ -1,0 +1,21 @@
+{#- custom_field_tag_with_label: field, value, name (input name), id, project -#}
+{%- set multiple = field.isMultiple() -%}
+{%- set css = field.fieldFormat ~ '_cf cf_' ~ field.id -%}
+<label for="{{ id }}"{% if field.description %} title="{{ field.description }}"{% endif %}><span>{{ field.name }}</span>{% if field.isRequired %}<span class="required"> *</span>{% endif %}</label>
+{%- if field.fieldFormat == 'text' -%}
+<textarea rows="3" name="{{ name }}" id="{{ id }}" class="{{ css }}{{ field.getFormatOption('text_formatting') == 'full' ? ' wiki-edit' : '' }}">
+{{ value }}</textarea>
+{%- elseif field.fieldFormat == 'bool' -%}
+{%- if field.getFormatOption('edit_tag_style') == 'check_box' -%}<input type="hidden" name="{{ name }}" value="0" /><input type="checkbox" name="{{ name }}" id="{{ id }}" value="1"{% if value == '1' %} checked="checked"{% endif %} class="{{ css }}" />
+{%- else -%}<select name="{{ name }}" id="{{ id }}" class="{{ css }}"><option value="">{{ field.isRequired ? '--- ' ~ l('actionview_instancetag_blank_option') ~ ' ---' : '' }}</option><option value="1"{% if value == '1' %} selected="selected"{% endif %}>{{ l('general_text_Yes') }}</option><option value="0"{% if value == '0' %} selected="selected"{% endif %}>{{ l('general_text_No') }}</option></select>{% endif %}
+{%- elseif field.fieldFormat in ['list', 'enumeration', 'user', 'version'] -%}
+{%- set values = value is iterable ? value : (value is null or value == '' ? [] : [value]) -%}
+<select name="{{ name }}{{ multiple ? '[]' : '' }}" id="{{ id }}" class="{{ css }}"{% if multiple %} multiple="multiple"{% endif %}>
+{%- if not multiple %}<option value="">{{ field.isRequired ? '--- ' ~ l('actionview_instancetag_blank_option') ~ ' ---' : '' }}</option>{% endif -%}
+{%- for o in custom_field_options(field, project ?? null) %}<option value="{{ o[0] }}"{% if o[0] in values %} selected="selected"{% endif %}>{{ o[1] }}</option>{% endfor -%}
+</select>{% if multiple %}<input type="hidden" name="{{ name }}[]" value="" />{% endif %}
+{%- elseif field.fieldFormat == 'date' -%}
+<input type="date" name="{{ name }}" id="{{ id }}" value="{{ value }}" class="{{ css }}" size="10" />
+{%- else -%}
+<input type="text" name="{{ name }}" id="{{ id }}" value="{{ value }}" class="{{ css }}" />
+{%- endif -%}

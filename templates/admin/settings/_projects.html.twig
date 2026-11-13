@@ -1,0 +1,39 @@
+{% import 'admin/settings/_macros.html.twig' as s %}
+<form action="{{ path('settings_edit', {tab: 'projects'}) }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+
+<div class="box tabular settings">
+<p>{{ s.check_box(values, 'default_projects_public') }}</p>
+
+<p>{{ s.multiselect(values, 'default_projects_modules', opts.project_modules) }}</p>
+
+<p>{{ s.multiselect(values, 'default_projects_tracker_ids', opts.trackers) }}</p>
+
+<p>{{ s.check_box(values, 'sequential_project_identifiers') }}</p>
+
+<p>{{ s.select(values, 'new_project_user_role_id', opts.givable_roles, {blank: 'x', blank_text: '--- ' ~ l('actionview_instancetag_blank_option') ~ ' ---'}) }}</p>
+</div>
+
+<fieldset class="box">
+  <legend>{{ l('setting_project_list_defaults') }}</legend>
+  <p>
+    <label>{{ l('label_display_type') }}</label>
+    {% for t in opts.project_display_types %}
+      <input type="radio" name="settings[project_list_display_type]" id="setting_project_list_display_type_{{ t }}" value="{{ t }}"{% if values.project_list_display_type == t %} checked="checked"{% endif %} />
+      <label for="settings_project_list_display_type_{{ t }}" class="inline">{{ l('label_display_type_' ~ t) }}</label>
+    {% endfor %}
+  </p>
+  <div id="list-definition">
+    <div>
+      {{ s.columns('settings[project_list_defaults][column_names]', opts.project_columns, values.project_list_defaults.column_names ?? []) }}
+    </div>
+  </div>
+
+  <p>
+    <label>{{ l('label_default_query') }}</label>
+    {{ s.select(values, 'default_project_query', opts.project_queries, {label: false}) }}
+  </p>
+</fieldset>
+
+
+<input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Wiki formatting</title>
+<link rel="stylesheet" href="{{ asset_base }}/assets/wiki_syntax.css" media="screen" />
+</head>
+<body>
+
+<h1>Wiki Syntax Quick Reference (CommonMark Markdown (GitHub Flavored))</h1>
+
+<table style="width:100%">
+<tr><th colspan="3">Font Styles <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#5" target="_blank">more</a>)</span></th></tr>
+<tr><th><img alt="Strong" src="{{ asset_base }}/assets/jstoolbar/bold.svg" /></th><td style="width:50%;">**Strong**</td><td style="width:50%;"><strong>Strong</strong></td></tr>
+<tr><th><img alt="Italic" src="{{ asset_base }}/assets/jstoolbar/italic.svg" /></th><td>*Italic*</td><td><em>Italic</em></td></tr>
+<tr><th><img alt="Deleted" src="{{ asset_base }}/assets/jstoolbar/strikethrough.svg" /></th><td>~~Deleted~~</td><td><del>Deleted</del></td></tr>
+<tr><th><img alt="Inline code" src="{{ asset_base }}/assets/jstoolbar/letter-c.svg" /></th><td>`Inline Code`</td><td><code>Inline Code</code></td></tr>
+<tr><th><span class="syntax-pre"/></th><td>```<br />&nbsp;lines<br />&nbsp;of code<br />```</td><td>
+<pre>
+ lines
+ of code
+</pre>
+</td></tr>
+
+<tr><th colspan="3">Highlighted code <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#13" target="_blank">more</a>)</span></th></tr>
+<tr><th><img alt="Highlighted code" src="{{ asset_base }}/assets/jstoolbar/code.svg" /></th><td>```ruby<br />3.times do<br />&nbsp;&nbsp;puts 'Hello'<br />end<br />```</td><td>
+<pre><code class="ruby syntaxhl"><span class="mi">3</span><span class="p">.</span><span class="nf">times</span> <span class="k">do</span>
+  <span class="nb">puts</span> <span class="s1">'Hello'</span>
+<span class="k">end</span>
+</code></pre>
+</td></tr>
+
+<tr><th colspan="3">Mermaid diagrams <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#17" target="_blank">more</a>)</span></th></tr>
+<tr><th></th><td>```mermaid<br />flowchart TD<br />&nbsp;&nbsp;A[Start] --&gt; B[End]<br />```</td><td><img width="168" alt="Flowchart from Start to End" src="{{ asset_base }}/assets/help/mermaid_flowchart_simple.png" /></td></tr>
+
+<tr><th colspan="3">Line breaks and Paragraphs</th></tr>
+<tr><th></th><td>An empty line<br><br>creates<br>a new paragraph.</td><td><p>An empty line</p><p>creates a new paragraph.</p></td></tr>
+<tr><th></th><td>End a line with a backslash\<br> or two spaces to insert a manual line break.</td><td><p>End a line with a backslash<br>or two spaces to insert a manual line break.</p></td></tr>
+
+<tr><th colspan="3">Lists</th></tr>
+<tr><th><img alt="Unordered list" src="{{ asset_base }}/assets/jstoolbar/list.svg" /></th><td>* Item 1<br />&nbsp;&nbsp;* Sub<br />* Item 2</td><td><ul><li>Item 1<ul><li>Sub</li></ul></li><li>Item 2</li></ul></td></tr>
+<tr><th><img alt="Ordered list" src="{{ asset_base }}/assets/jstoolbar/list-numbers.svg" /></th><td>1. Item 1<br />&nbsp;&nbsp;&nbsp;1. Sub<br />2. Item 2</td><td><ol><li>Item 1<ol><li>Sub</li></ol></li><li>Item 2</li></ol></td></tr>
+<tr><th><img alt="Task list" src="{{ asset_base }}/assets/jstoolbar/list-check.svg" /></th><td>* [ ] Item 1<br />* [x] Item 2</td><td><ul style="list-style-type: none; padding-inline-start: 12px;"><li><input type="checkbox" disabled>Item 1</li><li><input type="checkbox" disabled checked>Item 2</li></ul></td></tr>
+
+<tr><th colspan="3">Headings <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#8" target="_blank">more</a>)</span></th></tr>
+<tr><th><img alt="Heading 1" src="{{ asset_base }}/assets/jstoolbar/h1.svg" /></th><td># Title 1</td><td><h1>Title 1</h1></td></tr>
+<tr><th><img alt="Heading 2" src="{{ asset_base }}/assets/jstoolbar/h2.svg" /></th><td>## Title 2</td><td><h2>Title 2</h2></td></tr>
+<tr><th><img alt="Heading 3" src="{{ asset_base }}/assets/jstoolbar/h3.svg" /></th><td>### Title 3</td><td><h3>Title 3</h3></td></tr>
+
+<tr><th colspan="3">Links <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#4" target="_blank">more</a>)</span></th></tr>
+<tr><th></th><td>www.example.com</td><td><a href="#">www.example.com</a></td></tr>
+<tr><th></th><td>http://example.com</td><td><a href="#">http://example.com</a></td></tr>
+<tr><th></th><td>[Foo](http://example.com)</td><td><a href="#">Foo</a></td></tr>
+
+<tr><th colspan="3">Redmine links <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#3" target="_blank">more</a>)</span></th></tr>
+<tr><th><img alt="Link to a Wiki page" src="{{ asset_base }}/assets/jstoolbar/wiki_link.svg" /></th><td>[[Wiki page]]</td><td><a href="#">Wiki page</a></td></tr>
+<tr><th></th><td>Issue #12</td><td>Issue <a href="#">#12</a></td></tr>
+<tr><th></th><td>##12</td><td><a href="#">Bug #12</a>: The issue subject</td></tr>
+<tr><th></th><td>Revision r43</td><td>Revision <a href="#">r43</a></td></tr>
+<tr><th></th><td>commit:f30e13e43</td><td><a href="#">f30e13e4</a></td></tr>
+<tr><th></th><td>source:some/file</td><td><a href="#">source:some/file</a></td></tr>
+
+<tr><th colspan="3">Inline images <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#7" target="_blank">more</a>)</span></th></tr>
+<tr><th><img alt="Image" src="{{ asset_base }}/assets/jstoolbar/image.svg" /></th><td>![](<em>image_url</em>)</td><td></td></tr>
+<tr><th></th><td>![](<em>attached_image</em>)</td><td></td></tr>
+
+<tr><th colspan="3">Tables</th></tr>
+<tr>
+  <th></th>
+  <td>| A | B | C |<br />|---|---|---|<br />| A | B | C |<br />| D | E | F |</td>
+  <td>
+    <table class="sample">
+      <tbody>
+        <th>A</th><th>B</th><th>C</th>
+        <tr><td>A</td><td>B</td><td>C</td></tr>
+        <tr><td>D</td><td>E</td><td>F</td></tr>
+      </tbody>
+    </table>
+  </td>
+</tr>
+
+<tr><th colspan="3">Raw HTML <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#15" target="_blank">more</a>)</span></th></tr>
+<tr>
+  <th></th><td>HTML is &lt;del&gt;not&lt;/del&gt; &lt;u&gt;allowed&lt;/u&gt;.</td><td>HTML is <del>not</del> <u>allowed</u>.</td>
+</tr>
+
+<tr><th colspan="3">Alerts <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#16" target="_blank">more</a>)</span></th></tr>
+<tr><th></th><td>> [!NOTE]<br>> You can use alerts like [!NOTE], [!TIP], [!IMPORTANT], [!WARNING], and [!CAUTION].</td><td>
+<div class="markdown-alert markdown-alert-note">
+<p class="markdown-alert-title">Note</p>
+<p>You can use alerts like [!NOTE], [!TIP], [!IMPORTANT], [!WARNING], and [!CAUTION].</p>
+</div>
+</td></tr>
+
+</table>
+
+<p><a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}" onclick="window.open('{{ path('help_wiki_syntax', {type: 'detailed'}) }}', '', ''); return false;">More Information</a></p>
+</body>
+</html>

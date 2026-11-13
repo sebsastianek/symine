@@ -1,0 +1,9 @@
+{% extends 'admin/layout.html.twig' %}
+{% import 'queries/_macros.html.twig' as qm %}
+{% block header_tags %}{{ qm.context_menu_tags() }}{{ qm.calendar_headers() }}{% endblock %}
+{% block content %}
+{% include 'admin/admin/_projects.html.twig' %}
+{% endblock %}
+{% block admin_sidebar %}
+{{ render_sidebar_queries(query, null, 'ProjectAdminQuery', 'admin_projects') }}
+{% endblock %}

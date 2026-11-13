@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_document') }}</h2>
+
+<form class="edit_document" id="edit_document_{{ document.id }}" enctype="multipart/form-data" action="{{ path('document_update', {id: document.id}) }}" accept-charset="UTF-8" method="post">
+<input type="hidden" name="_method" value="patch" autocomplete="off" />
+{{ csrf_field() }}
+  {% include 'documents/_form.html.twig' %}
+  <p><input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" /></p>
+</form>
+{% endblock %}

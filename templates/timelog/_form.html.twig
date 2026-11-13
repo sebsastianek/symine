@@ -1,0 +1,98 @@
+{% import 'my/_macros.html.twig' as m %}
+{{ m.errors(errors) }}
+{% if back_url %}<input type="hidden" name="back_url" value="{{ back_url }}" autocomplete="off" />{% endif %}
+
+<div class="box tabular">
+  {% if entry.id is null and route_project_id %}
+    <input type="hidden" name="project_id" id="project_id" value="{{ route_project_id }}" autocomplete="off" />
+  {% elseif entry.id is null and route_issue_id %}
+    <input type="hidden" name="issue_id" id="issue_id" value="{{ route_issue_id }}" autocomplete="off" />
+  {% else %}
+    <p><label for="time_entry_project_id">{{ l('field_project') }}<span class="required"> *</span></label><select name="time_entry[project_id]" id="time_entry_project_id"><option value=""></option>
+{% for p in log_time_projects %}<option value="{{ p.id }}"{% if entry.project is defined and entry.project and entry.project.id == p.id %} selected="selected"{% endif %}>{% for a in p.getAncestors() %}&#187; {% endfor %}{{ p.name }}</option>
+{% endfor %}</select></p>
+  {% endif %}
+
+  <p>
+    <label for="time_entry_issue_id">{{ l('field_issue') }}{% if 'issue_id' in required_fields %}<span class="required"> *</span>{% endif %}</label><input size="6" type="text" value="{{ entry.issue ? entry.issue.id : '' }}" name="time_entry[issue_id]" id="time_entry_issue_id" />
+    <span id="time_entry_issue">
+      {% if entry.issue and te_issue_visible(entry.issue) %}{{ link_to_issue(entry.issue) }}{% endif %}
+    </span>
+  </p>
+
+  {% if log_for_others %}
+    <p><label for="time_entry_user_id">{{ l('field_user') }}<span class="required"> *</span></label><select name="time_entry[user_id]" id="time_entry_user_id">{% for u in users %}<option value="{{ u.id }}"{% if entry.user is defined and entry.user.id == u.id %} selected="selected"{% endif %}>{{ u.getName() }}</option>{% endfor %}</select></p>
+  {% elseif entry.id is not null %}
+    <p>
+      <label for="time_entry_user_id">{{ l('field_user') }}</label>
+      <span>{{ link_to_user(entry.user) }}</span>
+    </p>
+  {% endif %}
+  <p><label for="time_entry_spent_on">{{ l('field_spent_on') }}<span class="required"> *</span></label><input size="10" type="date" value="{{ entry.spentOn|date('Y-m-d') }}" name="time_entry[spent_on]" id="time_entry_spent_on" /><script>
+//<![CDATA[
+$(function() { $('#time_entry_spent_on').addClass('date').datepickerFallback(datepickerOptions); });
+//]]>
+</script></p>
+  <p><label for="time_entry_hours">{{ l('field_hours') }}<span class="required"> *</span></label><input size="6" type="text" value="{{ hours_value }}" name="time_entry[hours]" id="time_entry_hours" /></p>
+  <p><label for="time_entry_comments">{{ l('field_comments') }}{% if 'comments' in required_fields %}<span class="required"> *</span>{% endif %}</label><input size="100" maxlength="1024" type="text" value="{{ entry.comments }}" name="time_entry[comments]" id="time_entry_comments" /></p>
+  <p><label for="time_entry_activity_id">{{ l('field_activity') }}<span class="required"> *</span></label><select name="time_entry[activity_id]" id="time_entry_activity_id">{% if blank_activity %}<option value="">--- {{ l('actionview_instancetag_blank_option') }} ---</option>{% endif %}
+{% for a in activities %}<option{% if entry.activity is defined and entry.activity and entry.activity.id == a.id %} selected="selected"{% endif %} value="{{ a.id }}">{{ a.name }}</option>
+{% endfor %}</select></p>
+  {% for field in custom_fields %}
+    <div class="form-field">
+      <p>{{ m.cf_label('time_entry', field) }}{{ m.cf_tag('time_entry', field, custom_values[field.id] ?? null, cf_options(field, entry.project ?? project)) }}</p>
+    </div>
+  {% endfor %}
+  {{ call_hook('view_timelog_edit_form_bottom', {time_entry: entry, form: null}) }}
+</div>
+
+<script>
+//<![CDATA[
+  $(document).ready(function(){
+    $('#time_entry_project_id').change(function(){
+      $('#time_entry_issue_id').val('');
+    });
+    $('#time_entry_project_id, #time_entry_issue_id').change(function(){
+      $.ajax({
+        url: '{{ (entry.id is null ? path('time_entry_new_js') : path('time_entry_edit_js', {id: entry.id}))|e('js') }}',
+        type: 'post',
+        data: $(this).closest('form').serialize()
+      });
+    });
+  });
+
+  observeAutocompleteField('time_entry_issue_id',
+    function(request, callback) {
+      var url = '{{ (path_exists('issues_auto_complete') ? path('issues_auto_complete') : '')|e('js') }}';
+      var data = {
+        term: request.term
+      };
+      var project_id;
+      {% if entry.id is null and project %}
+      project_id = '{{ project.id }}';
+      {% else %}
+      project_id = $('#time_entry_project_id').val();
+      {% endif %}
+      if(project_id){
+        data['project_id'] = project_id;
+      } else {
+        data['scope'] = 'all';
+      }
+
+      $.get(url, data, null, 'json')
+        .done(function(data){
+          callback(data);
+        })
+        .fail(function(jqXHR, status, error){
+          callback([]);
+        });
+    },
+    {
+      select: function(event, ui) {
+        $('#time_entry_issue').text('');
+        $('#time_entry_issue_id').val(ui.item.value).change();
+      }
+    }
+  );
+//]]>
+</script>

@@ -1,0 +1,14 @@
+{%- set dirs = path|split('/')|filter(d => d != '') -%}
+{%- set filename = null -%}
+{%- if kind == 'file' and dirs|length > 0 -%}{%- set filename = dirs|last -%}{%- set dirs = dirs|slice(0, dirs|length - 1) -%}{%- endif -%}
+<a href="{{ repo_url('show', repository, {rev: rev}) }}">{{ repository.identifier ?: 'root' }}</a>
+{%- set link_path = '' -%}
+{%- for dir in dirs -%}
+{%- set link_path = link_path ? link_path ~ '/' ~ dir : dir -%}
+<span class="separator">/</span><a href="{{ repo_url('show', repository, {path: link_path, rev: rev}) }}">{{ dir }}</a>
+{%- endfor -%}
+{%- if filename -%}
+<span class="separator">/</span><a href="{{ repo_url('entry', repository, {path: (link_path ? link_path ~ '/' : '') ~ filename, rev: rev}) }}">{{ filename }}</a>
+{%- endif -%}
+{%- set rev_text = changeset ? format_revision(changeset) : rev -%}
+{% if rev_text %} @ {{ rev_text }}{% endif %}

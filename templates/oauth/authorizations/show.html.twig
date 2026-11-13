@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('oauth_authorized_applications') }}">{{ l('label_oauth_authorized_application_plural') }}</a></h2>
+
+<fieldset class="tabular"><legend>{{ l('label_information_plural') }}</legend>
+  <p>
+    <label>{{ l('doorkeeper.authorizations.show.title') }}:</label>
+    <code>{{ code }}</code>
+  </p>
+</fieldset>
+{% endblock %}

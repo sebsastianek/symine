@@ -1,0 +1,42 @@
+{#- Minimal port of Redmine's TabularFormBuilder for the "custom_field" object -#}
+{% macro label(field, text, required = false, for = null) -%}
+<label for="{{ for ?? 'custom_field_' ~ field }}">{{ text }}{% if required %}<span class="required"> *</span>{% endif %}</label>
+{%- endmacro %}
+
+{% macro text_field(field, value, text, size = null, required = false, attrs = '') -%}
+{{ _self.label(field, text, required) }}<input{% if size %} size="{{ size }}"{% endif %} type="text" value="{{ value }}" name="custom_field[{{ field }}]" id="custom_field_{{ field }}" {{ attrs|raw }}/>
+{%- endmacro %}
+
+{% macro check_box(field, checked, text, checked_value = '1', unchecked_value = '0', attrs = '') -%}
+{{ _self.label(field, text) }}<input name="custom_field[{{ field }}]" type="hidden" value="{{ unchecked_value }}" autocomplete="off" /><input {{ attrs|raw }} type="checkbox" value="{{ checked_value }}"{% if checked %} checked="checked"{% endif %} name="custom_field[{{ field }}]" id="custom_field_{{ field }}" />
+{%- endmacro %}
+
+{% macro select(field, options, selected, text, include_blank = false, attrs = '') -%}
+{{ _self.label(field, text) }}<select name="custom_field[{{ field }}]" id="custom_field_{{ field }}" {{ attrs|raw }}>{% if include_blank %}<option value=""></option>{% endif %}{% for o in options %}<option{% if (o[1] ?? o[0])|default('') ~ '' == selected ~ '' %} selected="selected"{% endif %} value="{{ o[1] ?? o[0] }}">{{ o[0] }}</option>{% endfor %}</select>
+{%- endmacro %}
+
+{% macro edit_tag_style(cf, include_radio = false) -%}
+{% set opts = [[l('label_drop_down_list'), ''], [l('label_checkboxes'), 'check_box']] %}
+{% if include_radio %}{% set opts = opts|merge([[l('label_radio_buttons'), 'radio']]) %}{% endif %}
+{{ _self.select('edit_tag_style', opts, cf.getFormatOption('edit_tag_style', ''), l('label_display')) }}
+{%- endmacro %}
+
+{% macro title(cf, type, type_label) -%}
+<h2><a href="{{ path('custom_fields_index') }}">{{ l('label_custom_field_plural') }}</a> &#187; <a href="{{ path('custom_fields_index', {tab: type}) }}">{{ l(type_label) }}</a> &#187; {{ cf is null or cf.id is null ? l('label_custom_field_new') : cf.name }}</h2>
+{%- endmacro %}
+
+{% macro errors(errors) -%}
+{% if errors|length > 0 %}<div id='errorExplanation'>
+{{ sprite_icon('warning') }}<ul>
+{% for e in errors %}<li>{{ e }}</li>
+{% endfor %}</ul></div>
+{% endif %}
+{%- endmacro %}
+
+{% macro checked_image(checked) -%}
+{% if checked %}<span class="icon-only icon-checked">{{ sprite_icon('checked') }}</span>{% endif %}
+{%- endmacro %}
+
+{% macro toggle_checkboxes_link(selector) -%}
+<a href="#" onclick="toggleCheckboxesBySelector('{{ selector }}'); return false;" title="{{ l('button_check_all') }} / {{ l('button_uncheck_all') }}" class="icon icon-checked">{{ sprite_icon('checked', '') }}</a>
+{%- endmacro %}

@@ -1,0 +1,8 @@
+{% import 'versions/_macros.html.twig' as vm %}
+{{ vm.errors(errors) }}
+
+<div class="box tabular">
+<p><label for="issue_category_name">{{ l('field_name') }}<span class="required"> *</span></label><input size="60" type="text" value="{{ category.name }}" name="issue_category[name]" id="issue_category_name" /></p>
+<p><label for="issue_category_assigned_to_id">{{ l('field_assigned_to') }}</label><select name="issue_category[assigned_to_id]" id="issue_category_assigned_to_id"><option value="" label=" "></option>
+{{ category_principals_options(assignable_users, category.assignedTo) }}</select></p>
+</div>

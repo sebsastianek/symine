@@ -1,0 +1,5 @@
+{%- if m.parent -%}
+<a href="{{ path('board_message_show', {board_id: m.board.id, id: m.parent.id, r: m.id}) }}#message-{{ m.id }}">{{ m.subject|truncate(60) }}</a>
+{%- else -%}
+<a href="{{ path('board_message_show', {board_id: m.board.id, id: m.id}) }}">{{ m.subject|truncate(60) }}</a>
+{%- endif -%}

@@ -1,0 +1,35 @@
+{% include 'admin/_error_messages.html.twig' %}
+<div class="box tabular">
+  <p><label for="doorkeeper_application_name">{{ l('field_name') }}<span class="required"> *</span></label><input type="text" value="{{ application.name }}" name="doorkeeper_application[name]" id="doorkeeper_application_name" /></p>
+
+  <p>
+    <label for="doorkeeper_application_redirect_uri">{{ l('activerecord.attributes.doorkeeper/application.redirect_uri') }}<span class="required"> *</span></label><textarea name="doorkeeper_application[redirect_uri]" id="doorkeeper_application_redirect_uri">
+{{ application.redirectUri }}</textarea>
+    <em class="info">
+      {{ l('doorkeeper.applications.help.redirect_uri') }}
+    </em>
+  </p>
+</div>
+
+<h3>{{ l('activerecord.attributes.doorkeeper/application.scopes') }}</h3>
+<p><em class="info">{{ l('text_oauth_info_scopes') }}</em></p>
+<div class="box tabular" id="scopes">
+<fieldset><legend>{{ l('label_oauth_admin_access') }}</legend>
+  <label class="floating" style="width: auto;">
+    <input type="checkbox" name="doorkeeper_application[scopes][]" id="doorkeeper_application_scopes_admin" value="admin"{% if 'admin' in app_scopes %} checked="checked"{% endif %} />
+    {{ l('text_oauth_admin_permission') }}
+  </label>
+</fieldset>
+{% for mod, permissions in permissions_by_module %}
+    <fieldset><legend>{{ mod is empty ? l('label_project') : l('project_module_' ~ mod) }}</legend>
+    {% for permission in permissions %}
+        <label class="floating">
+        <input type="checkbox" name="doorkeeper_application[scopes][]" id="doorkeeper_application_scopes_{{ permission.name }}" value="{{ permission.name }}"{% if permission.public %} disabled="disabled"{% endif %}{% if permission.public or permission.name in app_scopes %} checked="checked"{% endif %} />
+        {{ l('permission_' ~ permission.name) }}
+        </label>
+    {% endfor %}
+    </fieldset>
+{% endfor %}
+<br /><a href="#" onclick="checkAll(&#39;scopes&#39;, true); return false;">{{ l('button_check_all') }}</a> | <a href="#" onclick="checkAll(&#39;scopes&#39;, false); return false;">{{ l('button_uncheck_all') }}</a>
+<input type="hidden" name="doorkeeper_application[scopes][]" id="doorkeeper_application_scopes_" value="" autocomplete="off" />
+</div>

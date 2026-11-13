@@ -1,0 +1,62 @@
+{{ call_hook('view_issues_form_details_top', {issue: issue, form: null}) }}
+<input type="hidden" name="form_update_triggered_by" id="form_update_triggered_by" value="" autocomplete="off" />
+{% if back_url %}<input type="hidden" name="back_url" value="{{ back_url }}" autocomplete="off" />{% endif %}
+
+{% if 'is_private' in safe %}
+<p id="issue_is_private_wrap">
+  <input name="issue[is_private]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1" name="issue[is_private]" id="issue_is_private"{% if issue.isPrivate %} checked="checked"{% endif %} /><label class="inline" for="issue_is_private" id="issue_is_private_label">{{ l('field_is_private') }}</label>
+</p>
+{% endif %}
+
+{% if show_project_select %}
+<p><label for="issue_project_id">{{ l('field_project') }}<span class="required"> *</span></label><select onchange="updateIssueFrom('{{ form_update_url|e('js') }}', this)" name="issue[project_id]" id="issue_project_id">{{ issue_project_tree_options(projects_for_select, issue.project) }}</select></p>
+{% endif %}
+
+{% if 'tracker_id' in safe %}
+<p>
+  <label for="issue_tracker_id">{{ l('field_tracker') }}<span class="required"> *</span></label><select onchange="updateIssueFrom('{{ form_update_url|e('js') }}', this)"{% if issue.tracker.description %} title="{{ issue.tracker.description }}"{% endif %} name="issue[tracker_id]" id="issue_tracker_id">{% for t in trackers_for_select %}<option{% if t.id == issue.tracker.id %} selected="selected"{% endif %} value="{{ t.id }}">{{ t.name }}</option>
+{% endfor %}</select>
+</p>
+{% endif %}
+
+{% if 'subject' in safe %}
+<p><label for="issue_subject">{{ l('field_subject') }}<span class="required"> *</span></label><input size="80" maxlength="255" type="text" value="{{ issue.subject }}" name="issue[subject]" id="issue_subject" /></p>
+{% endif %}
+
+{% if 'description' in safe %}
+<div class="form-field">
+  <label for="issue_description">{{ l('field_description') }}{% include 'issues/_req.html.twig' with {req: 'description' in required_attrs} %}</label>
+  <div id="issue_description_and_toolbar"{% if not issue.isNew() %} style="display:none"{% endif %}>
+    {% include 'issues/_wiki_textarea.html.twig' with {name: 'issue[description]', id: 'issue_description', value: issue.description, rows: min(max(10, ((issue.description ?? '')|length / 50)|round(0, 'floor')), 20), cols: 60, accesskey: 'e', preview_url: preview_url} %}
+  </div>
+  {% if not issue.isNew() %}<a href="#" onclick="$(this).hide(); $(&quot;#issue_description_and_toolbar&quot;).show(); return false;" class="icon icon-edit"><span>{{ sprite_icon('edit', l('button_edit')) }}</span></a>{% endif %}
+</div>
+{% endif %}
+
+<div id="attributes" class="attributes">
+  {% include 'issues/_attributes.html.twig' %}
+</div>
+
+{{ call_hook('view_issues_form_details_bottom', {issue: issue, form: null}) }}
+
+<script>
+$(document).ready(function(){
+  $("#issue_tracker_id, #issue_status_id").each(function(){
+    $(this).val($(this).find("option[selected=selected]").val());
+  });
+  $(".assign-to-me-link").click(function(event){
+    event.preventDefault();
+    var element = $(event.target);
+    $('#issue_assigned_to_id').val(element.data('id'));
+    element.hide();
+  });
+  $('#issue_assigned_to_id').change(function(event){
+    var assign_to_me_link = $(".assign-to-me-link");
+    if (assign_to_me_link.length > 0) {
+      var user_id = $(event.target).val();
+      var current_user_id = assign_to_me_link.data('id');
+      if (user_id == current_user_id) { assign_to_me_link.hide(); } else { assign_to_me_link.show(); }
+    }
+  });
+});
+</script>

@@ -1,0 +1,39 @@
+{#- my/blocks/_issues.erb ; b.query is an App\Query\IssueQuery -#}
+{%- set q = b.query -%}
+<div class="contextual">
+  <a href="#" onclick="$('#{{ block }}-settings').toggle();; return false;" class="icon-only icon-settings" title="{{ l('label_options') }}">{{ sprite_icon('settings', l('label_options')) }}</a>
+</div>
+
+<h3>
+  {% if q.project %}{{ q.project.name }} |{% endif %}
+  {% if path_exists('issues_index') %}<a href="{{ (q.project and path_exists('project_issues')) ? path('project_issues', {project_id: q.project.identifier}|merge(b.issues_url_params)) : path('issues_index', b.issues_url_params) }}">{{ b.title }}</a>{% else %}{{ b.title }}{% endif %}
+  ({{ b.issue_count }})
+</h3>
+
+<div id="{{ block }}-settings" style="display:none;">
+  <form action="{{ path('my_update_page') }}" accept-charset="UTF-8" data-remote="true" method="post">{{ csrf_field() }}
+    <div id="list-definition">
+      <div class="box">
+        {% include 'queries/_columns.html.twig' with {query: q, tag_name: 'settings[' ~ block ~ '][columns][]'} %}
+      </div>
+    </div>
+    <p>
+      <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+      <a href="#" onclick="$('#{{ block }}-settings').toggle();; return false;">{{ l('button_cancel') }}</a>
+    </p>
+  </form>
+</div>
+
+{% if b.issues is not empty %}
+  {% include 'issues/_list.html.twig' with {
+    issues: b.issues,
+    query: q,
+    query_options: {
+      sort_param: 'settings[' ~ block ~ '][sort]',
+      url: path('my_page'),
+      sort_link_options: {'data-remote': 'true', rel: 'nofollow', 'data-method': 'post'}
+    }
+  } %}
+{% else %}
+  <p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}

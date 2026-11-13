@@ -1,0 +1,45 @@
+{% extends 'base.html.twig' %}
+{% import 'my/_macros.html.twig' as m %}
+{% block content %}
+<h2>{{ l('label_register') }}</h2>
+
+<form class="new_user" id="new_user" action="{{ path('register') }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+{{ m.errors(errors) }}
+
+<div class="box tabular">
+{% if reg_user.authSourceId is null %}
+  <p><label for="user_login">{{ l('field_login') }}<span class="required"> *</span></label><input size="25" type="text" value="{{ reg_user.login }}" name="user[login]" id="user_login" /></p>
+
+  <p><label for="user_password">{{ l('field_password') }}<span class="required"> *</span></label><input size="25" type="password" name="user[password]" id="user_password" autocomplete="new-password" />
+  <em class="info">{{ l('text_caracters_minimum', {count: settings.int('password_min_length')}) }}</em>
+  {% set classes = settings.array('password_required_char_classes') %}
+  {% if classes is not empty %}
+    <em class="info">{{ l('text_characters_must_contain', {character_classes: classes|map(c => l('label_password_char_class_' ~ c))|join(', ')}) }}</em>
+  {% endif %}
+  </p>
+  <p><label for="user_password_confirmation">{{ l('field_password_confirmation') }}<span class="required"> *</span></label><input size="25" type="password" name="user[password_confirmation]" id="user_password_confirmation" autocomplete="new-password" /></p>
+{% endif %}
+
+{% set fn %}<p><label for="user_firstname">{{ l('field_firstname') }}<span class="required"> *</span></label><input type="text" value="{{ reg_user.firstname }}" name="user[firstname]" id="user_firstname" /></p>{% endset %}
+{% set ln %}<p><label for="user_lastname">{{ l('field_lastname') }}<span class="required"> *</span></label><input type="text" value="{{ reg_user.lastname }}" name="user[lastname]" id="user_lastname" /></p>{% endset %}
+{% if settings.string('user_format') starts with 'lastname' %}{{ ln }}
+{{ fn }}{% else %}{{ fn }}
+{{ ln }}{% endif %}
+<p><label for="user_mail">{{ l('field_mail') }}<span class="required"> *</span></label><input type="text" value="{{ reg_user.getMail() }}" name="user[mail]" id="user_mail" /></p>
+<p><label for="pref_hide_mail">{{ l('field_hide_mail') }}</label><input name="pref[hide_mail]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1"{% if reg_user.getPref().hideMail %} checked="checked"{% endif %} name="pref[hide_mail]" id="pref_hide_mail" /></p>
+
+{% if not settings.bool('force_default_language_for_loggedin') %}
+<p><label for="user_language">{{ l('field_language') }}</label><select name="user[language]" id="user_language"><option value="">(auto)</option>
+{% for code, name in languages %}<option value="{{ code }}"{% if code == reg_user.language %} selected="selected"{% endif %}>{{ name }}</option>
+{% endfor %}</select></p>
+{% endif %}
+
+{% for field in custom_fields %}
+  <p>{{ m.cf_label('user', field) }}{{ m.cf_tag('user', field, custom_values[field.id] ?? null, cf_options(field)) }}</p>
+{% endfor %}
+</div>
+
+<input type="submit" name="commit" value="{{ l('button_submit') }}" data-disable-with="{{ l('button_submit') }}" />
+</form>
+{% endblock %}

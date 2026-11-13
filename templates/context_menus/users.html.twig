@@ -1,0 +1,63 @@
+{#- context_menus/users.html.erb -#}
+{%- set back_param = back is not null ? {back_url: back} : {} -%}
+<ul>
+  {% if edited_user %}
+    {% if edited_user.isLocked() %}
+      <li>
+        <a class="icon icon-unlock" rel="nofollow" data-method="put" href="{{ path('user_update', {id: edited_user.id}|merge(back_param)|merge({user: {status: 1}})) }}">{{ sprite_icon('unlock', l('button_unlock')) }}</a>
+      </li>
+    {% elseif current_user().id != edited_user.id %}
+      <li>
+        <a class="icon icon-lock" rel="nofollow" data-method="put" href="{{ path('user_update', {id: edited_user.id}|merge(back_param)|merge({user: {status: 3}})) }}">{{ sprite_icon('lock', l('button_lock')) }}</a>
+      </li>
+    {% endif %}
+
+    <li>
+      <a class="icon icon-edit" href="{{ path('user_edit', {id: edited_user.id}|merge(back_param)) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>
+    </li>
+
+    {% if current_user().id != edited_user.id %}
+      <li>
+        <a class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('user_destroy', {id: edited_user.id}|merge(back_param)) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+      </li>
+    {% endif %}
+  {% else %}
+    {% if users|filter(u => not u.isLocked())|length > 0 %}
+      <li>
+        <a class="icon icon-lock" rel="nofollow" data-method="post" href="{{ path('users_bulk_lock', {ids: ids}) }}">{{ sprite_icon('lock', l('button_lock')) }}</a>
+      </li>
+    {% else %}
+      <li>
+        <a class="icon icon-unlock" rel="nofollow" data-method="post" href="{{ path('users_bulk_unlock', {ids: ids}) }}">{{ sprite_icon('unlock', l('button_unlock')) }}</a>
+      </li>
+    {% endif %}
+    <li>
+      <a class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('users_bulk_destroy', {ids: ids}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+    </li>
+  {% endif %}
+
+  {% if groups is not empty %}
+    <li class="folder">
+      <a href="#" class="submenu">{{ l('button_add_to_group') }}</a>
+      <span class="icon-only">{{ sprite_icon('angle-right', null, 18, false, 'icon-rtl') }}</span>
+      <ul>
+        {% for group in groups %}
+          <li><a class="" rel="nofollow" data-method="post" href="{{ path('group_users_add', {id: group.id}|merge(back_param)|merge({user_ids: ids})) }}">{{ group.getName() }}</a></li>
+        {% endfor %}
+      </ul>
+    </li>
+    {% if common_group_ids is not empty %}
+      <li class="folder">
+        <a href="#" class="submenu">{{ l('button_remove_from_group') }}</a>
+        <span class="icon-only">{{ sprite_icon('angle-right', null, 18, false, 'icon-rtl') }}</span>
+        <ul>
+          {% for group in groups %}
+            {% if group.id in common_group_ids %}
+              <li><a class="" rel="nofollow" data-method="delete" href="{{ path('group_users_remove', {id: group.id}|merge(back_param)|merge({user_ids: ids})) }}">{{ group.getName() }}</a></li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </li>
+    {% endif %}
+  {% endif %}
+</ul>

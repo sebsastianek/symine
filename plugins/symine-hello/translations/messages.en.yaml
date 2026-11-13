@@ -1,0 +1,14 @@
+# Redmine-style keys (l('...')): permission_<name>, project_module_<module>, label_<event type singular>_plural
+project_module_hello: Greetings
+permission_view_hello_greetings: View greetings
+permission_add_hello_greetings: Add greetings
+label_hello_greeting_plural: Greetings
+label_hello_greeting_new: New greeting
+label_hello_color: Color (Hello plugin)
+field_hello_message: Message
+field_hello_greeting: Greeting word
+field_hello_show_on_issues: Display on issues
+text_hello_issue_greeting:
+  zero: This project has no greetings yet.
+  one: This project has 1 greeting.
+  other: "This project has %{count} greetings."

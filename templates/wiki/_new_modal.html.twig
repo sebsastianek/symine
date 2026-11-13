@@ -1,0 +1,9 @@
+<h3 class="title">{{ l('label_wiki_page_new') }}</h3>
+
+<form action="{{ path('wiki_new', {project_id: project.identifier}) }}" accept-charset="UTF-8" data-remote="true" method="post">{{ csrf_field() }}
+{% include 'wiki/_new_form_fields.html.twig' with {modal: true} %}
+  <p class="buttons">
+    <input type="submit" value="{{ l('label_next') }}" data-disable-with="{{ l('label_next') }}" />
+    <a href="#" onclick="hideModal(this); return false;">{{ l('button_cancel') }}</a>
+  </p>
+</form>

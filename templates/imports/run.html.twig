@@ -1,0 +1,25 @@
+{% extends layout %}
+{% block content %}
+<h2>{{ import_title }}</h2>
+
+<div id="import-details">
+  <div id="import-progress"><div id="progress-label">0 / {{ import.totalItems ?? 0 }}</div></div>
+</div>
+
+<form id="import-run-form" action="{{ path('import_run', {id: import.filename}) }}" method="post">
+  {{ csrf_field() }}
+  <noscript><p><input type="submit" value="{{ l('button_import') }}" /></p></noscript>
+</form>
+
+<script>
+$(document).ready(function() {
+  $('#import-details').addClass('ajax-loading');
+  $('#import-progress').progressbar({value: 0, max: {{ import.totalItems ?? 0 }}});
+  $.ajax({
+    url: {{ path('import_run_js', {id: import.filename, _format: 'js'})|json_encode|raw }},
+    type: 'post',
+    headers: {'X-CSRF-Token': $('meta[name="csrf-token"]').attr('content')}
+  });
+});
+</script>
+{% endblock %}

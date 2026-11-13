@@ -1,0 +1,6 @@
+{% for principal in users %}<label><input type="checkbox" name="watcher[user_ids][]" value="{{ principal.id }}" />{% if principal.isGroup() %}<span class="name icon icon-group">{{ sprite_icon('group') }}</span>{% else %}{{ avatar(principal, 16) }}{% endif %}{{ principal.getName() }}</label>{% endfor %}
+{% if more_users %}
+  <p class="watcher-more-users" data-role="load-more">
+    <a data-action="searchable-selection#loadMore" href="{{ path('watchers_autocomplete_for_user', {object_type: object_type, object_id: object_ids|length > 0 ? object_ids : null, project_id: project ? project.identifier : null, q: q ?: null, offset: next_offset}) }}">{{ l('label_show_more') }}</a>
+  </p>
+{% endif %}

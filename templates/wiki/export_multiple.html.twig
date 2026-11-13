@@ -1,0 +1,20 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<title>{{ project.name }}</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+{% include 'wiki/_export_style.html.twig' %}
+</head>
+<body>
+
+<strong>{{ l('label_index_by_title') }}</strong>
+{{ hierarchy|raw }}
+
+{% for page in pages %}
+<hr />
+<a name="{{ page.title }}" />
+{{ textilizable(page.content ? page.content.text : '', project, {wiki_links: 'anchor', headings: true, object: page}) }}
+{% endfor %}
+
+</body>
+</html>

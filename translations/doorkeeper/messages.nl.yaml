@@ -1,0 +1,88 @@
+# Doorkeeper translations (doorkeeper-i18n 5.2.9 / doorkeeper 5.8.2, MIT), used by the OAuth2 provider.
+# Generated - merged into the "messages" domain.
+activerecord.attributes.doorkeeper/application.name: Naam
+activerecord.attributes.doorkeeper/application.redirect_uri: 'Redirect URI'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.forbidden_uri: 'is forbidden by the server.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.fragment_present: 'kan geen fragment bevatten.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.invalid_uri: 'moet een geldige URI zijn.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.relative_uri: 'moet een absolute URI zijn.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.secured_uri: 'moet een HTTPS/SSL URI zijn.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.unspecified_scheme: 'moet een schema specificeren.'
+activerecord.errors.models.doorkeeper/application.attributes.scopes.not_match_configured: 'komt niet overeen met server configuratie.'
+doorkeeper.applications.buttons.authorize: Authoriseren
+doorkeeper.applications.buttons.cancel: Annuleren
+doorkeeper.applications.buttons.destroy: Verwijderen
+doorkeeper.applications.buttons.edit: Bewerken
+doorkeeper.applications.buttons.submit: Opslaan
+doorkeeper.applications.confirmations.destroy: 'Weet je het zeker?'
+doorkeeper.applications.edit.title: 'Bewerk applicatie'
+doorkeeper.applications.form.error: 'Oops! Controleer het formulier op fouten'
+doorkeeper.applications.help.blank_redirect_uri: 'Laat het leeg indien u uw provider heeft geconfigureerd voor het gebruik van Client Credentials, Resource Owner Password Credentials of een ander type authorisatie dat geen omleiding van URI vereist.'
+doorkeeper.applications.help.confidential: 'Toepassing zal worden gebruikt waar de client secret vertrouwelijk kan worden gehouden. Native mobile apps en Single Page Apps worden beschouwd als niet-vertrouwelijk.'
+doorkeeper.applications.help.redirect_uri: 'Gebruik één regel per URI. '
+doorkeeper.applications.help.scopes: 'Scheid scopes met spaties. Laat leeg om de standaard scopes te gebruiken.'
+doorkeeper.applications.index.actions: Actions
+doorkeeper.applications.index.callback_url: 'Callback URL'
+doorkeeper.applications.index.confidential: 'Confidential?'
+doorkeeper.applications.index.confidentiality.no: Nee
+doorkeeper.applications.index.confidentiality.yes: Ja
+doorkeeper.applications.index.name: Naam
+doorkeeper.applications.index.new: 'Nieuwe applicatie'
+doorkeeper.applications.index.title: 'Jouw applicaties'
+doorkeeper.applications.new.title: 'Nieuwe applicatie'
+doorkeeper.applications.show.actions: Acties
+doorkeeper.applications.show.application_id: 'Applicatie UID:'
+doorkeeper.applications.show.callback_urls: 'Callback urls:'
+doorkeeper.applications.show.confidential: 'Confidentieel:'
+doorkeeper.applications.show.not_defined: 'Not defined'
+doorkeeper.applications.show.scopes: 'Scopes:'
+doorkeeper.applications.show.secret: 'Secret:'
+doorkeeper.applications.show.secret_hashed: 'Secret hashed'
+doorkeeper.applications.show.title: 'Applicatie: %{name}'
+doorkeeper.authorizations.buttons.authorize: Authoriseren
+doorkeeper.authorizations.buttons.deny: Weigeren
+doorkeeper.authorizations.error.title: 'Er is een fout opgetreden'
+doorkeeper.authorizations.form_post.title: 'Submit this form'
+doorkeeper.authorizations.new.able_to: 'Deze applicatie zal in staat zijn om:'
+doorkeeper.authorizations.new.prompt: '%{client_name} authoriseren om uw account te gebruiken?'
+doorkeeper.authorizations.new.title: 'Authorisatie vereist'
+doorkeeper.authorizations.show.title: 'Authorisatie code:'
+doorkeeper.authorized_applications.buttons.revoke: Intrekken
+doorkeeper.authorized_applications.confirmations.revoke: 'Weet je het zeker?'
+doorkeeper.authorized_applications.index.application: Applicatie
+doorkeeper.authorized_applications.index.created_at: 'Aangemaakt op'
+doorkeeper.authorized_applications.index.date_format: '%d-%m-%Y %H:%M:%S'
+doorkeeper.authorized_applications.index.title: 'Jouw geauthoriseerde applicaties'
+doorkeeper.errors.messages.access_denied: 'De resource eigenaar of authorisatie-server weigerde het verzoek.'
+doorkeeper.errors.messages.admin_authenticator_not_configured: 'Toegang tot het adminpaneel is verboden omdat Doorkeeper.configure.admin_authenticator niet geconfigureerd is.'
+doorkeeper.errors.messages.credential_flow_not_configured: 'Resource Owner Password Credentials flow is mislukt doordat Doorkeeper.configure.resource_owner_from_credentials niet geconfigureerd is.'
+doorkeeper.errors.messages.forbidden_token.missing_scope: 'Access to this resource requires scope "%{oauth_scopes}".'
+doorkeeper.errors.messages.invalid_client: 'Client verificatie is mislukt door onbekende klant, geen client authenticatie opgegeven, of een niet-ondersteunde authenticatie methode.'
+doorkeeper.errors.messages.invalid_code_challenge_method: 'De code-uitdaging-methode moet plain of S256 zijn.'
+doorkeeper.errors.messages.invalid_grant: 'De verstrekte authorisatie is ongeldig, verlopen, ingetrokken, komt niet overeen met de redirect uri die is opgegeven, of werd uitgegeven aan een andere klant.'
+doorkeeper.errors.messages.invalid_redirect_uri: 'De opgegeven redirect uri is niet geldig.'
+doorkeeper.errors.messages.invalid_request.missing_param: 'Ontbrekende vereiste parameter: %{value}.'
+doorkeeper.errors.messages.invalid_request.request_not_authorized: 'Verzoek moet worden geautoriseerd. Vereiste parameter voor het autoriseren van de aanvraag ontbreekt of is ongeldig.'
+doorkeeper.errors.messages.invalid_request.unknown: 'Het verzoek mist een vereiste parameter, bevat een niet-ondersteunde parameter waarde of is anderszins onjuist.'
+doorkeeper.errors.messages.invalid_scope: 'De opgevraagde scope is niet geldig, onbekend of onjuist.'
+doorkeeper.errors.messages.invalid_token.expired: 'Het toegangstoken is verlopen'
+doorkeeper.errors.messages.invalid_token.revoked: 'Het toegangstoken is geweigerd'
+doorkeeper.errors.messages.invalid_token.unknown: 'Het toegangstoken is ongeldig'
+doorkeeper.errors.messages.resource_owner_authenticator_not_configured: 'Resource Owner opzoeking mislukt doordat Doorkeeper.configure.resource_owner_authenticator niet is gevonden.'
+doorkeeper.errors.messages.revoke.unauthorized: 'U bent niet bevoegd om dit token in te trekken...'
+doorkeeper.errors.messages.server_error: 'De authorisatie server is een onverwachte voorwaarde tegengekomen die het verzoek verhinderd.'
+doorkeeper.errors.messages.temporarily_unavailable: 'De authorisatie-server is momenteel niet in staat het verzoek te behandelen als gevolg van een tijdelijke overbelasting of onderhoud aan de server.'
+doorkeeper.errors.messages.unauthorized_client: 'De client is niet bevoegd om dit verzoek met deze methode uit te voeren.'
+doorkeeper.errors.messages.unsupported_grant_type: 'Het type authorisatie is niet ondersteund door de authorisatie-server'
+doorkeeper.errors.messages.unsupported_response_mode: 'The authorization server does not support this response mode.'
+doorkeeper.errors.messages.unsupported_response_type: 'De authorisatie server ondersteunt dit response type niet'
+doorkeeper.flash.applications.create.notice: 'Applicatie aangemaakt.'
+doorkeeper.flash.applications.destroy.notice: 'Applicatie verwijderd.'
+doorkeeper.flash.applications.update.notice: 'Applicatie bewerkt.'
+doorkeeper.flash.authorized_applications.destroy.notice: 'Applicatie ingetrokken.'
+doorkeeper.layouts.admin.nav.applications: Applicaties
+doorkeeper.layouts.admin.nav.home: Home
+doorkeeper.layouts.admin.nav.oauth2_provider: 'OAuth2 Provider'
+doorkeeper.layouts.admin.title: Doorkeeper
+doorkeeper.layouts.application.title: 'OAuth authorisatie vereist'
+doorkeeper.pre_authorization.status: Pre-authorization

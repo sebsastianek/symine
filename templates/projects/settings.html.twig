@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_settings') }}</h2>
+<div class="tabs">
+  <ul>
+    {% for tab in tabs %}
+    <li><a id="tab-{{ tab.name }}"{% if tab.name == selected_tab %} class="selected"{% endif %} onclick="showTab('{{ tab.name }}', this.href); return false;" href="{{ path('project_settings', {id: project.identifier, tab: tab.name}) }}">{{ tab.label }}</a></li>
+    {% endfor %}
+  </ul>
+  <div class="tabs-buttons" style="display:none;">
+    <button class="tab-left icon-only" type="button" onclick="moveTabLeft(this);">{{ sprite_icon('angle-left') }}</button>
+    <button class="tab-right icon-only" type="button" onclick="moveTabRight(this);">{{ sprite_icon('angle-right') }}</button>
+  </div>
+</div>
+{% for tab in tabs %}
+  <div id="tab-content-{{ tab.name }}"{% if tab.name != selected_tab %} style="display:none"{% endif %} class="tab-content">
+  {%- if tab.name == 'info' -%}
+    {% include 'projects/settings/_info.html.twig' %}
+  {%- elseif tab.name == 'members' -%}
+    {% include 'members/_members.html.twig' %}
+  {%- elseif tab.name == 'issues' -%}
+    {% include 'projects/settings/_issues.html.twig' %}
+  {%- elseif tab.name == 'versions' -%}
+    {% include 'projects/settings/_versions.html.twig' ignore missing %}
+  {%- elseif tab.name == 'categories' -%}
+    {% include 'projects/settings/_issue_categories.html.twig' ignore missing %}
+  {%- elseif tab.name == 'repositories' -%}
+    {% include ['repositories/_settings_tab.html.twig', 'projects/settings/_repositories.html.twig'] %}
+  {%- elseif tab.name == 'boards' -%}
+    {% include ['boards/_settings_tab.html.twig', 'projects/settings/_boards.html.twig'] %}
+  {%- elseif tab.name == 'activities' -%}
+    {% include 'projects/settings/_activities.html.twig' %}
+  {%- endif -%}
+  </div>
+{% endfor %}
+<script>
+//<![CDATA[
+showTab('{{ selected_tab }}', this.href)
+//]]>
+</script>
+{% endblock %}

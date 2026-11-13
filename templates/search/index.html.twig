@@ -1,0 +1,111 @@
+{% extends 'base.html.twig' %}
+{% set type_label = {issues: 'label_issue_plural', news: 'label_news_plural', documents: 'label_document_plural', changesets: 'label_changeset_plural', wiki_pages: 'label_wiki_page_plural', messages: 'label_message_plural', projects: 'label_project_plural'} %}
+{% block content %}
+<h2>{{ l('label_search') }}</h2>
+
+<form id="search-form" action="{{ path(route, route_params) }}" accept-charset="UTF-8" method="get">
+<div class="box">
+<label class="hidden-for-sighted" for="search-input">{{ l('description_search') }}</label>
+<p><input type="text" name="q" id="search-input" value="{{ question }}" size="60" data-auto-complete="true" />
+{% if scope_options %}<label class="hidden-for-sighted" for="scope">{{ l('description_project_scope') }}</label><select name="scope" id="scope">{% for o in scope_options %}<option{% if scope_param == o[1] %} selected="selected"{% endif %} value="{{ o[1] }}">{{ o[0] }}</option>
+{% endfor %}</select>
+{% endif %}
+<input type="hidden" name="all_words" value="" autocomplete="off" />
+<label><input type="checkbox" name="all_words" id="all_words" value="1"{% if all_words %} checked="checked"{% endif %} /> {{ l('label_all_words') }}</label>
+<input type="hidden" name="titles_only" value="" autocomplete="off" />
+<label><input type="checkbox" name="titles_only" id="titles_only" value="1"{% if titles_only %} checked="checked"{% endif %} /> {{ l('label_search_titles_only') }}</label>
+</p>
+
+<fieldset class="box">
+  <legend><a href="#" onclick="toggleCheckboxesBySelector('p#search-types input'); return false;" title="{{ l('button_check_all') }} / {{ l('button_uncheck_all') }}" class="icon icon-checked">{{ sprite_icon('checked', '') }}</a></legend>
+  <p id="search-types">
+  {% for t in object_types %}
+  <label><input type="checkbox" name="{{ t }}" id="{{ t }}" value="1"{% if t in scope %} checked="checked"{% endif %} /> <a href="#">{{ l(type_label[t] ?? ('label_' ~ (t ends with 's' ? t|slice(0, -1) : t) ~ '_plural')) }}</a></label>
+  {% endfor %}
+  </p>
+</fieldset>
+
+<fieldset class="collapsible collapsed">
+  <legend onclick="toggleFieldset(this);" class="icon icon-collapsed">
+    {{ sprite_icon('angle-right', null, 18, false, 'icon-rtl') }}
+    {{ l('label_options') }}
+  </legend>
+  <div id="options-content" style="display:none;">
+    <p><label><input type="checkbox" name="open_issues" id="open_issues" value="1"{% if open_issues %} checked="checked"{% endif %} /> {{ l('label_search_open_issues_only') }}</label></p>
+    <p>
+      <label><input type="radio" name="attachments" id="attachments_0" value="0"{% if search_attachments == '0' %} checked="checked"{% endif %} /> {{ l('label_search_attachments_no') }}</label>
+      <label><input type="radio" name="attachments" id="attachments_1" value="1"{% if search_attachments == '1' %} checked="checked"{% endif %} /> {{ l('label_search_attachments_yes') }}</label>
+      <label><input type="radio" name="attachments" id="attachments_only" value="only"{% if search_attachments == 'only' %} checked="checked"{% endif %} /> {{ l('label_search_attachments_only') }}</label>
+    </p>
+    {{ call_hook('view_search_index_options_content_bottom') }}
+  </div>
+</fieldset>
+<input type="hidden" name="options" id="show-options" value="" autocomplete="off" />
+
+</div>
+<p><input type="submit" name="commit" value="{{ l('label_search') }}" data-disable-with="{{ l('label_search') }}" /></p>
+</form>
+
+{% if results is not null %}
+    <div id="search-results-counts">
+      {% if scope|length != 1 and count_links|length > 0 %}<ul>{% for c in count_links %}<li><a href="{{ c.url }}">{{ l(type_label[c.type] ?? ('label_' ~ (c.type ends with 's' ? c.type|slice(0, -1) : c.type) ~ '_plural')) }} ({{ c.count }})</a></li>{% if not loop.last %} {% endif %}{% endfor %}</ul>{% endif %}
+    </div>
+    <h3>{{ l('label_result_plural') }} ({{ result_count }})</h3>
+    {% if (result_count_by_type.issues ?? 0) > 0 and search_attachments == '0' and issues_filter_url %}
+      <p class="buttons">
+        <a class="icon icon-list" href="{{ issues_filter_url }}">{{ sprite_icon('list', l('button_apply_issues_filter')) }}</a>
+      </p>
+    {% endif %}
+    <dl id="search-results">
+      {% for e in results %}
+        <dt class="{{ e.type }} icon icon-{{ e.type }}">
+          {{ sprite_icon(e.type) }}
+          {% if e.project and (project is null or project.id != e.project.id) %}<span class="project">{{ e.project.name }}</span>{% endif %}
+          <a href="{{ app.request.baseUrl ~ e.url }}">{{ highlight_tokens(e.title|length > 255 ? e.title|slice(0, 252) ~ '...' : e.title, tokens) }}</a>
+        </dt>
+        <dd><span class="description">{{ highlight_tokens(e.description, tokens) }}</span>
+        <span class="author">{{ format_time(e.datetime) }}</span></dd>
+      {% endfor %}
+    </dl>
+{% endif %}
+
+{% if pager %}
+{% set qp = app.request.query.all %}
+<span class="pagination"><ul class="pages">
+{%- if pager.pages > 1 -%}
+{%- if pager.page > 1 %}<li class="previous page"><a accesskey="p" href="?{{ qp|merge({page: pager.page - 1})|url_encode }}">« {{ l('label_previous') }}</a></li>{% else %}<li class="previous"><span>« {{ l('label_previous') }}</span></li>{% endif -%}
+{%- endif -%}
+{%- set prev = null -%}
+{%- for p in linked_pages -%}
+{%- if prev is not null and prev != p - 1 %}<li class="spacer"><span>&hellip;</span></li>{% endif -%}
+{%- if p == pager.page %}<li class="current"><span>{{ p }}</span></li>{% else %}<li class="page"><a href="?{{ qp|merge({page: p})|url_encode }}">{{ p }}</a></li>{% endif -%}
+{%- set prev = p -%}
+{%- endfor -%}
+{%- if pager.pages > 1 -%}
+{%- if pager.page < pager.pages %}<li class="next page"><a accesskey="n" href="?{{ qp|merge({page: pager.page + 1})|url_encode }}">{{ l('label_next') }} »</a></li>{% else %}<li class="next"><span>{{ l('label_next') }} »</span></li>{% endif -%}
+{%- endif -%}
+</ul><span><span class="items">({{ pager.count > 0 ? pager.offset + 1 : 0 }}-{{ min(pager.offset + pager.limit, pager.count) }}/{{ pager.count }})</span> </span></span>
+{% endif %}
+
+<script>
+//<![CDATA[
+
+$("#search-types a").click(function(e){
+  e.preventDefault();
+  $("#search-types input[type=checkbox]").prop('checked', false);
+  $(this).siblings("input[type=checkbox]").prop('checked', true);
+  if ($("#search-input").val() != "") {
+    $("#search-form").submit();
+  }
+});
+
+$("#search-form").submit(function(){
+  $("#show-options").val($("#options-content").is(":visible") ? '1' : '0');
+});
+
+{% if app.request.query.get('options') == '1' %}
+toggleFieldset($("#options-content"));
+{% endif %}
+//]]>
+</script>
+{% endblock %}

@@ -1,0 +1,44 @@
+{#- Port of attachments/_links.html.erb. Params: attachments, container_type (e.g. 'issues'), container_id, editable, deletable, author, thumbnails, journals -#}
+<div class="attachments">
+<div class="contextual">
+  {% if editable ?? false %}<a title="{{ l('label_edit_attachments') }}" class="icon-only icon-edit " href="{{ path('attachments_edit_all', {object_type: container_type, object_id: container_id}) }}">{{ sprite_icon('edit', l('label_edit_attachments')) }}</a>{% endif %}
+  {% if attachments|length > 1 %}<a title="{{ l('label_download_all_attachments') }}" class="icon-only icon-download " href="{{ path('attachments_download_all', {object_type: container_type, object_id: container_id}) }}">{{ sprite_icon('download', l('label_download_all_attachments')) }}</a>{% endif %}
+</div>
+<table>
+{% for attachment in attachments %}
+<tr>
+  <td>
+    {{ attachment_link(attachment, {class: 'icon icon-attachment ', icon: 'file'}) }}    <span class="size">({{ number_to_human_size(attachment.filesize) }})</span>
+    {{ attachment_link(attachment, {class: 'icon-only icon-download ', title: l('button_download'), download: true, icon: 'download'}) }}
+  </td>
+  <td>{{ attachment.description }}</td>
+  <td>
+    {% if journals is defined and journals is not empty %}
+      <span class="attachment-journal">
+        {% if journals[attachment.id] is defined %}
+          {% set anchor = '#note-' ~ journals[attachment.id].indice %}
+          <a title="{{ anchor }}" class="icon-only icon-chevrons-down" data-controller="issue-journal-link" data-action="issue-journal-link#show" href="{{ anchor }}">{{ sprite_icon('chevrons-down', anchor) }}</a>
+        {% endif %}
+      </span>
+    {% endif %}
+    {% if author ?? true %}
+      <span class="author">{{ attachment.author.getName() }}, {{ format_time(attachment.createdOn) }}</span>
+    {% endif %}
+  </td>
+  <td>
+    {% if deletable ?? false %}
+      <a data-confirm="{{ l('text_are_you_sure') }}" class="delete icon-only icon-del " title="{{ l('button_delete') }}" rel="nofollow" data-method="delete" href="{{ path('attachment_destroy', {id: attachment.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+    {% endif %}
+  </td>
+</tr>
+{% endfor %}
+</table>
+{% if (thumbnails ?? false) and setting('thumbnails_enabled') in ['1', 1, true] %}
+  {% set images = attachments|filter(a => attachment_thumbnailable(a)) %}
+  {% if images|length > 0 %}
+  <div class="thumbnails">
+    {% for attachment in images %}{{ attachment_thumbnail(attachment) }}{% endfor %}
+  </div>
+  {% endif %}
+{% endif %}
+</div>

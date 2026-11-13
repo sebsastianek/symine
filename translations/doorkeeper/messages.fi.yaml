@@ -1,0 +1,88 @@
+# Doorkeeper translations (doorkeeper-i18n 5.2.9 / doorkeeper 5.8.2, MIT), used by the OAuth2 provider.
+# Generated - merged into the "messages" domain.
+activerecord.attributes.doorkeeper/application.name: Nimi
+activerecord.attributes.doorkeeper/application.redirect_uri: 'Uudelleenohjauksen URI'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.forbidden_uri: 'on kielletty palvelimella.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.fragment_present: 'ei voi sisältää URI fragmenttia.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.invalid_uri: 'täytyy olla validi URI.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.relative_uri: 'täytyy olla absoluuttinen URI.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.secured_uri: 'täytyy olla HTTPS/SSL URI.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.unspecified_scheme: 'täytyy määrittää järjestelmä.'
+activerecord.errors.models.doorkeeper/application.attributes.scopes.not_match_configured: "doesn't match configured on the server."
+doorkeeper.applications.buttons.authorize: Valtuuta
+doorkeeper.applications.buttons.cancel: Peruuta
+doorkeeper.applications.buttons.destroy: Poista
+doorkeeper.applications.buttons.edit: Muokkaa
+doorkeeper.applications.buttons.submit: Lähetä
+doorkeeper.applications.confirmations.destroy: 'Oletko varma?'
+doorkeeper.applications.edit.title: 'Muokkaa sovellusta'
+doorkeeper.applications.form.error: 'Hups! Tarkasta lomakkeesi mahdollisten virheiden varalta.'
+doorkeeper.applications.help.blank_redirect_uri: "Leave it blank if you configured your provider to use Client Credentials, Resource Owner Password Credentials or any other grant type that doesn't require redirect URI."
+doorkeeper.applications.help.confidential: 'Application will be used where the client secret can be kept confidential. Native mobile apps and Single Page Apps are considered non-confidential.'
+doorkeeper.applications.help.redirect_uri: 'Yksi URI riviä kohden'
+doorkeeper.applications.help.scopes: 'Erottele näkyvyysalueet välilyönnein. Jätä tyhjäksi, mikäli haluat käyttää oletusnäkyvyysalueita.'
+doorkeeper.applications.index.actions: Actions
+doorkeeper.applications.index.callback_url: 'Callback URL'
+doorkeeper.applications.index.confidential: 'Confidential?'
+doorkeeper.applications.index.confidentiality.no: Ei
+doorkeeper.applications.index.confidentiality.yes: Joo
+doorkeeper.applications.index.name: Nimi
+doorkeeper.applications.index.new: 'Uusi sovellus'
+doorkeeper.applications.index.title: 'Omat sovellukset'
+doorkeeper.applications.new.title: 'Uusi sovellus'
+doorkeeper.applications.show.actions: Toiminnot
+doorkeeper.applications.show.application_id: 'Sovelluksen UID:'
+doorkeeper.applications.show.callback_urls: 'Callback URL:t:'
+doorkeeper.applications.show.confidential: 'Confidential:'
+doorkeeper.applications.show.not_defined: 'Not defined'
+doorkeeper.applications.show.scopes: 'Näkyvyysalueet:'
+doorkeeper.applications.show.secret: 'Salainen avain:'
+doorkeeper.applications.show.secret_hashed: 'Secret hashed'
+doorkeeper.applications.show.title: 'Sovellus: %{name}'
+doorkeeper.authorizations.buttons.authorize: Valtuuta
+doorkeeper.authorizations.buttons.deny: Kiellä
+doorkeeper.authorizations.error.title: Virhe
+doorkeeper.authorizations.form_post.title: 'Submit this form'
+doorkeeper.authorizations.new.able_to: 'Tämä sovellus pystyy:'
+doorkeeper.authorizations.new.prompt: 'Valtuuta %{client_name} käyttämään tiliäsi?'
+doorkeeper.authorizations.new.title: 'Valtuutus vaadittu'
+doorkeeper.authorizations.show.title: 'Valtuutuskoodi:'
+doorkeeper.authorized_applications.buttons.revoke: Evää
+doorkeeper.authorized_applications.confirmations.revoke: 'Oletko varma?'
+doorkeeper.authorized_applications.index.application: Sovellukset
+doorkeeper.authorized_applications.index.created_at: Valtuutettu
+doorkeeper.authorized_applications.index.date_format: '%d. %m. %Y klo %H:%M:%S'
+doorkeeper.authorized_applications.index.title: 'Valtuuttamasi sovellukset'
+doorkeeper.errors.messages.access_denied: 'Resurssin omistaja tai valtuutuspalvelin kieltäytyi suorittamasta pyyntöä.'
+doorkeeper.errors.messages.admin_authenticator_not_configured: 'Access to admin panel is forbidden due to Doorkeeper.configure.admin_authenticator being unconfigured.'
+doorkeeper.errors.messages.credential_flow_not_configured: '"Resource Owner Password Credentials flow" - proseduuri epäonnistui, koska Doorkeeper.configure.resource_owner_from_credentials -asetusta ei ole konfiguroitu.'
+doorkeeper.errors.messages.forbidden_token.missing_scope: 'Access to this resource requires scope "%{oauth_scopes}".'
+doorkeeper.errors.messages.invalid_client: 'Asiakasohjelman valtuutus epäonnistui tuntemattoman asiakasohjelman, virheellisen valtuutuksen tai tukemattoman valtuutusmetodin takia.'
+doorkeeper.errors.messages.invalid_code_challenge_method: 'The code challenge method must be plain or S256.'
+doorkeeper.errors.messages.invalid_grant: 'Toimitettu valtuutus on virheellinen, vanhentunut, evätty, se ei vastaa valtuutuspyynnön uudelleenohjauksen URI:a tai sen on myöntänyt toinen asiakasohjelma.'
+doorkeeper.errors.messages.invalid_redirect_uri: 'Uudelleenohjauksen URI ei ole validi.'
+doorkeeper.errors.messages.invalid_request.missing_param: 'Missing required parameter: %{value}.'
+doorkeeper.errors.messages.invalid_request.request_not_authorized: 'Request need to be authorized. Required parameter for authorizing request is missing or invalid.'
+doorkeeper.errors.messages.invalid_request.unknown: 'Pyynnöstä puuttuu vaadittu parametri, se sisältää virheellisen parametrin arvon tai on muutoin väärin muodostettu.'
+doorkeeper.errors.messages.invalid_scope: 'Pyynnön näkyvyysalue on virheellinen, tuntematon tai väärin muodostettu.'
+doorkeeper.errors.messages.invalid_token.expired: 'Pääsyoikeus vanhentunut'
+doorkeeper.errors.messages.invalid_token.revoked: 'Pääsyoikeus evätty'
+doorkeeper.errors.messages.invalid_token.unknown: 'Pääsyoikeus virheellinen'
+doorkeeper.errors.messages.resource_owner_authenticator_not_configured: '"Resource Owner find" - proseduuri epäonnistui, koska Doorkeeper.configure.resource_owner_authenticator -asetusta ei ole konfiguroitu.'
+doorkeeper.errors.messages.revoke.unauthorized: 'You are not authorized to revoke this token'
+doorkeeper.errors.messages.server_error: 'Valtuutuspalvelin kohtasi odottamattoman tilan, jonka seurauksena se ei pystynyt suorittamaan pyyntöä.'
+doorkeeper.errors.messages.temporarily_unavailable: 'Valtuutuspalvelin ei tällä hetkellä pysty suorittamaan pyyntöä väliaikaisen ylikuormituksen tai palvelinhuollon takia.'
+doorkeeper.errors.messages.unauthorized_client: 'Asiakasohjelmaa ei ole valtuutettu suorittamaan haluttua pyyntöä käyttäen tätä metodia.'
+doorkeeper.errors.messages.unsupported_grant_type: 'Valtuutuspalvelin ei tue tämän tyyppisiä valtuutuksia.'
+doorkeeper.errors.messages.unsupported_response_mode: 'The authorization server does not support this response mode.'
+doorkeeper.errors.messages.unsupported_response_type: 'Valtuutuspalvelin ei tue tämän tyyppisiä vastauksia.'
+doorkeeper.flash.applications.create.notice: 'Sovellus luotu.'
+doorkeeper.flash.applications.destroy.notice: 'Sovellus poistettu.'
+doorkeeper.flash.applications.update.notice: 'Sovellus päivitetty.'
+doorkeeper.flash.authorized_applications.destroy.notice: 'Sovellus evätty.'
+doorkeeper.layouts.admin.nav.applications: Sovellukset
+doorkeeper.layouts.admin.nav.home: Etusivu
+doorkeeper.layouts.admin.nav.oauth2_provider: 'OAuth2 tarjoaja'
+doorkeeper.layouts.admin.title: Doorkeeper
+doorkeeper.layouts.application.title: 'OAuth valtuutus vaadittu.'
+doorkeeper.pre_authorization.status: Pre-authorization

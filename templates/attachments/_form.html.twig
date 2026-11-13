@@ -1,0 +1,37 @@
+{#- Port of attachments/_form.html.erb. Params: attachment_param (default 'attachments'), saved_attachments, multiple, description, filedrop -#}
+{%- set attachment_param = attachment_param ?? 'attachments' -%}
+{%- set saved_attachments = saved_attachments ?? [] -%}
+{%- set multiple = multiple ?? true -%}
+{%- set show_add = multiple or saved_attachments is empty -%}
+{%- set max_files = multiple ? 10 : 1 -%}
+{%- set with_description = description ?? true -%}
+{%- set css_class = (filedrop ?? true) ? 'filedrop' : '' -%}
+{%- set max_size = setting('attachment_max_size') * 1024 -%}
+<span class="attachments_form">
+  <span class="attachments_icons hidden">
+    {{ sprite_icon('del', null, 18, true, 'svg-del') }}
+    {{ sprite_icon('file', null, 16, true, 'svg-attachment') }}
+    {{ sprite_icon('loader', null, 16, true, 'svg-loader') }}
+    {{ sprite_icon('hourglass', null, 16, true, 'svg-hourglass') }}
+  </span>
+  <span class="attachments_fields">
+  {% for attachment in saved_attachments %}
+    <span id="attachments_p{{ loop.index0 }}">
+      {{ sprite_icon('file', null, 16, true, 'svg-attachment') }}
+      <input type="text" name="{{ attachment_param }}[p{{ loop.index0 }}][filename]" id="{{ attachment_param }}_p{{ loop.index0 }}_filename" value="{{ attachment.filename }}" class="filename" />
+      {% if attachment.containerId %}
+        <a href="#" onclick="$(this).closest('.attachments_form').find('.add_attachment').show(); $(this).parent().remove(); return false;" class="icon-only icon-del">{{ sprite_icon('del', l('button_delete'), 18, true) }}</a>
+        <input type="hidden" name="{{ attachment_param }}[p{{ loop.index0 }}][id]" value="{{ attachment.id }}" />
+      {% else %}
+        {% if with_description %}<input type="text" name="{{ attachment_param }}[p{{ loop.index0 }}][description]" id="{{ attachment_param }}_p{{ loop.index0 }}_description" value="{{ attachment.description }}" maxlength="255" placeholder="{{ l('label_optional_description') }}" class="description" />{% endif %}
+        <a class="icon-only icon-del remove-upload" data-remote="true" rel="nofollow" data-method="delete" href="{{ path('attachment_destroy', {id: attachment.id, _format: 'js', attachment_id: 'p' ~ loop.index0}) }}">{{ sprite_icon('del', l('button_delete'), 18, true) }}</a>
+        <input type="hidden" name="{{ attachment_param }}[p{{ loop.index0 }}][token]" value="{{ attachment_token(attachment) }}" />
+      {% endif %}
+    </span>
+  {% endfor %}
+  </span>
+  <span class="add_attachment" style="{{ show_add ? '' : 'display:none;' }}">
+    <input type="file" name="{{ attachment_param }}[dummy][file]" class="file_selector {{ css_class }}"{% if multiple %} multiple="multiple"{% endif %} onchange="addInputFiles(this);" data-max-number-of-files="{{ max_files }}" data-max-number-of-files-message="{{ l('error_attachments_too_many', {max_number_of_files: max_files}) }}" data-max-file-size="{{ max_size }}" data-max-file-size-message="{{ l('error_attachment_too_big', {max_size: number_to_human_size(max_size)}) }}" data-max-concurrent-uploads="2" data-upload-path="{{ path('uploads', {_format: 'js'}) }}" data-param="{{ attachment_param }}" data-description="{{ with_description ? 'true' : 'false' }}" data-description-placeholder="{{ l('label_optional_description') }}" />
+    ({{ l('label_max_size') }}: {{ number_to_human_size(max_size) }})
+  </span>
+</span>

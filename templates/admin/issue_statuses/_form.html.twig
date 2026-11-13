@@ -1,0 +1,16 @@
+{% import 'admin/workflows/_macros.html.twig' as h %}
+{{ h.error_messages(errors) }}
+
+<div class="box tabular">
+<p><label for="issue_status_name">{{ l('field_name') }}<span class="required"> *</span></label><input type="text" value="{{ issue_status.name }}" name="issue_status[name]" id="issue_status_name" /></p>
+<p><label for="issue_status_description">{{ l('field_description') }}</label><textarea rows="4" name="issue_status[description]" id="issue_status_description">
+{{ issue_status.description }}</textarea></p>
+{% if use_status_for_done_ratio %}
+  <p><label for="issue_status_default_done_ratio">{{ l('field_done_ratio') }}</label><select name="issue_status[default_done_ratio]" id="issue_status_default_done_ratio"><option value="" label=" "></option>
+{% for r in done_ratios %}<option{% if issue_status.defaultDoneRatio is not null and issue_status.defaultDoneRatio == r %} selected="selected"{% endif %} value="{{ r }}">{{ r }} %</option>
+{% endfor %}</select></p>
+{% endif %}
+<p><label for="issue_status_is_closed">{{ l('field_is_closed') }}</label><input name="issue_status[is_closed]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1"{% if issue_status.isClosed %} checked="checked"{% endif %} name="issue_status[is_closed]" id="issue_status_is_closed" /></p>
+
+{{ call_hook('view_issue_statuses_form', {issue_status: issue_status}) }}
+</div>

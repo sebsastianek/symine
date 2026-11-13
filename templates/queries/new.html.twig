@@ -1,0 +1,13 @@
+{#- queries/new.html.erb -#}
+{% extends 'base.html.twig' %}
+{% import 'queries/_macros.html.twig' as qm %}
+{% block header_tags %}{{ qm.calendar_headers() }}{% endblock %}
+{% block content %}
+<h2>{{ l('label_query_new') }}</h2>
+
+<form id="query-form" action="{{ project ? path('project_query_create', {project_id: project.identifier}) : path('query_create') }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+  <input type="hidden" name="type" id="type" value="{{ query.type() }}" autocomplete="off" />
+  {% include 'queries/_form.html.twig' %}
+  <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>
+{% endblock %}

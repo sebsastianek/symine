@@ -1,0 +1,34 @@
+{#- View helpers shared by the roles / trackers / issue statuses / workflows admin pages (ports of ApplicationHelper). -#}
+
+{% macro toggle_checkboxes_link(selector, class) -%}
+<a href="#" onclick="toggleCheckboxesBySelector({{ ("'" ~ selector ~ "'")|e('html') }}); return false;" title="{{ l('button_check_all') }} / {{ l('button_uncheck_all') }}" class="icon icon-checked{{ class ? ' ' ~ class : '' }}">{{ sprite_icon('checked', '') }}</a>
+{%- endmacro %}
+
+{% macro check_all_links(form_name) -%}
+<a href="#" onclick="checkAll(&#39;{{ form_name }}&#39;, true); return false;">{{ l('button_check_all') }}</a> | <a href="#" onclick="checkAll(&#39;{{ form_name }}&#39;, false); return false;">{{ l('button_uncheck_all') }}</a>
+{%- endmacro %}
+
+{% macro delete_link(url) -%}
+<a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ url }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+{%- endmacro %}
+
+{% macro reorder_handle(url, param) -%}
+<span class="icon-only icon-sort-handle sort-handle" data-reorder-url="{{ url }}" data-reorder-param="{{ param }}" title="{{ l('button_sort') }}">{{ sprite_icon('reorder', '') }}</span>
+{%- endmacro %}
+
+{% macro checked_image(checked) -%}
+{% if checked %}<span class="icon-only icon-checked">{{ sprite_icon('checked') }}</span>{% endif %}
+{%- endmacro %}
+
+{% macro role_name(role) -%}
+{{ role.builtin == 1 ? l('label_role_non_member') : (role.builtin == 2 ? l('label_role_anonymous') : role.name) }}
+{%- endmacro %}
+
+{% macro error_messages(errors) -%}
+{% if errors is not empty %}
+<div id='errorExplanation'>
+{{ sprite_icon('warning') }}<ul>
+{% for e in errors %}<li>{{ e }}</li>
+{% endfor %}</ul></div>
+{% endif %}
+{%- endmacro %}

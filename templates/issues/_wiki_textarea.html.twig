@@ -1,0 +1,50 @@
+{#- Port of wiki_textarea_tag / LabelledFormBuilder#wiki_textarea (app/views/wiki_toolbar/_toolbar.html.erb).
+    Params: name, id, value, rows, cols, preview_url, accesskey, auto_complete (bool), extra_class -#}
+{%- set formatting = settings.textFormatting() -%}
+{%- set field_id = id -%}
+{%- set textarea -%}
+<textarea name="{{ name }}" id="{{ field_id }}" cols="{{ cols ?? 60 }}" rows="{{ rows ?? 10 }}" class="wiki-edit{{ extra_class is defined and extra_class ? ' ' ~ extra_class : '' }}"{% if accesskey is defined and accesskey %} accesskey="{{ accesskey }}"{% endif %}{% if auto_complete ?? true %} data-auto-complete="true"{% endif %}{% if formatting %} data-controller="list-autofill selection-indent table-paste" data-action="beforeinput-&gt;list-autofill#handleBeforeInput keydown.tab-&gt;selection-indent#run keydown.shift+tab-&gt;selection-indent#run paste-&gt;table-paste#handlePaste" data-list-autofill-text-formatting-param="{{ formatting }}" data-selection-indent-text-formatting-param="{{ formatting }}" data-table-paste-text-formatting-param="{{ formatting }}"{% endif %} data-wiki-toolbar-target="field">
+{{ value ?? '' }}</textarea>
+{%- endset -%}
+{%- if formatting in ['textile', 'common_mark', 'markdown'] -%}
+<script>var wikiImageMimeTypes = ["image/avif","image/bmp","image/gif","image/jpeg","image/png","image/svg+xml","image/tiff","image/webp","image/x-ms-bmp"];</script>
+<div class="jstBlock" data-controller="wiki-toolbar" data-action="keydown->wiki-toolbar#shortcut keydown.ctrl+shift+p@window->wiki-toolbar#togglePreview keydown.meta+shift+p@window->wiki-toolbar#togglePreview" data-wiki-toolbar-format-value="{{ formatting }}" data-wiki-toolbar-preview-url-value="{{ preview_url ?? (path_exists('preview_text') ? path('preview_text') : '') }}" data-wiki-toolbar-help-url-value="{{ path_exists('help_wiki_syntax') ? path('help_wiki_syntax') : '/help/wiki_syntax' }}">
+  <div class="jstTabs tabs">
+    <ul role="tablist">
+      <li><a class="tab-edit selected" role="tab" aria-selected="true" data-wiki-toolbar-target="editTab" data-action="wiki-toolbar#edit:prevent" href="#">{{ l('button_edit') }}</a></li>
+      <li><a class="tab-preview" role="tab" aria-selected="false" data-wiki-toolbar-target="previewTab" data-action="wiki-toolbar#preview:prevent" href="#">{{ l('label_preview') }}</a></li>
+      <li class="tab-elements">
+        <div class="jstElements" data-wiki-toolbar-target="toolbar">
+        {%- set groups = formatting == 'textile' ? [['strong','em','ins','del','code'],['h1','h2','h3'],['ul','ol'],['bq','unbq','table','pre','precode'],['link','img'],['help']] : [['strong','em','ins','del','code'],['h1','h2','h3'],['ul','ol','tl'],['bq','unbq','table','pre','precode'],['link','img'],['help']] -%}
+        {%- set labels = {strong: 'label_wiki_toolbar_strong', em: 'label_wiki_toolbar_italic', ins: 'label_wiki_toolbar_underline', del: 'label_wiki_toolbar_deleted', code: 'label_wiki_toolbar_code', h1: 'label_wiki_toolbar_heading_1', h2: 'label_wiki_toolbar_heading_2', h3: 'label_wiki_toolbar_heading_3', ul: 'label_wiki_toolbar_unordered_list', ol: 'label_wiki_toolbar_ordered_list', tl: 'label_wiki_toolbar_task_list', bq: 'label_wiki_toolbar_quote', unbq: 'label_wiki_toolbar_unquote', table: 'label_wiki_toolbar_table', pre: 'label_wiki_toolbar_preformatted_text', precode: 'label_wiki_toolbar_preformatted_code', link: 'label_wiki_toolbar_wiki_link', img: 'label_wiki_toolbar_image', help: 'label_wiki_toolbar_help'} -%}
+        {%- set shortcuts = {strong: 'b', em: 'i', ins: 'u'} -%}
+        {%- for names in groups -%}
+          {%- if not loop.first %}<span class="jstSpacer">&nbsp;</span>{% endif -%}
+          {%- for b in names -%}
+            {%- set title = l(labels[b]) -%}
+            <button type="button" class="jstb_{{ b }}" title="{{ title }}" tabindex="200"{% if b in ['table', 'precode'] %} data-action="wiki-toolbar#toggleMenu" data-wiki-toolbar-menu-param="{{ b }}"{% elseif b == 'help' %} data-action="wiki-toolbar#help"{% else %} data-action="wiki-toolbar#apply" data-wiki-toolbar-button-param="{{ b }}"{% endif %}{% if shortcuts[b] is defined %} data-wiki-toolbar-shortcut="{{ shortcuts[b] }}"{% endif %}><span>{{ title }}</span></button>
+          {%- endfor -%}
+        {%- endfor -%}
+        </div>
+      </li>
+    </ul>
+  </div>
+  <div class="jstEditor" data-wiki-toolbar-target="editor">
+    {{ textarea }}
+    <div class="wiki wiki-preview hidden" id="preview_{{ field_id }}" data-wiki-toolbar-target="preview"></div>
+  </div>
+  {%- set languages = (current_user().getPref().get('toolbar_language_options') ?: 'c,cpp,csharp,css,diff,go,groovy,html,java,javascript,objc,perl,php,python,r,ruby,sass,scala,shell,sql,swift,xml,yaml')|split(',') -%}
+  <template data-wiki-toolbar-menu="precode">
+    <ul class="jstMenu" role="menu" data-action="click->wiki-toolbar#closeMenu keydown.esc->wiki-toolbar#closeMenu">
+      {% for lang in languages %}<li role="none"><button type="button" role="menuitem" data-action="wiki-toolbar#insertPrecode" data-wiki-toolbar-lang-param="{{ lang }}">{{ lang }}</button></li>{% endfor %}
+    </ul>
+  </template>
+  <template data-wiki-toolbar-menu="table">
+    <table class="table-generator" role="grid" data-action="click->wiki-toolbar#closeMenu keydown.esc->wiki-toolbar#closeMenu mouseover->wiki-toolbar#highlightTable focusin->wiki-toolbar#highlightTable">
+      {% for row in 1..5 %}<tr>{% for col in 1..10 %}<td><button type="button" title="{{ col }}×{{ row }}" aria-label="{{ col }}×{{ row }}" data-action="wiki-toolbar#insertTable" data-wiki-toolbar-cols-param="{{ col }}" data-wiki-toolbar-rows-param="{{ row }}"></button></td>{% endfor %}</tr>{% endfor %}
+    </table>
+  </template>
+</div>
+{%- else -%}
+{{ textarea }}
+{%- endif -%}

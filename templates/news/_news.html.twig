@@ -1,0 +1,7 @@
+{#- Port of news/_news.html.erb (used by the welcome page and project overview). Param: news -#}
+<p>{% if project is not defined or project is null %}{{ link_to_project(news.project) }}: {% endif %}
+<a href="{{ path('news_show', {id: news.id}) }}">{{ news.title }}</a>
+{% if news.commentsCount > 0 %}<span class="comments">({{ l('label_x_comments', {count: news.commentsCount}) }})</span>{% endif %}
+<br />
+{% if news.summary is not empty %}<span class="summary">{{ news.summary }}</span><br />{% endif %}
+<span class="author">{{ authoring(news.createdOn, news.author) }}</span></p>

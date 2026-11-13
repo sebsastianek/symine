@@ -73,7 +73,7 @@ final class AttachmentService
         file_put_contents($dir.'/'.$a->diskFilename, $content);
         $a->filesize = \strlen($content);
         $a->digest = hash('sha256', $content);
-        $a->contentType = $contentType ?: (new \finfo(\FILEINFO_MIME_TYPE))->buffer($content) ?: 'application/octet-stream';
+        $a->contentType = $contentType ?: self::detectContentType($content, $filename);
         $this->em->persist($a);
 
         return $a;
@@ -201,10 +201,27 @@ final class AttachmentService
         return $response;
     }
 
+    /**
+     * Attachment#set_content_type (Marcel::MimeType.for(io, name: filename)): binary signatures win,
+     * otherwise the filename extension is used as a hint, otherwise application/octet-stream
+     * (plain text cannot be identified from its contents alone).
+     */
+    public static function detectContentType(string $content, string $filename): string
+    {
+        $magic = '' === $content ? '' : (string) (new \finfo(\FILEINFO_MIME_TYPE))->buffer($content);
+        if ('' !== $magic && !str_starts_with($magic, 'text/') && !\in_array($magic, ['application/octet-stream', 'inode/x-empty', 'application/x-empty'], true)) {
+            return $magic;
+        }
+        $ext = strtolower(pathinfo($filename, \PATHINFO_EXTENSION));
+        $byName = '' === $ext ? [] : \Symfony\Component\Mime\MimeTypes::getDefault()->getMimeTypes($ext);
+
+        return $byName[0] ?? 'application/octet-stream';
+    }
+
     public static function sanitizeFilename(string $name): string
     {
         $name = basename(str_replace('\\', '/', $name));
-        $name = preg_replace('/[\/\?\%\*\:\|\"\'<>\n\r]+/', '_', $name) ?? $name;
+        $name = preg_replace('/[\/\?\%\*\:\|\"\'<>\n\r\x00]+/', '_', $name) ?? $name;
 
         return '' === $name ? 'file' : mb_substr($name, 0, 255);
     }

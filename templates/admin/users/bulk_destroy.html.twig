@@ -1,0 +1,23 @@
+{#- users/bulk_destroy.html.erb -#}
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2>{{ l('label_confirmation') }}</h2>
+
+<form action="{{ path('users_bulk_destroy', {ids: ids}) }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}<input type="hidden" name="_method" value="delete" autocomplete="off" />
+<div class="warning">
+
+<p><p>{{ l('text_users_bulk_destroy_head') }}</p></p>
+
+{% for u in users %}
+  <p><strong>{{ u.getName() }}</strong> ({{ u.login }})</p>
+{% endfor %}
+
+<p>{{ l('text_users_bulk_destroy_confirm', {yes: l('general_text_Yes')}) }}</p>
+<p><input type="text" name="confirm" id="confirm" /></p>
+
+</div>
+
+<input type="submit" name="commit" value="{{ l('button_delete') }}" class="btn-alert btn-small" data-disable-with="{{ l('button_delete') }}" />
+</form><form class="button_to" method="post" action="{{ path('users_bulk_lock', {ids: ids}) }}">{{ csrf_field() }}<input class="btn" name="lock" type="submit" value="{{ l('button_lock') }}" /></form>
+<a href="{{ path('users_index') }}">{{ l('button_cancel') }}</a>
+{% endblock %}

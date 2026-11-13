@@ -1,0 +1,19 @@
+{#- role/tracker selection form shared by edit & permissions (options_for_workflow_select) -#}
+<p>{{ l('text_workflow_edit') }}:</p>
+
+<form action="{{ form_action }}" accept-charset="UTF-8" method="get">
+<p>
+  {% for sel in [{label: 'label_role', name: 'role_id', data: role_select}, {label: 'label_tracker', name: 'tracker_id', data: tracker_select}] %}
+  <label>{{ l(sel.label) }}:
+  <select name="{{ sel.name }}[]" id="{{ sel.name }}" class="expandable"{% if sel.data.multiple %} multiple="multiple"{% endif %}><option{% if sel.data.all_selected %} selected="selected"{% endif %} value="all"{% if sel.data.multiple %} style="display:none;"{% endif %}>{{ l('label_all') }}</option>{% for o in sel.data.options %}<option{% if o.selected %} selected="selected"{% endif %} value="{{ o.id }}">{{ o.name }}</option>
+{% endfor %}</select>
+  <span class="toggle-multiselect icon-only">{{ sprite_icon('') }}</span>
+  </label>
+
+  {% endfor %}
+  <input type="submit" value="{{ l('button_edit') }}" data-disable-with="{{ l('button_edit') }}" />
+
+  <input type="hidden" name="used_statuses_only" value="0" autocomplete="off" />
+  <label><input type="checkbox" name="used_statuses_only" id="used_statuses_only" value="1"{% if used_statuses_only %} checked="checked"{% endif %} /> {{ l('label_display_used_statuses_only') }}</label>
+</p>
+</form>

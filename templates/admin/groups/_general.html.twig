@@ -1,0 +1,6 @@
+<form class="edit_group" id="edit_group_{{ group.id }}" enctype="multipart/form-data" action="{{ path('group_update', {id: group.id}) }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+<input type="hidden" name="_method" value="put" autocomplete="off" />
+{% include 'admin/groups/_form.html.twig' %}
+<input type="submit" name="commit" value="{{ l('button_save') }}" />
+</form>

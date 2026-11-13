@@ -1,0 +1,11 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('auth_sources_index') }}">{{ l('label_auth_source_plural') }}</a> &#187; {{ l('label_auth_source_new') }} (LDAP)</h2>
+
+<form class="new_auth_source" id="auth_source_form" action="{{ path('auth_source_create') }}" method="post">
+  {{ csrf_field() }}
+  <input type="hidden" name="type" id="type" value="AuthSourceLdap" />
+  {% include 'admin/auth_sources/_form.html.twig' %}
+  <input type="submit" name="commit" value="{{ l('button_create') }}" />
+</form>
+{% endblock %}

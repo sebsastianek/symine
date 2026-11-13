@@ -1,0 +1,69 @@
+{#- Port of projects/_list.html.erb for the ProjectQuery engine (admin projects list); params: query, entries, pager, admin_list -#}
+{{ render_query_totals(query) }}
+<form data-cm-url="{{ path('projects_context_menu') }}" action="{{ app.request.pathInfo }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}<input type="hidden" name="back_url" value="{{ app.request.requestUri }}" autocomplete="off" />
+<div class="autoscroll">
+<table class="list projects odd-even {{ query.cssClasses() }}">
+<thead>
+  <tr>
+    {% if admin_list %}
+      <th class="checkbox hide-when-print">
+        <input type="checkbox" name="check_all" id="check_all" value="" class="toggle-selection" title="{{ l('button_check_all') }} / {{ l('button_uncheck_all') }}" />
+      </th>
+    {% endif %}
+    {% for column in query.inlineColumns() %}
+      {{ query_column_header(query, column) }}
+    {% endfor %}
+    {% if admin_list %}
+      <th></th>
+    {% endif %}
+  </tr>
+</thead>
+<tbody>
+{% set row = 0 %}
+{% for item in grouped_project_list(entries, query) %}
+  {%- set entry = item.project -%}
+  {% if item.group_name is not null %}
+    {% set row = 0 %}
+    <tr class="group open">
+      <td colspan="{{ query.inlineColumns()|length }}">
+        <span class="expander icon icon-expanded" onclick="toggleRowGroup(this);">{{ sprite_icon('angle-down') }}</span>
+        <span class="name">{{ item.group_name|raw }}</span>
+        {% if item.group_count is not null %}
+        <span class="count">{{ item.group_count }}</span>
+        {% endif %}
+        <span class="totals"></span>
+        <a href="#" onclick="toggleAllRowGroups(this); return false;" class="toggle-all">{{ l('button_collapse_all') }}/{{ l('button_expand_all') }}</a>
+      </td>
+      {% if admin_list %}
+        <td></td>
+      {% endif %}
+    </tr>
+  {% endif %}
+  {% set row = row + 1 %}
+  <tr id="project-{{ entry.id }}" class="{{ row is odd ? 'odd' : 'even' }} {{ admin_list ? 'hascontextmenu' : '' }} {{ project_css_classes(entry) }} {{ item.level > 0 ? 'idnt idnt-' ~ item.level : '' }}">
+    {% if admin_list %}
+      {% if entry.status != 10 %}
+        <td class="checkbox hide-when-print"><input type="checkbox" name="ids[]" value="{{ entry.id }}" /></td>
+      {% else %}
+        <td class="checkbox hide-when-print"></td>
+      {% endif %}
+    {% endif %}
+    {% for column in query.inlineColumns() %}
+    <td class="{{ column.cssClasses() }}">{{ project_query_column_content(query, column, entry) }}</td>
+    {% endfor %}
+    {% if admin_list %}
+      {% if entry.status != 10 %}
+        <td class="buttons"><a title="{{ l('button_actions') }}" class="icon-only icon-actions js-contextmenu " href="#">{{ sprite_icon('3-bullets', l('button_actions')) }}</a></td>
+      {% else %}
+        <td class="buttons"></td>
+      {% endif %}
+    {% endif %}
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</form>
+{% include 'common/_pagination.html.twig' with {pager: pager} %}
+
+{% include 'projects/_csv_export_options.html.twig' with {hidden_fields: query_as_hidden_field_tags(query)} %}

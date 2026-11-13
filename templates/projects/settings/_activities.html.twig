@@ -1,0 +1,40 @@
+<div class="contextual">
+<a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('project_enumerations', {project_id: project.identifier}) }}">{{ sprite_icon('del', l('button_reset')) }}</a>
+{% if current_user().admin and path_exists('enumerations_index') %}
+<a class="icon icon-settings" href="{{ path('enumerations_index') }}">{{ sprite_icon('settings', l('label_administration')) }}</a>
+{% endif %}
+</div>
+
+<form class="tabular" action="{{ path('project_enumerations', {project_id: project.identifier}) }}" method="post"><input type="hidden" name="_method" value="put" autocomplete="off" />{{ csrf_field() }}
+
+<table class="list">
+  <thead><tr>
+    <th>{{ l('field_name') }}</th>
+    <th>{{ l('enumeration_system_activity') }}</th>
+    {% for cf in activity_custom_fields %}
+    <th>{{ cf.name }}</th>
+    {% endfor %}
+    <th><a href="#" onclick="toggleCheckboxesBySelector('input.enumerations_active'); return false;" title="{{ l('button_check_all') }} / {{ l('button_uncheck_all') }}" class="icon icon-checked">{{ sprite_icon('checked', '') }}</a> {{ l('field_active') }}</th>
+  </tr></thead>
+
+  {% for e in activities %}
+  <tr>
+    <td class="name">
+      {% if e.project is null %}<input autocomplete="off" value="{{ e.id }}" type="hidden" name="enumerations[{{ e.id }}][parent_id]" id="enumerations_{{ e.id }}_parent_id" />{% endif %}
+      {{ e.name }}
+    </td>
+    <td class="tick">{% if e.project is null %}<span class="icon-only icon-checked">{{ sprite_icon('checked') }}</span>{% endif %}</td>
+    {% for cf in activity_custom_fields %}
+    <td>
+      {% include 'projects/_custom_field_tag.html.twig' with {field: cf, value: null, name: 'enumerations[' ~ e.id ~ '][custom_field_values][' ~ cf.id ~ ']', id: 'enumerations_' ~ e.id ~ '_custom_field_values_' ~ cf.id, project: project} only %}
+    </td>
+    {% endfor %}
+    <td>
+      <input name="enumerations[{{ e.id }}][active]" type="hidden" value="0" autocomplete="off" /><input class="enumerations_active" type="checkbox" value="1"{% if e.active %} checked="checked"{% endif %} name="enumerations[{{ e.id }}][active]" id="enumerations_{{ e.id }}_active" />
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+<input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>

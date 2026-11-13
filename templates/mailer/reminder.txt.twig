@@ -1,0 +1,11 @@
+{% extends 'mailer/layout.txt.twig' %}
+{% block content %}
+{{ l('mail_body_reminder', {count: issues|length, days: days}) }}:
+
+{% for issue in issues %}
+* {{ issue.project.name }} - {{ issue.tracker.name }} #{{ issue.id }}: {{ issue.subject }} ({{ mail.dueDateDistance(issue.dueDate) }})
+{% endfor %}
+
+{{ l('label_issue_view_all') }} ({{ l('label_x_open_issues_abbr', {count: open_issues_count}) }})
+{{ open_issues_url }}
+{% endblock %}

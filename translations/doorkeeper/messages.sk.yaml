@@ -1,0 +1,88 @@
+# Doorkeeper translations (doorkeeper-i18n 5.2.9 / doorkeeper 5.8.2, MIT), used by the OAuth2 provider.
+# Generated - merged into the "messages" domain.
+activerecord.attributes.doorkeeper/application.name: Meno
+activerecord.attributes.doorkeeper/application.redirect_uri: 'URI presmerovania'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.forbidden_uri: 'je serverom zakázaná.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.fragment_present: 'nemôže obsahovať fragment.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.invalid_uri: 'musí byť platná URI.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.relative_uri: 'musí byť absolútna URI.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.secured_uri: 'musí byť HTTPS / SSL URI.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.unspecified_scheme: 'musí špecifikovať schému.'
+activerecord.errors.models.doorkeeper/application.attributes.scopes.not_match_configured: 'nezodpovedá nastavenému serveru.'
+doorkeeper.applications.buttons.authorize: Autorizovať
+doorkeeper.applications.buttons.cancel: Zrušiť
+doorkeeper.applications.buttons.destroy: Zmazať
+doorkeeper.applications.buttons.edit: Upraviť
+doorkeeper.applications.buttons.submit: Odoslať
+doorkeeper.applications.confirmations.destroy: 'Naozaj zmazať?'
+doorkeeper.applications.edit.title: 'Upraviť aplikáciu'
+doorkeeper.applications.form.error: 'Chyba! Skontrolujte a opravte chyby vo formulári.'
+doorkeeper.applications.help.blank_redirect_uri: 'Ponechajte prázdne, ak ste nakonfigurovali svojho poskytovateľa, aby používal poverenia klienta, poverenia vlastníka hesla alebo iný typ grantu, ktorý nevyžaduje presmerovanie URI.'
+doorkeeper.applications.help.confidential: 'Aplikácia bude použitá tam, kde je možné zachovať dôvernosť klienta. Natívne mobilné aplikácie a aplikácie s jednou stránkou sú považované za nedôverné.'
+doorkeeper.applications.help.redirect_uri: 'Na každý riadok jedna URI'
+doorkeeper.applications.help.scopes: 'Oddeľte Scope medzerami. Nechajte prázdne pre použitie default scope.'
+doorkeeper.applications.index.actions: Akcia
+doorkeeper.applications.index.callback_url: 'Callback URL'
+doorkeeper.applications.index.confidential: 'Dôverné?'
+doorkeeper.applications.index.confidentiality.no: Nie
+doorkeeper.applications.index.confidentiality.yes: Áno
+doorkeeper.applications.index.name: Názov
+doorkeeper.applications.index.new: 'Nová aplikácia'
+doorkeeper.applications.index.title: 'Vaše aplikácie'
+doorkeeper.applications.new.title: 'Nová aplikácia'
+doorkeeper.applications.show.actions: Akcia
+doorkeeper.applications.show.application_id: 'UID aplikácie:'
+doorkeeper.applications.show.callback_urls: 'Url presmerovanie:'
+doorkeeper.applications.show.confidential: 'Dôverné:'
+doorkeeper.applications.show.not_defined: 'Not defined'
+doorkeeper.applications.show.scopes: 'Scopes:'
+doorkeeper.applications.show.secret: 'Secret:'
+doorkeeper.applications.show.secret_hashed: 'Secret hashed'
+doorkeeper.applications.show.title: 'Aplikácia: %{name}'
+doorkeeper.authorizations.buttons.authorize: Autorizovať
+doorkeeper.authorizations.buttons.deny: Odmietnuť
+doorkeeper.authorizations.error.title: 'Vyskytla se chyba'
+doorkeeper.authorizations.form_post.title: 'Submit this form'
+doorkeeper.authorizations.new.able_to: 'Táto aplikácia bude mať tieto oprávnenia:'
+doorkeeper.authorizations.new.prompt: 'Autorizovať %{client_name} k prístupu k vášmu účtu?'
+doorkeeper.authorizations.new.title: 'Nutná autorizácie'
+doorkeeper.authorizations.show.title: 'Autorizačný kód:'
+doorkeeper.authorized_applications.buttons.revoke: 'Odstrániť autorizáciu'
+doorkeeper.authorized_applications.confirmations.revoke: 'Naozaj autorizovať?'
+doorkeeper.authorized_applications.index.application: Aplikácia
+doorkeeper.authorized_applications.index.created_at: Vytvorené
+doorkeeper.authorized_applications.index.date_format: '%H:%M:%S %d.%m.%T'
+doorkeeper.authorized_applications.index.title: 'Vaše autorizované aplikácie'
+doorkeeper.errors.messages.access_denied: 'Vlastník zdroje alebo autorizačný server požiadavku odmietol.'
+doorkeeper.errors.messages.admin_authenticator_not_configured: 'Prístup k panelu admin je zakázaný kvôli tomu, že Doorkeeper.configure.admin_authenticator nie je nakonfigurované.'
+doorkeeper.errors.messages.credential_flow_not_configured: 'Flow poverenia vlastníka zdroja zlyhal kvôli tomu, že Doorkeeper.configure.resource_owner_from_credentials nie je nakonfigurovaný.'
+doorkeeper.errors.messages.forbidden_token.missing_scope: 'Access to this resource requires scope "%{oauth_scopes}".'
+doorkeeper.errors.messages.invalid_client: 'Autentizácia klienta zlyhala kvôli neznámemu klientovi, žiadnemu overovanie klienta alebo nepodporované metóde overovania.'
+doorkeeper.errors.messages.invalid_code_challenge_method: 'Metóda výzvy kódu musí byť prostá alebo S256.'
+doorkeeper.errors.messages.invalid_grant: 'Udelený grant pre udelenie oprávnenia je neplatný, jeho platnosť vypršala, zrušená, nezodpovedá URI presmerovania použitého v žiadosti o autorizáciu alebo bola vydaná inému klientovi.'
+doorkeeper.errors.messages.invalid_redirect_uri: 'Požadované presmerovanie uri je chybne formátované alebo nezodpovedá presmerovania URI klienta.'
+doorkeeper.errors.messages.invalid_request.missing_param: 'Missing required parameter: %{value}.'
+doorkeeper.errors.messages.invalid_request.request_not_authorized: 'Request need to be authorized. Required parameter for authorizing request is missing or invalid.'
+doorkeeper.errors.messages.invalid_request.unknown: 'Požiadavke chýba požadovaný parameter, obsahuje nepodporovanú hodnotu parametra, alebo je inak poškodený.'
+doorkeeper.errors.messages.invalid_scope: 'Požadovaný rozsah je neplatný, neznámy alebo poškodený.'
+doorkeeper.errors.messages.invalid_token.expired: 'Tento prístupový token vypršal'
+doorkeeper.errors.messages.invalid_token.revoked: 'Tento prístupový token bol zrušený'
+doorkeeper.errors.messages.invalid_token.unknown: 'Tento prístupový token je neplatný'
+doorkeeper.errors.messages.resource_owner_authenticator_not_configured: 'Vyhľadanie zdroja zlyhalo z dôvodu, že Doorkeeper.configure.resource_owner_authenticator nie je nakonfigurované.'
+doorkeeper.errors.messages.revoke.unauthorized: 'You are not authorized to revoke this token'
+doorkeeper.errors.messages.server_error: 'Autorizačný server narazil na neočakávanú podmienku, ktorá mu znemožnila splniť požiadavku.'
+doorkeeper.errors.messages.temporarily_unavailable: 'Autorizačný server nie je v súčasnej dobe schopný spracovať požiadavku z dôvodu dočasného preťaženia alebo údržby serveru.'
+doorkeeper.errors.messages.unauthorized_client: 'Klient nie je oprávnený vykonávať túto požiadavku touto metódou.'
+doorkeeper.errors.messages.unsupported_grant_type: 'Autorizačný Server nepodporuje typ autorizačného grantu.'
+doorkeeper.errors.messages.unsupported_response_mode: 'The authorization server does not support this response mode.'
+doorkeeper.errors.messages.unsupported_response_type: 'Autorizačný server nepodporuje tento typ odpovede.'
+doorkeeper.flash.applications.create.notice: 'Aplikácia vytvorená.'
+doorkeeper.flash.applications.destroy.notice: 'Aplikácia zmazaná.'
+doorkeeper.flash.applications.update.notice: 'Aplikácia aktualizovaná.'
+doorkeeper.flash.authorized_applications.destroy.notice: 'Aplikácii bolo odňaté povolenie.'
+doorkeeper.layouts.admin.nav.applications: Aplikácia
+doorkeeper.layouts.admin.nav.home: Domov
+doorkeeper.layouts.admin.nav.oauth2_provider: 'OAuth2 poskytovateľ'
+doorkeeper.layouts.admin.title: Doorkeeper
+doorkeeper.layouts.application.title: 'OAuth vyžaduje autorizáciu'
+doorkeeper.pre_authorization.status: Pre-autorizácie

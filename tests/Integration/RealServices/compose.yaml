@@ -1,0 +1,39 @@
+# Real services used by tests/Integration/RealServices (started by bin/test-real-services)
+#
+#   SYMINE_TEST_LDAP_URL=ldap://localhost:13890      SYMINE_TEST_LDAPS_URL=ldaps://localhost:16360
+#   SYMINE_TEST_IMAP_URL=imap://localhost:13143      SYMINE_TEST_POP3_URL=pop3://localhost:13110
+#   SYMINE_TEST_MAIL_SMTP=localhost:13025            (GreenMail SMTP, delivers the incoming test mails)
+#   SYMINE_TEST_SMTP_DSN=smtp://localhost:11125      SYMINE_TEST_MAILPIT_URL=http://localhost:18125
+#   SYMINE_TEST_WEBHOOK_RECEIVER_URL=http://<non-loopback host IP>:18190
+#   SYMINE_TEST_WEBHOOK_INSPECT_URL=http://localhost:18190
+services:
+  ldap:
+    image: osixia/openldap:1.5.0
+    platform: linux/amd64
+    command: --copy-service
+    environment:
+      LDAP_ORGANISATION: Symine
+      LDAP_DOMAIN: symine.test
+      LDAP_ADMIN_PASSWORD: adminpw
+      LDAP_TLS_VERIFY_CLIENT: never
+    volumes:
+      - ./fixtures/ldap-acl.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/40-acl.ldif:ro
+      - ./fixtures/ldap-users.ldif:/container/service/slapd/assets/config/bootstrap/ldif/custom/50-users.ldif:ro
+    ports: ["13890:389", "16360:636"]
+  mail:
+    image: greenmail/standalone:2.1.2
+    environment:
+      GREENMAIL_OPTS: >-
+        -Dgreenmail.setup.test.all -Dgreenmail.hostname=0.0.0.0 -Dgreenmail.users.login=local_part
+        -Dgreenmail.users=redmine:secret@symine.test,redpop:secret@symine.test
+    ports: ["13025:3025", "13110:3110", "13143:3143", "13993:3993", "13995:3995"]
+  mailpit:
+    image: axllent/mailpit:latest
+    environment: { MP_SMTP_AUTH_ACCEPT_ANY: 1, MP_SMTP_AUTH_ALLOW_INSECURE: 1 }
+    ports: ["18125:8025", "11125:1025"]
+  webhook-receiver:
+    image: php:8.5-cli-alpine
+    command: php -S 0.0.0.0:8080 /srv/receiver.php
+    volumes:
+      - ./fixtures/webhook-receiver.php:/srv/receiver.php:ro
+    ports: ["18190:8080"]

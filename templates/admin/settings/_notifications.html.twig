@@ -1,0 +1,35 @@
+{% import 'admin/settings/_macros.html.twig' as s %}
+<form action="{{ path('settings_edit', {tab: 'notifications'}) }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+
+<div class="box tabular settings">
+<p>{{ s.text_field(values, 'mail_from', {size: 60}) }}</p>
+
+<p>{{ s.check_box(values, 'plain_text_mail') }}</p>
+
+<p>{{ s.check_box(values, 'show_status_changes_in_mail_subject') }}</p>
+</div>
+
+<fieldset class="box" id="notified_events"><legend>{{ l('text_select_mail_notifications') }}</legend>
+<input type="hidden" name="settings[notified_events][]" id="settings_notified_events_" value="" autocomplete="off" />
+{% set notified = values.notified_events is iterable ? values.notified_events : [] %}
+{% for name, parent in opts.notifiables %}
+<label{% if parent %} class="parent"{% endif %}><input type="checkbox" name="settings[notified_events][]" value="{{ name }}"{% if name in notified %} checked="checked"{% endif %}{% if parent %} data-parent-notifiable="{{ parent }}"{% else %} data-disables="input[data-parent-notifiable={{ name }}]"{% endif %} />{{ l('label_' ~ name) }}</label>
+<br />
+{% endfor %}
+<p><a href="#" onclick="checkAll('notified_events', true); return false;">{{ l('button_check_all') }}</a> | <a href="#" onclick="checkAll('notified_events', false); return false;">{{ l('button_uncheck_all') }}</a></p>
+</fieldset>
+
+<fieldset class="box"><legend>{{ l('setting_emails_header') }}</legend>
+{{ s.textarea(values, 'emails_header', {label: false, rows: 5, wiki: true}) }}
+</fieldset>
+
+<fieldset class="box"><legend>{{ l('setting_emails_footer') }}</legend>
+{{ s.textarea(values, 'emails_footer', {label: false, rows: 5, wiki: true}) }}
+</fieldset>
+
+<div style="float:right;">
+<a rel="nofollow" data-method="post" href="/admin/test_email">{{ l('label_send_test_email') }}</a>
+</div>
+
+<input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>

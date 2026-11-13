@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# Runs the PHPUnit suite and prints a summary per test directory.
+#
+#   bin/test                      full suite (the live differential tests are skipped unless SYMINE_REFERENCE_URL is set)
+#   bin/test --api                REST API parity suite (tests/Api)
+#   bin/test --security           permission matrix, CSRF, private data visibility (tests/Security)
+#   bin/test --parity             oracle snapshots recorded from the reference Redmine (tests/Parity + parity tests)
+#   bin/test --differential       live comparison with the reference Redmine (SYMINE_REFERENCE_URL, default http://localhost:3300)
+#   bin/test [options] -- <phpunit arguments>   e.g. bin/test -- --filter Wiki tests/Content
+#
+# Environment: PHP (php binary), TEST_TOKEN (test database var/test$TEST_TOKEN.db, default "bin"),
+# APP_CACHE_DIR (default var/cache-test$TEST_TOKEN), SYMINE_REFERENCE_URL / SYMINE_REFERENCE_KEY / SYMINE_REFERENCE_ADMIN.
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+PHP="${PHP:-}"
+if [ -z "$PHP" ]; then
+    if [ -x /opt/homebrew/opt/php/bin/php ]; then PHP=/opt/homebrew/opt/php/bin/php; else PHP=php; fi
+fi
+export TEST_TOKEN="${TEST_TOKEN:-bin}"
+export APP_CACHE_DIR="${APP_CACHE_DIR:-var/cache-test$TEST_TOKEN}"
+
+paths=()
+args=()
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --api) paths+=(tests/Api) ;;
+        --security) paths+=(tests/Security) ;;
+        --parity) paths+=(tests/Parity tests/Integration/RedmineParityTest.php tests/Query/IssueQueryParityTest.php) ;;
+        --differential)
+            export SYMINE_REFERENCE_URL="${SYMINE_REFERENCE_URL:-http://localhost:3300}"
+            paths+=(tests/Api/ReferenceDifferentialTest.php) ;;
+        -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
+        --) shift; args+=("$@"); break ;;
+        *) args+=("$1") ;;
+    esac
+    shift
+done
+
+junit="$(mktemp -t symine-junit.XXXXXX)"
+trap 'rm -f "$junit"' EXIT
+
+run() {
+    "$PHP" -d memory_limit=2G bin/phpunit --log-junit "$junit" "$@"
+}
+
+status=0
+if [ ${#paths[@]} -le 1 ]; then
+    run "${args[@]+"${args[@]}"}" "${paths[@]+"${paths[@]}"}" || status=$?
+else
+    # phpunit accepts a single path argument: run a temporary configuration listing all of them
+    config="$(mktemp -t symine-phpunit.XXXXXX).xml"
+    {
+        sed -n '1,/<testsuites>/p' phpunit.dist.xml
+        echo '        <testsuite name="selection">'
+        for p in "${paths[@]}"; do
+            if [ -d "$p" ]; then echo "            <directory>$p</directory>"; else echo "            <file>$p</file>"; fi
+        done
+        echo '        </testsuite>'
+        sed -n '/<\/testsuites>/,$p' phpunit.dist.xml
+    } | sed "s#bootstrap=\"tests/bootstrap.php\"#bootstrap=\"$PWD/tests/bootstrap.php\"#; s#<directory>tests/#<directory>$PWD/tests/#; s#<file>tests/#<file>$PWD/tests/#; s#<directory>src</directory>#<directory>$PWD/src</directory>#; s#vendor/phpunit#$PWD/vendor/phpunit#; s#cacheDirectory=\".phpunit.cache\"#cacheDirectory=\"$PWD/.phpunit.cache\"#" > "$config"
+    run -c "$config" "${args[@]+"${args[@]}"}" || status=$?
+    rm -f "$config"
+fi
+
+# Summary per directory (from the JUnit log)
+if [ -s "$junit" ]; then
+    "$PHP" -r '
+        $xml = @simplexml_load_file($argv[1]);
+        if (false === $xml) { exit(0); }
+        $rows = [];
+        foreach ($xml->xpath("//testcase") as $tc) {
+            $file = (string) $tc["file"];
+            $dir = preg_match("#/tests/([^/]+)/#", $file, $m) ? $m[1] : "other";
+            $r = &$rows[$dir];
+            $r ??= ["tests" => 0, "failed" => 0, "skipped" => 0, "incomplete" => 0, "time" => 0.0];
+            $r["tests"]++;
+            $r["time"] += (float) $tc["time"];
+            if (isset($tc->failure) || isset($tc->error)) { $r["failed"]++; }
+            elseif (isset($tc->skipped)) {
+                $msg = (string) $tc->skipped;
+                str_contains(strtolower((string) ($tc->skipped["message"] ?? "")), "incomplete") || str_contains($msg, "Incomplete") ? $r["incomplete"]++ : $r["skipped"]++;
+            }
+            unset($r);
+        }
+        ksort($rows);
+        $t = ["tests" => 0, "failed" => 0, "skipped" => 0, "incomplete" => 0, "time" => 0.0];
+        printf("\n%-14s %7s %7s %8s %11s %8s\n", "Directory", "Tests", "Failed", "Skipped", "Incomplete", "Time");
+        foreach ($rows as $dir => $r) {
+            printf("%-14s %7d %7d %8d %11d %7.1fs\n", $dir, $r["tests"], $r["failed"], $r["skipped"], $r["incomplete"], $r["time"]);
+            foreach ($t as $k => $_) { $t[$k] += $r[$k]; }
+        }
+        printf("%-14s %7d %7d %8d %11d %7.1fs\n", "TOTAL", $t["tests"], $t["failed"], $t["skipped"], $t["incomplete"], $t["time"]);
+    ' "$junit"
+fi
+exit $status

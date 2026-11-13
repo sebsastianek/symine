@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Entity\Project;
 use App\Entity\User;
 use App\I18n\Localizer;
+use App\Plugin\Hook\Hooks;
 use App\Security\ApiRequestMatcher;
 use App\Security\Authorization;
 use App\Security\CurrentUser;
@@ -54,6 +55,27 @@ abstract class AbstractController extends BaseController
         $this->requestStack = $requestStack;
     }
 
+    protected ?Hooks $hooks = null;
+
+    #[Required]
+    public function setHooks(Hooks $hooks): void
+    {
+        $this->hooks = $hooks;
+    }
+
+    /**
+     * Calls a Redmine hook (Redmine::Hook::Helper#call_hook in controllers): the context gets the controller,
+     * the request and hook_caller, the caller passes the project when there is one.
+     *
+     * @param array<string, mixed> $context
+     *
+     * @return list<mixed>
+     */
+    protected function callHook(string $hook, array $context = []): array
+    {
+        return $this->hooks?->call($hook, $context + ['controller' => $this, 'project' => null, 'request' => $this->requestStack->getCurrentRequest(), 'hook_caller' => $this]) ?? [];
+    }
+
     protected function user(): User
     {
         return $this->currentUser->get();
@@ -86,6 +108,9 @@ abstract class AbstractController extends BaseController
             throw new HttpException(403, $this->l('notice_not_authorized_archived_project'));
         }
         if (!$this->auth->isProjectVisible($project)) {
+            if ($project->isArchived()) {
+                throw new HttpException(403, $this->l('notice_not_authorized_archived_project'));
+            }
             $this->deny();
         }
 
@@ -96,6 +121,10 @@ abstract class AbstractController extends BaseController
     protected function authorize(string $permission, ?Project $project = null, bool $global = false): void
     {
         if (!$this->auth->allowedTo($permission, $project, null, $global)) {
+            if (null !== $project && $project->isArchived()) {
+                // ApplicationController#authorize: render_403 :message => :notice_not_authorized_archived_project
+                throw new HttpException(403, $this->l('notice_not_authorized_archived_project'));
+            }
             $this->deny();
         }
     }

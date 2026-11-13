@@ -1,0 +1,17 @@
+{
+    "name": "symine/hello-plugin",
+    "description": "Example Symine plugin: a project module with greetings (menu tab, permissions, settings, view hooks, activity and search providers, custom field format, migrations, assets)",
+    "type": "symine-plugin",
+    "license": "GPL-2.0-or-later",
+    "autoload": {
+        "psr-4": {
+            "Symine\\Hello\\": "src/"
+        }
+    },
+    "extra": {
+        "symine": {
+            "bundle": "Symine\\Hello\\HelloPlugin",
+            "env": ["dev", "test"]
+        }
+    }
+}

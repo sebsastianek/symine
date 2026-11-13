@@ -1,0 +1,14 @@
+<h3>{{ l('label_document_plural') }}</h3>
+
+<div id="document-list">
+{% for document in b.documents %}
+<div class="document-item document-{{ document.id }}">
+  <h4 class="title">{{ sprite_icon('document') }}<a href="{{ path_exists('document_show') ? path('document_show', {id: document.id}) : '/documents/' ~ document.id }}">{{ document.title }}</a></h4>
+  <div class="updated_on"><em>{{ format_time(document.createdOn) }}</em></div>
+
+  <div class="wiki description">
+    {{ textilizable(document.description ?? '', document.project) }}
+  </div>
+</div>
+{% endfor %}
+</div>

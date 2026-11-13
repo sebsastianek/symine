@@ -1,0 +1,33 @@
+{% set reply_links = notes_addable %}{{ preload_reactions(journals) }}
+{% for journal in journals %}
+  <div id="change-{{ journal.id }}" class="{{ issue_journal_css(journal) }}" data-controller="quote-reply">
+    <div id="note-{{ journal.indice }}" class="note">
+      <h4 class="journal-header">
+        <span class="journal-info">
+          {{ avatar(journal.user, 24) }}
+          {{ authoring(journal.createdOn, journal.user, 'label_updated_time_by') }}
+          {% include 'journals/_private_notes_indicator.html.twig' %}
+          {% include 'journals/_update_info.html.twig' %}
+        </span>
+        <span class="journal-meta">
+          <span class="journal-actions">
+            {% include 'journals/_actions.html.twig' %}
+          </span>
+          <a href="#note-{{ journal.indice }}" class="journal-link">#{{ journal.indice }}</a>
+        </span>
+      </h4>
+      <div class="journal-content">
+        {% set detail_strings = issue_details_to_strings(journal) %}
+        {% if detail_strings|length > 0 %}
+          <ul class="journal-details">
+            {% for s in detail_strings %}
+              <li>{{ s|raw }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        {% if journal.hasNotes() %}{% include 'journals/_notes.html.twig' %}{% endif %}
+      </div>
+    </div>
+  </div>
+  {{ call_hook('view_issues_history_journal_bottom', {journal: journal}) }}
+{% endfor %}

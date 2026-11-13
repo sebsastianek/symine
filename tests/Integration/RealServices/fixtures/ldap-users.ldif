@@ -1,0 +1,63 @@
+dn: ou=people,dc=symine,dc=test
+objectClass: organizationalUnit
+ou: people
+
+dn: ou=groups,dc=symine,dc=test
+objectClass: organizationalUnit
+ou: groups
+
+dn: uid=ldapuser,ou=people,dc=symine,dc=test
+objectClass: inetOrgPerson
+uid: ldapuser
+cn: Lisa Dapper
+givenName: Lisa
+sn: Dapper
+mail: lisa.dapper@ldap.symine.test
+userPassword: ldappass1
+
+dn: uid=bob,ou=people,dc=symine,dc=test
+objectClass: inetOrgPerson
+uid: bob
+cn: Bob Builder
+givenName: Bob
+sn: Builder
+mail: bob@ldap.symine.test
+userPassword: bobpass1
+
+dn: uid=nomail,ou=people,dc=symine,dc=test
+objectClass: inetOrgPerson
+uid: nomail
+cn: No Mail
+givenName: No
+sn: Mail
+userPassword: nomailpass
+
+dn: uid=outsider,ou=people,dc=symine,dc=test
+objectClass: inetOrgPerson
+uid: outsider
+cn: Out Sider
+givenName: Out
+sn: Sider
+mail: outsider@ldap.symine.test
+departmentNumber: external
+userPassword: outpass1
+
+dn: uid=jsmith,ou=people,dc=symine,dc=test
+objectClass: inetOrgPerson
+uid: jsmith
+cn: John Smith
+givenName: John
+sn: Smith
+mail: jsmith-ldap@ldap.symine.test
+userPassword: jsmithldap
+
+dn: cn=redmine-users,ou=groups,dc=symine,dc=test
+objectClass: groupOfNames
+cn: redmine-users
+member: uid=ldapuser,ou=people,dc=symine,dc=test
+member: uid=bob,ou=people,dc=symine,dc=test
+
+dn: cn=developers,ou=groups,dc=symine,dc=test
+objectClass: groupOfNames
+cn: developers
+member: uid=bob,ou=people,dc=symine,dc=test

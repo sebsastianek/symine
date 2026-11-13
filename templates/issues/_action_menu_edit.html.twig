@@ -1,0 +1,10 @@
+<div style="clear: both;"></div>
+{% include 'issues/_action_menu.html.twig' %}
+
+<div style="clear: both;"></div>
+{% if is_editable %}
+  <div id="update" style="display:none;">
+    <h3>{{ l('button_edit') }}</h3>
+    {% include 'issues/_edit.html.twig' %}
+  </div>
+{% endif %}

@@ -1,0 +1,55 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<div class="contextual">
+<a accesskey="e" class="icon icon-edit" href="{{ path('edit_oauth_application', {id: application.id}) }}">{{ sprite_icon('edit', l('doorkeeper.applications.buttons.edit')) }}</a>
+<a data-confirm="{{ l('doorkeeper.applications.confirmations.destroy') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('oauth_application_destroy', {id: application.id}) }}">{{ sprite_icon('del', l('doorkeeper.applications.buttons.destroy')) }}</a>
+</div>
+
+<h2><a href="{{ path('oauth_applications') }}">{{ l('label_oauth_application_plural') }}</a> &#187; {{ application.name }}</h2>
+
+<div class="box">
+  <h3 class="icon icon-passwd">{{ sprite_icon('key', l('label_information_plural')) }}</h3>
+  <p>
+    <span class="label">{{ l('doorkeeper.applications.show.application_id') }}:</span>
+    <code>{{ application.uid }}</code>
+  </p>
+  <p>
+    <span class="label">{{ l('doorkeeper.applications.show.secret') }}:</span>
+    <code>
+      {% if secret is empty %}
+        {{ l('doorkeeper.applications.show.secret_hashed') }}
+      {% else %}
+        {{ secret }}
+      {% endif %}
+    </code>
+    {% if secret is not empty %}
+       <strong>{{ l('text_oauth_copy_secret_now') }}</strong>
+    {% endif %}
+  </p>
+  <p>
+    <span class="label">{{ l('doorkeeper.applications.show.scopes') }}:</span>
+    <code>{{ application.getScopes()|map(s => l('permission_' ~ s))|join(', ') }}</code>
+  </p>
+</div>
+
+<h3>{{ l('doorkeeper.applications.show.callback_urls') }}</h3>
+
+<div class="autoscroll">
+<table class="list">
+  <thead><tr>
+    <th><span class="translation_missing" title="translation missing: en.doorkeeper.applications.show.callback_url">Callback Url</span></th>
+    <th></th>
+  </tr></thead>
+  <tbody>
+  {% for uri in application.getRedirectUris() %}
+    <tr class="{{ cycle(['odd', 'even'], loop.index0) }}">
+      <td class="name"><span>{{ uri }}</span></td>
+      <td class="buttons">
+        <a class="icon icon-authorize" target="_blank" href="{{ path('oauth_authorization') }}?{{ {client_id: application.uid, redirect_uri: uri, response_type: 'code', scope: application.getScopes()|join(' ')}|url_encode }}">{{ sprite_icon('shield-check', l('doorkeeper.applications.buttons.authorize')) }}</a>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

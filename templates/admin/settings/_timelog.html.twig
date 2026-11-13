@@ -1,0 +1,33 @@
+{% import 'admin/settings/_macros.html.twig' as s %}
+<form action="{{ path('settings_edit', {tab: 'timelog'}) }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+
+<div class="box tabular settings">
+<p>{{ s.multiselect(values, 'timelog_required_fields', opts.timelog_required_fields) }}</p>
+
+<p>{{ s.text_field(values, 'timelog_max_hours_per_day', {size: 6}) }}</p>
+
+<p>{{ s.check_box(values, 'timelog_accept_0_hours') }}</p>
+
+<p>{{ s.check_box(values, 'timelog_accept_future_dates') }}</p>
+
+<p>{{ s.check_box(values, 'timelog_accept_closed_issues') }}</p>
+</div>
+
+<fieldset class="box">
+  <legend>{{ l('setting_time_entry_list_defaults') }}</legend>
+
+  <input type="hidden" name="settings[time_entry_list_defaults][column_names][]" id="settings_time_entry_list_defaults_column_names_" value="" autocomplete="off" />
+  <div id="list-definition">
+    <div>
+      {{ s.columns('settings[time_entry_list_defaults][column_names]', opts.time_entry_columns, values.time_entry_list_defaults.column_names ?? []) }}
+    </div>
+  </div>
+  <p>
+    <label>{{ l('label_total_plural') }}</label>
+    {% set totals = values.time_entry_list_defaults.totalable_names ?? [] %}
+    {% for k, caption in opts.time_entry_totals %}<label class="inline"><input type="checkbox" name="settings[time_entry_list_defaults][totalable_names][]" value="{{ k }}"{% if k in totals %} checked="checked"{% endif %} /> {{ caption }}</label>{% endfor %}<input type="hidden" name="settings[time_entry_list_defaults][totalable_names][]" value="" autocomplete="off" />
+  </p>
+</fieldset>
+
+<input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>

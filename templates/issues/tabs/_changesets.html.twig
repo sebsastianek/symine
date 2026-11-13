@@ -1,0 +1,20 @@
+{% for changeset in changesets %}
+  <div id="changeset-{{ changeset.id }}" class="changeset journal">
+    <h4 class="journal-header">
+        <span class="journal-info">
+          {{ avatar(changeset.user, 24) }}
+          {% if changeset.user %}{{ authoring(changeset.committedOn, changeset.user) }}{% else %}{{ l('label_added_time_by', {author: changeset.committer|split('<')|first|trim|e, age: time_tag(changeset.committedOn)})|raw }}{% endif %}
+        </span>
+    </h4>
+    <div class="journal-content">
+      <p>
+        {% if changeset.repository.project.id != issue.project.id %}{{ changeset.repository.project.name }} - {% endif %}
+        {% set rev_label = l('label_revision') ~ ' ' ~ (changeset.revision|length > 12 and changeset.scmid ? changeset.revision[:8] : changeset.revision) %}
+        {% if path_exists('repository_revision') %}<a title="{{ l('label_revision') }} {{ changeset.revision }}" href="{{ path('repository_revision', {id: changeset.repository.project.identifier, repository_id: changeset.repository.identifier ?: changeset.repository.id, rev: changeset.revision}) }}">{{ rev_label }}</a>{% else %}{{ rev_label }}{% endif %}
+      </p>
+      <div class="wiki changeset-comments">
+        {{ textilizable(changeset.comments, changeset.repository.project) }}
+      </div>
+    </div>
+  </div>
+{% endfor %}

@@ -1,0 +1,9 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('oauth_applications') }}">{{ l('label_oauth_application_plural') }}</a> &#187; {{ application.name }}</h2>
+
+<form class="edit_doorkeeper_application" id="edit_doorkeeper_application_{{ application.id }}" action="{{ path('oauth_application_update', {id: application.id}) }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="patch" autocomplete="off" />{{ csrf_field() }}
+{% include 'oauth/applications/_form.html.twig' %}
+<input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>
+{% endblock %}

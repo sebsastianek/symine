@@ -19,20 +19,28 @@ final class WelcomeController extends AbstractController
         return $this->render('welcome/index.html.twig', ['news' => $news, 'body_css' => 'controller-welcome action-index']);
     }
 
-    #[Route('/robots.txt', name: 'robots', methods: ['GET'])]
+    #[Route('/robots.{_format}', name: 'robots', requirements: ['_format' => 'txt'], methods: ['GET'])]
     public function robots(): Response
     {
-        $lines = ["User-agent: *"];
-        foreach ($this->projects->visibleProjects($this->currentUser->anonymous()) as $p) {
-            $lines[] = 'Disallow: /projects/'.$p->identifier.'/repository';
-            $lines[] = 'Disallow: /projects/'.$p->identifier.'/issues';
-            $lines[] = 'Disallow: /projects/'.$p->identifier.'/activity';
+        // port of welcome/robots.text.erb
+        $lines = ['User-agent: *'];
+        if ($this->settings->bool('login_required')) {
+            $lines[] = 'Disallow: /';
+        } else {
+            $projects = $this->projects->visibleProjects($this->currentUser->anonymous());
+            usort($projects, static fn ($a, $b) => $a->id <=> $b->id);
+            foreach ($projects as $p) {
+                foreach ([$p->identifier, (string) $p->id] as $id) {
+                    $lines[] = 'Disallow: '.$this->generateUrl('repository_show', ['id' => $id]);
+                    $lines[] = 'Disallow: '.$this->generateUrl('project_issues', ['project_id' => $id]);
+                    $lines[] = 'Disallow: '.$this->generateUrl('project_activity', ['id' => $id]);
+                }
+            }
+            foreach (['/issues/gantt', '/issues/calendar', '/activity', '/search', '/issues?*sort=', '/issues?*query_id=', '/issues?*set_filter=', '/issues/*.pdf$', '/projects/*.pdf$', '/login', '/account/register', '/account/lost_password'] as $path) {
+                $lines[] = 'Disallow: '.$this->requestStack->getCurrentRequest()?->getBasePath().$path;
+            }
         }
-        $lines[] = 'Disallow: /issues/gantt';
-        $lines[] = 'Disallow: /issues/calendar';
-        $lines[] = 'Disallow: /activity';
-        $lines[] = 'Disallow: /search';
 
-        return new Response(implode("\n", $lines)."\n", 200, ['Content-Type' => 'text/plain']);
+        return new Response(implode("\n", $lines)."\n", 200, ['Content-Type' => 'text/plain; charset=utf-8']);
     }
 }

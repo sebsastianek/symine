@@ -1,0 +1,12 @@
+<div class="contextual">
+  &#171;
+  {% if previous %}{{ link_to_revision(previous, repository, {text: l('label_previous'), accesskey: 'p'}) }}{% else %}{{ l('label_previous') }}{% endif %}
+|
+  {% if next %}{{ link_to_revision(next, repository, {text: l('label_next'), accesskey: 'n'}) }}{% else %}{{ l('label_next') }}{% endif %}
+  &#187;&nbsp;
+
+  <form action="{{ repo_url('revision', repository) }}" accept-charset="UTF-8" method="get">
+    <input type="text" name="rev" id="rev" value="{{ rev }}" size="8" />
+    <input type="submit" value="{{ l('button_view') }}" />
+  </form>
+</div>

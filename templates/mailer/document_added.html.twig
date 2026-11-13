@@ -1,0 +1,6 @@
+{% extends 'mailer/layout.html.twig' %}
+{% block content %}
+<a href="{{ document_url }}">{{ document.title }}</a> ({{ document.category.name }})<br />
+<br />
+{{ mail.textilizable(document.description, document.project)|raw }}
+{% endblock %}

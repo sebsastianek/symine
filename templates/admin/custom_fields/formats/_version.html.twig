@@ -1,0 +1,21 @@
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+{% set version_status = custom_field.getFormatOption('version_status') %}
+<p>
+  <label>{{ l('field_status') }}</label>
+  <label class="block">
+    <input type="radio" name="status" id="custom_field_version_status_all" value="1" data-disables=".custom_field_version_status input"{% if version_status is empty %} checked="checked"{% endif %} />
+    {{ l('label_all') }}
+  </label>
+  <label class="block">
+    <input type="radio" name="status" id="custom_field_version_status_only" value="0" data-enables=".custom_field_version_status input"{% if version_status is not empty %} checked="checked"{% endif %} />
+    {{ l('label_only') }}:
+  </label>
+  {% for status in version_statuses %}
+    <label class="block custom_field_version_status" style="padding-left:2em;">
+      <input type="checkbox" name="custom_field[version_status][]" value="{{ status }}"{% if version_status is iterable and status in version_status %} checked="checked"{% endif %} />
+      {{ l('version_status_' ~ status) }}
+    </label>
+  {% endfor %}
+  <input type="hidden" name="custom_field[version_status][]" id="custom_field_version_status_" value="" autocomplete="off" />
+</p>
+<p>{{ f.edit_tag_style(custom_field) }}</p>

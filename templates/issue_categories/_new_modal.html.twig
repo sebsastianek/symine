@@ -1,0 +1,9 @@
+<h3 class="title">{{ l('label_issue_category_new') }}</h3>
+
+<form class="new_issue_category" id="new_issue_category" action="{{ path('issue_category_create', {project_id: project.identifier}) }}" accept-charset="UTF-8" data-remote="true" method="post">{{ csrf_field() }}
+{% include 'issue_categories/_form.html.twig' %}
+  <p class="buttons">
+    <input type="submit" value="{{ l('button_create') }}" data-disable-with="{{ l('button_create') }}" />
+    <a href="#" onclick="hideModal(this); return false;">{{ l('button_cancel') }}</a>
+  </p>
+</form>

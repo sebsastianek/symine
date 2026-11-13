@@ -1,0 +1,73 @@
+{% extends 'base.html.twig' %}
+{% set feed_url = path('board_show', {project_id: project.identifier, id: board.id, _format: 'atom'}) %}
+{% block header_tags %}
+<link rel="alternate" type="application/atom+xml" title="{{ project.name }}: {{ board.name }}" href="{{ feed_url }}" />
+{% endblock %}
+{% block content %}
+{% include 'boards/_breadcrumb.html.twig' with {include_board: false} %}
+
+<div class="contextual">
+{% if allowed_to('add_messages', project) %}
+<a class="icon icon-add" onclick="showAndScrollTo(&quot;add-message&quot;, &quot;message_subject&quot;); return false;" href="{{ path('message_new', {board_id: board.id}) }}">{{ sprite_icon('add', l('label_message_new')) }}</a>
+{% endif %}
+{% include 'content/_watch_link.html.twig' with {watched_type: 'board', watched_class: 'Board', watched_id: board.id} %}
+{% if allowed_to('manage_boards', project) and path_exists('project_settings') %}
+<a class="icon icon-settings" href="{{ path('project_settings', {id: project.identifier, tab: 'boards'}) }}">{{ sprite_icon('settings', l('label_settings')) }}</a>
+{% endif %}
+</div>
+
+<div id="add-message" style="display:none;">
+{% if allowed_to('add_messages', project) %}
+<h2><a href="{{ path('board_show', {project_id: project.identifier, id: board.id}) }}">{{ board.name }}</a> &#187; {{ l('label_message_new') }}</h2>
+<form class="new_message" id="message-form" enctype="multipart/form-data" action="{{ path('message_new', {board_id: board.id}) }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+  {% include 'messages/_form.html.twig' with {param: 'message', replying: false} %}
+  <p><input type="submit" name="commit" value="{{ l('button_create') }}" data-disable-with="{{ l('button_create') }}" />
+  <a onclick="$(&quot;#add-message&quot;).hide(); return false;" href="#">{{ l('button_cancel') }}</a></p>
+</form>
+{% endif %}
+</div>
+
+<h2>{{ board.name }}</h2>
+<p class="subtitle">{{ board.description }}</p>
+
+{% if topics|length > 0 %}
+<table class="list messages">
+  <thead><tr>
+    <th>{{ l('field_subject') }}</th>
+    <th>{{ l('field_author') }}</th>
+    {% for h in sort_headers %}
+    <th title="{{ l('label_sort_by', {value: '"' ~ h.caption ~ '"'}) }}"><a{% if h.css %} class="{{ h.css }}"{% endif %} href="?{{ h.query|url_encode }}">{{ sprite_icon(h.icon, h.caption) }}</a></th>
+    {% endfor %}
+  </tr></thead>
+  <tbody>
+  {% for topic in topics %}
+    <tr id="message-{{ topic.id }}" class="message {{ topic.isSticky() ? 'sticky' : '' }} {{ topic.locked ? 'locked' : '' }}">
+      <td class="subject">
+        <span class="{{ topic.isSticky() or topic.locked ? 'icon' : '' }}">
+          {% if topic.isSticky() %}{{ sprite_icon('arrow-right') }}{% endif %}
+          {% if topic.locked %}{{ sprite_icon('lock') }}{% endif %}
+          <a href="{{ path('board_message_show', {board_id: board.id, id: topic.id}) }}">{{ topic.subject }}</a>
+        </span>
+      </td>
+      <td class="author">{{ link_to_user(topic.author) }}</td>
+      <td class="created_on">{{ format_time(topic.createdOn) }}</td>
+      <td class="reply-count">{{ topic.repliesCount }}</td>
+      <td class="last_message">
+        {% if topic.lastReply %}
+        {{ authoring(topic.lastReply.createdOn, topic.lastReply.author) }}<br />
+        {% include 'boards/_link_to_message.html.twig' with {m: topic.lastReply} %}
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% include 'common/_pagination.html.twig' %}
+{% else %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}
+
+<p class="other-formats hide-when-print">{{ l('label_export_to') }}  <span><a class="atom" rel="nofollow" href="{{ feed_url }}">Atom</a></span>
+</p>
+{% endblock %}

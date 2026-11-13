@@ -1,0 +1,25 @@
+<p><label for="pref_hide_mail">{{ l('field_hide_mail') }}</label><input name="pref[hide_mail]" type="hidden" value="0" /><input type="checkbox" value="1" name="pref[hide_mail]" id="pref_hide_mail"{% if pref.hideMail %} checked="checked"{% endif %} /></p>
+<p><label for="pref_time_zone">{{ l('field_time_zone') }}</label><select name="pref[time_zone]" id="pref_time_zone"><option value="" label=" "></option>
+{% for tz in time_zones %}<option value="{{ tz.value }}"{% if pref.timeZone == tz.value %} selected="selected"{% endif %}>{{ tz.label }}</option>{% endfor %}
+</select></p>
+<p><label for="pref_comments_sorting">{{ l('field_comments_sorting') }}</label><select name="pref[comments_sorting]" id="pref_comments_sorting">
+  <option value="asc"{% if pref.commentsSorting() == 'asc' %} selected="selected"{% endif %}>{{ l('label_chronological_order') }}</option>
+  <option value="desc"{% if pref.commentsSorting() == 'desc' %} selected="selected"{% endif %}>{{ l('label_reverse_chronological_order') }}</option>
+</select></p>
+<p><label for="pref_warn_on_leaving_unsaved">{{ l('field_warn_on_leaving_unsaved') }}</label><input name="pref[warn_on_leaving_unsaved]" type="hidden" value="0" /><input type="checkbox" value="1" name="pref[warn_on_leaving_unsaved]" id="pref_warn_on_leaving_unsaved"{% if pref.get('warn_on_leaving_unsaved', '1') in ['1', true] %} checked="checked"{% endif %} /></p>
+<p><label for="pref_textarea_font">{{ l('field_textarea_font') }}</label><select name="pref[textarea_font]" id="pref_textarea_font">
+  {% for o in [['', 'label_font_default'], ['monospace', 'label_font_monospace'], ['proportional', 'label_font_proportional']] %}<option value="{{ o[0] }}"{% if (pref.get('textarea_font') ?? '') == o[0] %} selected="selected"{% endif %}>{{ l(o[1]) }}</option>{% endfor %}
+</select></p>
+<p><label for="pref_recently_used_projects">{{ l('field_recently_used_projects') }}</label><input size="2" type="text" value="{{ pref.get('recently_used_projects', 3) }}" name="pref[recently_used_projects]" id="pref_recently_used_projects" /></p>
+<p><label for="pref_history_default_tab">{{ l('field_history_default_tab') }}</label><select name="pref[history_default_tab]" id="pref_history_default_tab">
+  {% for o in [['notes', 'label_issue_history_notes'], ['history', 'label_history'], ['properties', 'label_issue_history_properties'], ['time_entries', 'label_time_entry_plural'], ['changesets', 'label_associated_revisions'], ['last_tab_visited', 'label_last_tab_visited']] %}<option value="{{ o[0] }}"{% if pref.get('history_default_tab') == o[0] %} selected="selected"{% endif %}>{{ l(o[1]) }}</option>{% endfor %}
+</select></p>
+<p><label for="pref_toolbar_language_options">{{ l('field_toolbar_language_options') }}</label><textarea rows="4" name="pref[toolbar_language_options]" id="pref_toolbar_language_options">{{ toolbar_language_options }}</textarea></p>
+<p><label for="pref_default_issue_query">{{ l('field_default_issue_query') }}</label><select name="pref[default_issue_query]" id="pref_default_issue_query"><option value="">{{ l('label_none') }}</option>
+  <optgroup label="{{ l('label_default_queries.for_all_users') }}">{% for q in issue_queries|filter(q => q.visibility == 2) %}<option value="{{ q.id }}"{% if pref.get('default_issue_query')|default('') == q.id ~ '' %} selected="selected"{% endif %}>{{ q.name }}</option>{% endfor %}</optgroup>
+  <optgroup label="{{ l('label_default_queries.for_this_user') }}">{% for q in issue_queries|filter(q => q.visibility != 2 and q.userId == edited_user.id) %}<option value="{{ q.id }}"{% if pref.get('default_issue_query')|default('') == q.id ~ '' %} selected="selected"{% endif %}>{{ q.name }}</option>{% endfor %}</optgroup>
+</select></p>
+<p><label for="pref_default_project_query">{{ l('field_default_project_query') }}</label><select name="pref[default_project_query]" id="pref_default_project_query"><option value="">{{ l('label_none') }}</option>
+  <optgroup label="{{ l('label_default_queries.for_all_users') }}">{% for q in project_queries|filter(q => q.visibility == 2) %}<option value="{{ q.id }}"{% if pref.get('default_project_query')|default('') == q.id ~ '' %} selected="selected"{% endif %}>{{ q.name }}</option>{% endfor %}</optgroup>
+  <optgroup label="{{ l('label_default_queries.for_this_user') }}">{% for q in project_queries|filter(q => q.visibility != 2 and q.userId == edited_user.id) %}<option value="{{ q.id }}"{% if pref.get('default_project_query')|default('') == q.id ~ '' %} selected="selected"{% endif %}>{{ q.name }}</option>{% endfor %}</optgroup>
+</select></p>

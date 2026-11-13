@@ -1,0 +1,18 @@
+{% for entry in entries %}
+{% set tr_id = scm_tr_id(entry.path) %}
+<tr id="{{ tr_id }}" class="{{ parent_id }} entry {{ entry.kind }}">
+<td style="padding-inline-start: {{ 18 * depth }}px;" class="{{ report_last_commit ? 'filename' : 'filename_no_report' }}">
+{% if entry.isDir() %}
+<span class="expander icon icon-collapsed" onclick="scmEntryClick('{{ tr_id }}', '{{ repo_url('show', repository, {path: entry.path, rev: rev, depth: depth + 1, parent_id: tr_id})|e('js') }}');">{{ sprite_icon('angle-right') }}</span>
+{% endif %}
+<a class="{{ entry.isDir() ? 'icon icon-folder' : 'icon icon-file' }}" href="{{ repo_url(entry.isDir() ? 'show' : 'entry', repository, {path: entry.path, rev: rev}) }}">{{ scm_file_icon(entry, entry.name) }}</a>
+</td>
+<td class="size">{% if not entry.isDir() %}{{ entry.size is not null ? number_to_human_size(entry.size) : '?' }}{% endif %}</td>
+{% if report_last_commit %}
+<td class="revision">{% if entry.changeset %}{{ link_to_revision(entry.changeset, repository) }}{% endif %}</td>
+<td class="age">{% if entry.lastrev and entry.lastrev.time %}{{ distance_of_time(entry.lastrev.time) }}{% endif %}</td>
+<td class="author">{{ entry.author() }}</td>
+<td class="comments">{% if entry.changeset %}{{ entry.changeset.comments|truncate(50) }}{% endif %}</td>
+{% endif %}
+</tr>
+{% endfor %}

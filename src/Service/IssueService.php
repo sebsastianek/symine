@@ -656,12 +656,11 @@ final class IssueService
             }
             match ($name) {
                 'subject' => $issue->subject = trim((string) $value),
-                'description' => $issue->description = null === $value ? null : str_replace(["\r\n", "\r", "\n"], "\r\n", (string) $value),
+                'description' => $issue->description = null === $value ? null : preg_replace('/\r\n?|\n/', "\r\n", (string) $value),
                 'category_id' => $issue->category = ('' === (string) $value) ? null : $this->em->find(IssueCategory::class, (int) $value),
                 'priority_id' => ($p = $this->em->find(IssuePriority::class, (int) $value)) ? $issue->priority = $p : null,
                 'fixed_version_id' => $issue->fixedVersion = ('' === (string) $value) ? null : $this->em->find(Version::class, (int) $value),
-                'start_date' => $issue->startDate = self::parseDate($value),
-                'due_date' => $issue->dueDate = self::parseDate($value),
+                'start_date', 'due_date' => $this->assignDate($issue, $name, $value),
                 'done_ratio' => $issue->doneRatio = '' === (string) $value ? 0 : (int) $value,
                 'estimated_hours' => $issue->estimatedHours = self::parseHours($value),
                 'is_private' => $issue->isPrivate = \in_array($value, [true, 1, '1', 'true'], true),
@@ -709,6 +708,24 @@ final class IssueService
 
     /** @var array<int, bool> */
     private array $invalidParent = [];
+
+    /** @var array<int, array<string, true>> invalid date strings per issue object (validates :start_date, :due_date, :date => true) */
+    private array $invalidDates = [];
+
+    private function assignDate(Issue $issue, string $name, mixed $value): void
+    {
+        $date = self::parseDate($value);
+        if (null === $date && '' !== trim((string) $value)) {
+            $this->invalidDates[spl_object_id($issue)][$name] = true;
+        } else {
+            unset($this->invalidDates[spl_object_id($issue)][$name]);
+        }
+        if ('start_date' === $name) {
+            $issue->startDate = $date;
+        } else {
+            $issue->dueDate = $date;
+        }
+    }
     /** @var array<int, array<int|string, mixed>> */
     private array $pendingCustomValues = [];
     /** @var array<int, string> */
@@ -811,8 +828,10 @@ final class IssueService
         if (isset($issue->author) && $issue->author->isActive() && !\in_array($issue->author, $users, true)) {
             $users[] = $issue->author;
         }
-        if ($issue->assignedTo && !\in_array($issue->assignedTo, $users, true) && !$issue->isNew()) {
-            $users[] = $issue->assignedTo;
+        // Issue#assignable_users: the persisted assignee (assigned_to_id_was) stays assignable, not a new one
+        if (!$issue->isNew() && ($wasId = $this->em->getConnection()->fetchOne('SELECT assigned_to_id FROM issues WHERE id = ?', [$issue->id]))
+            && ($was = $this->em->find(Principal::class, (int) $wasId)) && !\in_array($was, $users, true)) {
+            $users[] = $was;
         }
         usort($users, static fn (Principal $a, Principal $b) => [$a instanceof Group ? 1 : 0, mb_strtolower($a->getName())] <=> [$b instanceof Group ? 1 : 0, mb_strtolower($b->getName())]);
 
@@ -825,9 +844,15 @@ final class IssueService
         if (!isset($issue->project)) {
             return [];
         }
-        $versions = array_values(array_filter($this->projects->sharedVersions($issue->project), static fn (Version $v) => $v->isOpen()));
+        $shared = $this->projects->sharedVersions($issue->project);
+        $versions = array_values(array_filter($shared, static fn (Version $v) => $v->isOpen()));
         if ($issue->fixedVersion && !\in_array($issue->fixedVersion, $versions, true)) {
-            $versions[] = $issue->fixedVersion;
+            // Issue#assignable_versions: a closed version is kept only when it is the unchanged persisted one
+            $was = $issue->isNew() ? false : $this->em->getConnection()->fetchAssociative('SELECT fixed_version_id, project_id FROM issues WHERE id = ?', [$issue->id]);
+            if (\is_array($was) && (int) $was['fixed_version_id'] === $issue->fixedVersion->id
+                && ((int) $was['project_id'] === $issue->project->id || \in_array($issue->fixedVersion, $shared, true))) {
+                $versions[] = $issue->fixedVersion;
+            }
         }
 
         return $this->projects->sortVersions($versions);
@@ -871,6 +896,13 @@ final class IssueService
 
         if (!isset($issue->project)) {
             $errors[] = $field('project').' '.$msg('blank');
+            // no project: no tracker nor default status either (same errors as Redmine)
+            if (!isset($issue->tracker)) {
+                $errors[] = $field('tracker').' '.$msg('blank');
+            }
+            if (!isset($issue->status)) {
+                $errors[] = $field('status').' '.$msg('blank');
+            }
 
             return $errors;
         }
@@ -922,6 +954,9 @@ final class IssueService
         if ($issue->assignedTo && ($issue->isNew() || $original['assigned_to_id'] !== $issue->assignedTo->id)
             && !\in_array($issue->assignedTo, $this->assignableUsers($issue), true)) {
             $errors[] = $field('assigned_to').' '.$msg('invalid');
+        }
+        foreach (array_keys($this->invalidDates[spl_object_id($issue)] ?? []) as $dateField) {
+            $errors[] = $field($dateField).' '.$msg('not_a_date');
         }
         if (isset($this->invalidParent[spl_object_id($issue)])) {
             $errors[] = $field('parent_issue').' '.$msg('invalid');
@@ -1046,6 +1081,16 @@ final class IssueService
     {
         $user = $this->auth->user($user);
         $oid = spl_object_id($issue);
+        // Issue#default_assign (before_validation on create): category assignee, then project default assignee
+        if ($issue->isNew() && null === $issue->assignedTo && isset($issue->project)) {
+            $assignable = null;
+            foreach ([$issue->category?->assignedTo, $issue->project->defaultAssignedTo] as $candidate) {
+                if (null !== $candidate && \in_array($candidate, $assignable ??= $this->assignableUsers($issue), true)) {
+                    $issue->assignedTo = $candidate;
+                    break;
+                }
+            }
+        }
         $errors = $this->validate($issue, $user);
         if ([] !== $errors) {
             return $errors;
@@ -1152,6 +1197,26 @@ final class IssueService
                 if ($journal->isEmpty()) {
                     $journal = null;
                 } else {
+                    // Journal#split_private_notes: blank notes are never private; private notes with
+                    // changes are split so that the changes stay visible to everyone
+                    if ($journal->privateNotes && !$journal->hasNotes()) {
+                        $journal->privateNotes = false;
+                    } elseif ($journal->privateNotes && $journal->details->count() > 0) {
+                        $changes = new Journal();
+                        $changes->issue = $issue;
+                        $changes->user = $user;
+                        $changes->notes = null;
+                        $changes->privateNotes = false;
+                        $changes->createdOn = $now;
+                        $changes->updatedOn = $now;
+                        foreach ($journal->details->toArray() as $d) {
+                            $journal->details->removeElement($d);
+                            $d->journal = $changes;
+                            $changes->details->add($d);
+                        }
+                        $this->em->persist($changes);
+                        $issue->journals->add($changes);
+                    }
                     $this->em->persist($journal);
                     $issue->journals->add($journal);
                 }
@@ -1215,7 +1280,7 @@ final class IssueService
     {
         $oid = spl_object_id($issue);
         unset($this->pendingCustomValues[$oid], $this->pendingNotes[$oid], $this->pendingPrivateNotes[$oid],
-            $this->pendingWatchers[$oid], $this->pendingDeletedAttachments[$oid], $this->pendingAttachments[$oid], $this->invalidParent[$oid]);
+            $this->pendingWatchers[$oid], $this->pendingDeletedAttachments[$oid], $this->pendingAttachments[$oid], $this->invalidParent[$oid], $this->invalidDates[$oid]);
         $this->workflowRulesCache = [];
     }
 
@@ -1448,6 +1513,10 @@ final class IssueService
         if (IssueRelation::TYPE_RELATES === $type && $from->id > $to->id) {
             [$from, $to] = [$to, $from];
         }
+        // IssueRelation#circular_dependency? is reported before the (reverse) uniqueness of the pair
+        if (\in_array($type, [IssueRelation::TYPE_PRECEDES, IssueRelation::TYPE_BLOCKS], true) && $this->wouldCreateCycle($from, $to, $type)) {
+            return [null, [$this->i18n->l('activerecord.errors.messages.circular_dependency')]];
+        }
         foreach ($from->getRelations() as $r) {
             if ($r->otherIssue($from)->id === $to->id) {
                 return [null, [$this->i18n->l('field_issue_to').' '.$this->i18n->l('activerecord.errors.messages.taken')]];
@@ -1455,9 +1524,6 @@ final class IssueService
         }
         if ($to->isDescendantOf($from) || $from->isDescendantOf($to)) {
             return [null, [$this->i18n->l('activerecord.errors.messages.cant_link_an_issue_with_a_descendant')]];
-        }
-        if (\in_array($type, [IssueRelation::TYPE_PRECEDES, IssueRelation::TYPE_BLOCKS], true) && $this->wouldCreateCycle($from, $to, $type)) {
-            return [null, [$this->i18n->l('activerecord.errors.messages.circular_dependency')]];
         }
         $rel = new IssueRelation();
         $rel->issueFrom = $from;
@@ -1746,6 +1812,11 @@ final class IssueService
             return;
         }
         $parents = array_values(array_unique(array_filter(array_map(static fn (Issue $i) => $i->parent?->id, $issues))));
+        // after_destroy_commit webhooks are built from the in-memory issue: build them while it is still
+        // loaded (its custom values, journals... are deleted below and the EntityManager is cleared)
+        foreach ($issues as $issue) {
+            $this->events->dispatch(new IssueEvent($issue, IssueEvent::DELETED, $user, null));
+        }
         $conn = $this->em->getConnection();
         $conn->beginTransaction();
         try {
@@ -1756,6 +1827,7 @@ final class IssueService
             };
             $p = [\Doctrine\DBAL\ArrayParameterType::INTEGER];
             $conn->executeStatement('DELETE FROM journal_details WHERE journal_id IN (SELECT id FROM journals WHERE journalized_type = \'Issue\' AND journalized_id IN (?))', [$ids], $p);
+            $conn->executeStatement('DELETE FROM reactions WHERE reactable_type = \'Journal\' AND reactable_id IN (SELECT id FROM journals WHERE journalized_type = \'Issue\' AND journalized_id IN (?))', [$ids], $p);
             $conn->executeStatement('DELETE FROM journals WHERE journalized_type = \'Issue\' AND journalized_id IN (?)', [$ids], $p);
             $conn->executeStatement('DELETE FROM issue_relations WHERE issue_from_id IN (?) OR issue_to_id IN (?)', [$ids, $ids], [\Doctrine\DBAL\ArrayParameterType::INTEGER, \Doctrine\DBAL\ArrayParameterType::INTEGER]);
             $conn->executeStatement('DELETE FROM watchers WHERE watchable_type = \'Issue\' AND watchable_id IN (?)', [$ids], $p);
@@ -1778,9 +1850,6 @@ final class IssueService
                 $this->rebuildIssueTrees([$pid]);
                 $this->recalculateAttributesFor($pid, $this->em->find(User::class, $user->id));
             }
-        }
-        foreach ($issues as $issue) {
-            $this->events->dispatch(new IssueEvent($issue, IssueEvent::DELETED, $user, null));
         }
     }
 

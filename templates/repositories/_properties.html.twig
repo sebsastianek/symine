@@ -1,0 +1,5 @@
+{% if properties is not empty %}
+<ul class="properties">
+{% for name in properties|keys|sort %}<li><b>{{ name }}</b>: <span>{{ properties[name] }}</span></li>{% endfor %}
+</ul>
+{% endif %}

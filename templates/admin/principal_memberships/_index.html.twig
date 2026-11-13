@@ -1,0 +1,32 @@
+{#- principal_memberships/_index: principal, principal_memberships -#}
+{% set ptype = principal.isGroup() ? 'groups' : 'users' %}
+<p><a class="icon icon-add" href="{{ path('membership_new', {type: ptype, principal_id: principal.id}) }}">{{ sprite_icon('add', l('label_add_projects')) }}</a></p>
+
+{% if principal_memberships|length > 0 %}
+<table class="list memberships">
+  <thead><tr>
+    <th>{{ l('label_project') }}</th>
+    <th>{{ l('label_role_plural') }}</th>
+    <th style="width:15%"></th>
+  </tr></thead>
+  <tbody>
+  {% for membership in principal_memberships %}
+  <tr id="member-{{ membership.id }}" class="class">
+  <td class="project name">
+    {{ link_to_project(membership.project) }}
+  </td>
+  <td class="roles">
+    <span id="member-{{ membership.id }}-roles">{{ membership.getRoles()|map(r => r.name)|join(', ') }}</span>
+    <div id="member-{{ membership.id }}-form"></div>
+  </td>
+  <td class="buttons">
+      <a class="icon icon-edit" href="{{ path('membership_edit', {type: ptype, principal_id: principal.id, id: membership.id}) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>
+      {% if membership.isDeletable() %}<a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('membership_destroy', {type: ptype, principal_id: principal.id, id: membership.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>{% endif %}
+  </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}

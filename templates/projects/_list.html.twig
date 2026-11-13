@@ -1,0 +1,73 @@
+{%- set q = app.request.query.all -%}
+{%- set statuses = {1: l('project_status_active'), 5: l('project_status_closed'), 9: l('project_status_archived'), 10: l('project_status_scheduled_for_deletion')} -%}
+{%- set current_sort = query.sort[0] ?? null -%}
+<form data-cm-url="{{ path('projects_context_menu') }}" action="{{ app.request.pathInfo }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}<input type="hidden" name="back_url" value="{{ app.request.pathInfo }}{% if q is not empty %}?{{ rails_to_query(q) }}{% endif %}" autocomplete="off" />
+<div class="autoscroll">
+<table class="list projects odd-even {{ query.group_by ? 'grouped' : '' }}">
+<thead>
+  <tr>
+    {% for column in query.columns %}{% if available_columns[column] is defined %}
+      {%- set sortable = column != 'last_activity_date' -%}
+      {%- if sortable -%}
+        {%- set css = null -%}{%- set icon = null -%}
+        {%- set order = column in ['parent_id', 'created_on', 'updated_on'] ? 'desc' : 'asc' -%}
+        {%- if current_sort and current_sort[0] == column -%}
+          {%- set css = current_sort[1] == 'asc' ? 'sort asc icon icon-sorted-desc' : 'sort desc icon icon-sorted-asc' -%}
+          {%- set icon = current_sort[1] == 'asc' ? 'angle-up' : 'angle-down' -%}
+          {%- set order = current_sort[1] == 'asc' ? 'desc' : 'asc' -%}
+        {%- endif -%}
+        {%- set sort_param = ([column ~ (order == 'desc' ? ':desc' : '')]|merge(query.sort|filter(s => s[0] != column)|map(s => s[0] ~ (s[1] == 'desc' ? ':desc' : ''))))|slice(0, 3)|join(',') -%}
+      {%- endif %}
+      <th class="{{ column }}">{% if sortable %}<a title="{{ l('label_sort_by', {value: '"' ~ available_columns[column] ~ '"'}) }}"{% if css %} class="{{ css }}"{% endif %} href="{{ app.request.pathInfo }}?{{ rails_to_query(q|merge({sort: sort_param})) }}">{% if icon %}{{ sprite_icon(icon, available_columns[column]) }}{% else %}{{ available_columns[column] }}{% endif %}</a>{% else %}{{ available_columns[column] }}{% endif %}</th>
+    {% endif %}{% endfor %}
+  </tr>
+</thead>
+<tbody>
+{%- set previous_group = null -%}
+{%- set bookmarks = bookmarked_project_ids() -%}
+{% for entry in entries %}
+  {%- set level = 0 -%}
+  {%- if query.sort|length == 0 -%}{%- for a in entry.getAncestors() -%}{%- if a in entries -%}{%- set level = level + 1 -%}{%- endif -%}{%- endfor -%}{%- endif -%}
+  {% if query.group_by == 'is_public' and not (previous_group is same as(entry.isPublic)) %}
+    {%- set previous_group = entry.isPublic -%}
+    <tr class="group open">
+      <td colspan="{{ query.columns|length }}">
+        <span class="expander icon icon-expanded" onclick="toggleRowGroup(this);">{{ sprite_icon('angle-down') }}</span>
+        <span class="name">{{ entry.isPublic ? l('general_text_Yes') : l('general_text_No') }}</span>
+        <span class="count">{{ entries|filter(e => e.isPublic == entry.isPublic)|length }}</span>
+        <a href="#" onclick="toggleAllRowGroups(this); return false;" class="toggle-all">{{ l('button_collapse_all') }}/{{ l('button_expand_all') }}</a>
+      </td>
+    </tr>
+  {% endif %}
+  <tr id="project-{{ entry.id }}" class="{{ cycle(['odd', 'even'], loop.index0) }}  {{ project_css_classes(entry) }} {{ level > 0 ? 'idnt idnt-' ~ level : '' }}">
+    {% for column in query.columns %}{% if available_columns[column] is defined %}
+    <td class="{{ column }}">
+      {%- if column == 'name' -%}
+        {{ link_to_project(entry) }}{% if is_member_of(entry) %}<span class="icon-only icon-user my-project">{{ sprite_icon('user', l('label_my_projects'), 18, true) }}</span>{% endif %}{% if entry.id in bookmarks %}<span class="icon-only icon-bookmarked-project">{{ sprite_icon('bookmarked', l('label_my_bookmarks'), 18, true) }}</span>{% endif %}
+      {%- elseif column == 'short_description' -%}
+        {% if entry.description %}<div class="wiki">{{ textilizable(project_short_description(entry.description), entry) }}</div>{% endif %}
+      {%- elseif column == 'homepage' -%}
+        {% if entry.homepage %}<div class="wiki">{{ textilizable(entry.homepage, entry) }}</div>{% endif %}
+      {%- elseif column == 'status' -%}{{ statuses[entry.status] ?? entry.status }}
+      {%- elseif column == 'identifier' -%}{{ entry.identifier }}
+      {%- elseif column == 'parent_id' -%}{{ entry.parent ? link_to_project(entry.parent) : '' }}
+      {%- elseif column == 'is_public' -%}{{ entry.isPublic ? l('general_text_Yes') : l('general_text_No') }}
+      {%- elseif column == 'created_on' -%}{{ format_time(entry.createdOn) }}
+      {%- elseif column == 'updated_on' -%}{{ format_time(entry.updatedOn) }}
+      {%- elseif column == 'last_activity_date' -%}
+        {%- set last_activity = (last_activity_dates ?? {})[entry.id] ?? null -%}
+        {%- if last_activity %}<a href="{{ path('project_activity', {id: entry.identifier, from: last_activity.date}) }}">{{ format_time(last_activity.time) }}</a>{% endif -%}
+      {%- elseif column starts with 'cf_' -%}
+        {%- for f in custom_fields -%}{% if 'cf_' ~ f.id == column %}{{ format_custom_value(f, custom_values[entry.id][f.id] ?? null) }}{% endif %}{%- endfor -%}
+      {%- endif -%}
+    </td>
+    {% endif %}{% endfor %}
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</form>
+{% include 'common/_pagination.html.twig' %}
+
+{% include 'projects/_csv_export_options.html.twig' with {hidden_fields: csv_hidden_fields} %}

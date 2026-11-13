@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_confirmation') }}</h2>
+<div class="warning">
+<p>{{ l('text_account_destroy_confirmation')|nl2br }}</p>
+<p>
+  <form action="{{ path('my_account_destroy') }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+    <label><input type="checkbox" name="confirm" id="confirm" value="1" /> {{ l('general_text_Yes') }}</label>
+    <input type="submit" name="commit" value="{{ l('button_delete_my_account') }}" /> |
+    <a href="{{ path('my_account') }}">{{ l('button_cancel') }}</a>
+  </form>
+</p>
+</div>
+{% endblock %}

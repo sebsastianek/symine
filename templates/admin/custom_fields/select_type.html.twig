@@ -1,0 +1,15 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('custom_fields_index') }}">{{ l('label_custom_field_plural') }}</a> &#187; {{ l('label_custom_field_new') }}</h2>
+
+<form action="{{ path('custom_field_new') }}" accept-charset="UTF-8" method="get">
+  <div class="box">
+  <p>{{ l('label_custom_field_select_type') }}:</p>
+  <p>
+  {% for o in type_options %}<label style="display:block;"><input type="radio" name="type" id="type_{{ o[1] }}" value="{{ o[1] }}"{% if o[1] == default_type %} checked="checked"{% endif %} />{{ o[0] }}</label>
+{% endfor %}
+  </p>
+  </div>
+  <p><input type="submit" value="{{ l('label_next') }} &#187;" /></p>
+</form>
+{% endblock %}

@@ -1,0 +1,7 @@
+{% if entry and entry.kind == 'file' %}
+{% set tabs = [] %}
+{% if supports_cat %}{% set tabs = tabs|merge([{name: 'entry', label: 'button_view', url: repo_url('entry', repository, {path: path, rev: rev})}]) %}{% endif %}
+{% if supports_history %}{% set tabs = tabs|merge([{name: 'changes', label: 'label_history', url: repo_url('changes', repository, {path: path, rev: rev})}]) %}{% endif %}
+{% if supports_annotate %}{% set tabs = tabs|merge([{name: 'annotate', label: 'button_annotate', url: repo_url('annotate', repository, {path: path, rev: rev})}]) %}{% endif %}
+{% include 'repositories/_tabs.html.twig' with {selected_tab: action_name, tabs: tabs} %}
+{% endif %}

@@ -1,0 +1,7 @@
+{% extends 'mailer/layout.txt.twig' %}
+{% block content %}
+{{ document.title }} ({{ document.category.name }})
+{{ document_url }}
+
+{{ document.description }}
+{% endblock %}

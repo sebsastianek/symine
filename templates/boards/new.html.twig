@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_board_new') }}</h2>
+
+<form class="new_board" id="new_board" action="{{ path('board_create', {project_id: project.identifier}) }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+  {% include 'boards/_form.html.twig' %}
+  <input type="submit" name="commit" value="{{ l('button_create') }}" data-disable-with="{{ l('button_create') }}" />
+</form>
+{% endblock %}

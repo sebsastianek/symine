@@ -1,0 +1,31 @@
+{#- Port of Redmine's common/_tabs (render_tabs).
+    Params: tabs = list of {name, label, template?, url?, onclick?}; selected_tab (defaults to app.request.query tab).
+    Tab contents are included with the current context (+ `tab`). -#}
+{% if tabs|length == 0 %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% else %}
+{% set _names = tabs|map(t => t.name) %}
+{% set selected_tab = selected_tab ?? app.request.query.get('tab') %}
+{% if selected_tab not in _names %}{% set selected_tab = tabs|first.name %}{% endif %}
+{% set default_action = null %}
+<div class="tabs">
+  <ul>
+  {% for tab in tabs %}
+    {% set action = tab.onclick ?? (tab.template is defined and tab.template ? "showTab('" ~ tab.name ~ "', this.href)" : null) %}
+    <li><a href="{{ tab.url ?? ('?' ~ app.request.query.all|merge({tab: tab.name})|url_encode) }}" id="tab-{{ tab.name }}"{% if tab.name == selected_tab %} class="selected"{% endif %}{% if action %} onclick="{{ action }}; return false;"{% endif %}>{{ l(tab.label) }}</a></li>
+    {% if tab.name == selected_tab %}{% set default_action = action %}{% endif %}
+  {% endfor %}
+  </ul>
+  <div class="tabs-buttons" style="display:none;">
+    <button class="tab-left icon-only" type="button" onclick="moveTabLeft(this);">{{ sprite_icon('angle-left') }}</button>
+    <button class="tab-right icon-only" type="button" onclick="moveTabRight(this);">{{ sprite_icon('angle-right') }}</button>
+  </div>
+</div>
+{% for tab in tabs %}
+  {% if tab.template is defined and tab.template %}
+  <div id="tab-content-{{ tab.name }}"{% if tab.name != selected_tab %} style="display:none"{% endif %} class="tab-content">
+    {% include tab.template with {tab: tab} %}
+  </div>
+  {% endif %}
+{% endfor %}
+{% endif %}

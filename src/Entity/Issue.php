@@ -171,7 +171,10 @@ class Issue implements \Stringable
     {
         $out = [];
         $p = $this->parent;
-        while (null !== $p) {
+        $seen = [spl_object_id($this) => true];
+        // guard against cycles created in memory by an invalid parent assignment (validated later)
+        while (null !== $p && !isset($seen[spl_object_id($p)])) {
+            $seen[spl_object_id($p)] = true;
             array_unshift($out, $p);
             $p = $p->parent;
         }

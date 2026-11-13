@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# Runs tests/Integration/RealServices against real containers (OpenLDAP, GreenMail IMAP/POP3/SMTP,
+# Mailpit, an HTTP webhook receiver): starts them, runs the tests with the SYMINE_TEST_* variables set,
+# and tears everything down (also on failure). Extra arguments are passed to phpunit, e.g.
+#   bin/test-real-services --filter LdapTest
+#   bin/test-real-services --e2e        # also the Playwright specs of e2e/tests/real-services
+#   bin/test-real-services --e2e-only   # only the Playwright specs (extra arguments go to Playwright)
+# Set KEEP_SERVICES=1 to leave the containers running.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+PHP=${PHP:-php}
+RUN_PHPUNIT=1
+RUN_E2E=0
+case "${1:-}" in
+  --e2e) RUN_E2E=1; shift ;;
+  --e2e-only) RUN_E2E=1; RUN_PHPUNIT=0; shift ;;
+esac
+E2E_SERVER_PID=
+PROJECT=symine-real-services
+COMPOSE=(docker compose -p "$PROJECT" -f tests/Integration/RealServices/compose.yaml)
+
+teardown() {
+  if [ -n "$E2E_SERVER_PID" ]; then kill "$E2E_SERVER_PID" >/dev/null 2>&1 || true; fi
+  if [ "${KEEP_SERVICES:-0}" != "1" ]; then
+    "${COMPOSE[@]}" down -v --remove-orphans >/dev/null 2>&1 || true
+  fi
+}
+trap teardown EXIT
+
+"${COMPOSE[@]}" up -d
+
+# webhook endpoints on loopback addresses are refused (SSRF protection): use a non-loopback host address
+HOST_IP=${SYMINE_TEST_HOST_IP:-}
+if [ -z "$HOST_IP" ]; then
+  HOST_IP=$( (ipconfig getifaddr en0 || ipconfig getifaddr en1 || hostname -I 2>/dev/null | awk '{print $1}') 2>/dev/null | head -1 || true)
+fi
+if [ -z "$HOST_IP" ]; then
+  echo "Cannot determine a non-loopback host IP; set SYMINE_TEST_HOST_IP" >&2
+  exit 1
+fi
+
+export SYMINE_TEST_LDAP_URL=ldap://localhost:13890
+export SYMINE_TEST_LDAPS_URL=ldaps://localhost:16360
+export SYMINE_TEST_IMAP_URL=imap://localhost:13143
+export SYMINE_TEST_POP3_URL=pop3://localhost:13110
+export SYMINE_TEST_MAIL_SMTP=localhost:13025
+export SYMINE_TEST_SMTP_DSN=smtp://localhost:11125
+export SYMINE_TEST_MAILPIT_URL=http://localhost:18125
+export SYMINE_TEST_WEBHOOK_RECEIVER_URL=http://$HOST_IP:18190
+export SYMINE_TEST_WEBHOOK_INSPECT_URL=http://localhost:18190
+
+echo "Waiting for the services..."
+# osixia/openldap restarts slapd once its bootstrap is done: wait for the final process
+for _ in $(seq 1 60); do
+  "${COMPOSE[@]}" logs ldap 2>/dev/null | grep -q "Running /container/run/process/slapd/run" && break
+  sleep 2
+done
+"$PHP" -r '
+$deadline = time() + 120;
+$ready = static function (): bool {
+    foreach ([13025, 13110, 13143, 11125, 18125, 18190] as $port) {
+        $s = @fsockopen("127.0.0.1", $port, $e, $m, 1);
+        if (!$s) { return false; }
+        fclose($s);
+    }
+    $l = @ldap_connect("ldap://localhost:13890");
+    if (!$l) { return false; }
+    ldap_set_option($l, LDAP_OPT_PROTOCOL_VERSION, 3);
+    ldap_set_option($l, LDAP_OPT_NETWORK_TIMEOUT, 2);
+    // bootstrap done when the test users are there
+    return @ldap_bind($l, "uid=bob,ou=people,dc=symine,dc=test", "bobpass1");
+};
+while (!$ready()) {
+    if (time() > $deadline) { fwrite(STDERR, "services not ready\n"); exit(1); }
+    sleep(2);
+}
+'
+
+STATUS=0
+if [ "$RUN_PHPUNIT" = "1" ]; then
+  "$PHP" bin/phpunit tests/Integration/RealServices "$@" || STATUS=$?
+fi
+
+if [ "$RUN_E2E" = "1" ]; then
+  # Symine server sending its e-mails to Mailpit, on its own DB (E2E_TOKEN=rs => var/e2e-rs.db, used by the specs' sql())
+  E2E_RS_PORT=${E2E_RS_PORT:-8777}
+  cp tests/fixtures/symine-seeded.db var/e2e-rs.db
+  rm -rf var/cache-e2e-rs
+  APP_ENV=dev APP_CACHE_DIR=var/cache-e2e-rs DATABASE_URL="sqlite:///$PWD/var/e2e-rs.db" MAILER_DSN="$SYMINE_TEST_SMTP_DSN" \
+    "$PHP" -d variables_order=EGPCS -S 127.0.0.1:"$E2E_RS_PORT" -t public >var/e2e-rs-server.log 2>&1 &
+  E2E_SERVER_PID=$!
+  E2E_TOKEN=rs E2E_BASE_URL=http://127.0.0.1:$E2E_RS_PORT bin/test-e2e tests/real-services $([ "$RUN_PHPUNIT" = "1" ] || printf '%s ' "$@") || STATUS=$?
+fi
+exit $STATUS

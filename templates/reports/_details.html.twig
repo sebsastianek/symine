@@ -1,0 +1,79 @@
+{#- reports/_details.html.erb ; params: data, field_name, rows -#}
+{% import 'reports/_macros.html.twig' as rm %}
+{% if statuses is empty or rows is empty %}
+    <p><i>{{ l('label_no_data') }}</i></p>
+{% else %}
+<table class="list issue-report-detailed">
+<thead><tr>
+<th></th>
+{% for status in statuses %}
+<th>{{ status.name }}</th>
+{% endfor %}
+<th><strong>{{ l('label_open_issues_plural') }}</strong></th>
+<th><strong>{{ l('label_closed_issues_plural') }}</strong></th>
+<th><strong>{{ l('label_total') }}</strong></th>
+</tr></thead>
+<tbody>
+{% for row in rows %}
+<tr>
+  <td class="name"><a href="{{ rm.aggregate_path(project, field_name, row) }}">{{ row.name }}</a></td>
+  {% for status in statuses %}
+    <td>{{ rm.aggregate_link(aggregate(data, {(field_name): row.id, status_id: status.id}), rm.aggregate_path(project, field_name, row, {status_id: status.id})) }}</td>
+  {% endfor %}
+  <td>{{ rm.aggregate_link(aggregate(data, {(field_name): row.id, closed: false}), rm.aggregate_path(project, field_name, row, {status_id: 'o'})) }}</td>
+  <td>{{ rm.aggregate_link(aggregate(data, {(field_name): row.id, closed: true}), rm.aggregate_path(project, field_name, row, {status_id: 'c'})) }}</td>
+  <td>{{ rm.aggregate_link(aggregate(data, {(field_name): row.id}), rm.aggregate_path(project, field_name, row, {status_id: '*'})) }}</td>
+</tr>
+{% endfor %}
+</tbody>
+<tfoot>
+<tr class="total">
+  <td>{{ l('label_total') }}</td>
+  {% for status in statuses %}
+  <td>{{ aggregate(data, {status_id: status.id}) }}</td>
+  {% endfor %}
+  <td>{{ aggregate(data, {closed: false}) }}</td>
+  <td>{{ aggregate(data, {closed: true}) }}</td>
+  <td>{{ aggregate(data, {}) }}</td>
+</tr>
+</tfoot>
+</table>
+{% if export_allowed %}
+<p class="other-formats hide-when-print">{{ l('label_export_to') }}  <span><a class="csv" rel="nofollow" onclick="showModal(&#39;csv-export-options&#39;, &#39;330px&#39;); return false;" href="{{ path('issues_report_details', {id: project.identifier, detail: detail, _format: 'csv'}|merge(app.request.query.all)) }}">CSV</a></span>
+</p><div id="csv-export-options" style="display: none;">
+  <h3 class="title">{{ l('label_export_options', {export_format: 'CSV'}) }}</h3>
+  <form id="csv-export-form" action="{{ path('issues_report_details', {id: project.identifier, detail: detail, _format: 'csv'}) }}" accept-charset="UTF-8" method="get">
+  {% set csv_encoding = l('general_csv_encoding') %}
+  {% if csv_encoding|upper != 'UTF-8' %}
+  <p><label>{{ l('label_encoding') }} <select name="encoding" id="encoding"><option selected="selected" value="UTF-8">UTF-8</option>
+<option value="{{ csv_encoding }}">{{ csv_encoding }}</option></select></label></p>
+  {% endif %}
+  {% set csv_sep = l('general_csv_separator') %}
+  <p><label>{{ l('label_fields_separator') }} <select name="field_separator" id="field_separator"><option{% if csv_sep == ',' %} selected="selected"{% endif %} value=",">{{ l('label_comma_char') }}</option>
+<option{% if csv_sep == ';' %} selected="selected"{% endif %} value=";">{{ l('label_semi_colon_char') }}</option></select></label></p>
+  <p class="buttons">
+    <input type="submit" value="{{ l('button_export') }}" onclick="hideModal(this);" />
+    <a href="#" onclick="hideModal(this);; return false;">{{ l('button_cancel') }}</a>
+  </p>
+</form></div>
+{% endif %}
+
+<div class="issue-report-graph hide-when-print" data-controller="reports--details" data-reports--details-title-value="{{ l('label_issues_by', {value: report_title}) }}">
+  <template data-reports--details-target="labels">
+    {{ rows|map(r => r.name)|json_encode(constant('JSON_UNESCAPED_UNICODE')) }}
+  </template>
+  <template data-reports--details-target="datasets">
+    {{ statuses|map(s => {label: s.name, hidden: s.isClosed, data: rows|map(r => aggregate(data, {(field_name): r.id, status_id: s.id}))})|json_encode(constant('JSON_UNESCAPED_UNICODE')) }}
+  </template>
+  <canvas id="issues_by_{{ detail }}" data-reports--details-target="canvas"></canvas>
+</div>
+<div class="issue-report-graph hide-when-print" data-controller="reports--details" data-reports--details-title-value="{{ l('label_issues_by', {value: l('field_status')}) }}">
+  <template data-reports--details-target="labels">
+    {{ statuses|map(s => s.name)|json_encode(constant('JSON_UNESCAPED_UNICODE')) }}
+  </template>
+  <template data-reports--details-target="datasets">
+    {{ rows|map(r => {label: r.name, data: statuses|map(s => aggregate(data, {(field_name): r.id, status_id: s.id}))})|json_encode(constant('JSON_UNESCAPED_UNICODE')) }}
+  </template>
+  <canvas id="issues_by_status" data-reports--details-target="canvas"></canvas>
+</div>
+{% endif %}

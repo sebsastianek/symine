@@ -29,15 +29,38 @@ final class Authorization
     /** @var array<int, array{status: int, public: bool, modules: list<string>}>|null */
     private ?array $projectInfo = null;
 
+    /** @var \WeakMap<User, list<string>> OAuth scopes of users authenticated by a Bearer token (User#oauth_scope) */
+    private \WeakMap $oauthScopes;
+
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly CurrentUser $currentUser,
     ) {
+        $this->oauthScopes = new \WeakMap();
+    }
+
+    /** User#oauth_scope=: restricts the user's permissions to these scopes (null = not authorized by OAuth) */
+    public function setOauthScope(User $user, ?array $scopes): void
+    {
+        if (null === $scopes) {
+            unset($this->oauthScopes[$user]);
+        } else {
+            $this->oauthScopes[$user] = array_values(array_map('strval', $scopes));
+        }
+    }
+
+    /** @return list<string>|null */
+    public function oauthScope(?User $user = null): ?array
+    {
+        $user ??= $this->currentUser->get();
+
+        return $this->oauthScopes[$user] ?? null;
     }
 
     public function reset(): void
     {
         $this->memberships = [];
+        $this->builtinRoles = [];
         $this->overrideRoles = null;
         $this->eligibleProjects = [];
         $this->projectInfo = null;
@@ -147,9 +170,15 @@ final class Authorization
         return array_values($roles);
     }
 
-    public function roleAllowedTo(Role $role, string $permission): bool
+    /** Role#allowed_to?(permission, user.oauth_scope): the OAuth scope (if any) filters the role permissions */
+    public function roleAllowedTo(Role $role, string $permission, ?User $user = null): bool
     {
-        return $role->hasPermission($permission) || AccessControl::isPublic($permission);
+        if (!$role->hasPermission($permission) && !AccessControl::isPublic($permission)) {
+            return false;
+        }
+        $scope = $this->oauthScope($user);
+
+        return null === $scope || \in_array($permission, $scope, true);
     }
 
     /** Project#allows_to? */
@@ -184,7 +213,7 @@ final class Authorization
             }
             foreach ($this->rolesForProject($project, $user) as $role) {
                 if (($project->isPublic || $role->isMember())
-                    && $this->roleAllowedTo($role, $permission)
+                    && $this->roleAllowedTo($role, $permission, $user)
                     && (null === $block || $block($role, $user))) {
                     return true;
                 }
@@ -197,7 +226,7 @@ final class Authorization
                 return true;
             }
             foreach ($this->allRoles($user) as $role) {
-                if ($this->roleAllowedTo($role, $permission) && (null === $block || $block($role, $user))) {
+                if ($this->roleAllowedTo($role, $permission, $user) && (null === $block || $block($role, $user))) {
                     return true;
                 }
             }
@@ -315,7 +344,7 @@ final class Authorization
         $statements = [];
         if (!$memberOnly) {
             $role = $this->builtinRole($user);
-            if ($this->roleAllowedTo($role, $permission)) {
+            if ($this->roleAllowedTo($role, $permission, $user)) {
                 $memberIds = array_keys($this->membershipsOf($user));
                 $overridden = [];
                 $this->overrideRoles(new Project(), $role);
@@ -328,7 +357,7 @@ final class Authorization
             }
         }
         foreach ($this->projectIdsByRole($user) as ['role' => $role, 'projects' => $projectIds]) {
-            if ($this->roleAllowedTo($role, $permission)) {
+            if ($this->roleAllowedTo($role, $permission, $user)) {
                 $ids = array_values(array_intersect($projectIds, $eligible));
                 if ([] !== $ids) {
                     $statements[] = [$role, $ids];

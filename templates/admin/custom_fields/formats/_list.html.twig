@@ -1,0 +1,9 @@
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+<p>
+  {{ f.label('possible_values', l('field_possible_values'), true) }}<textarea rows="15" name="custom_field[possible_values]" id="custom_field_possible_values">
+{{ custom_field.getPossibleValues()|join("\n") }}</textarea>
+  <em class="info">{{ l('text_custom_field_possible_values_info') }}</em>
+</p>
+<p>{{ f.text_field('default_value', custom_field.defaultValue, l('field_default_value')) }}</p>
+<p>{{ f.text_field('url_pattern', custom_field.getFormatOption('url_pattern'), l('label_link_values_to'), 50) }}</p>
+<p>{{ f.edit_tag_style(custom_field) }}</p>

@@ -1,0 +1,65 @@
+{#- Redmine ApplicationHelper#progress_bar (floor, titles per cell, legend paragraph) -#}
+{% macro progress_bar(pcts, legend, titles) -%}
+{%- set pcts = pcts is iterable ? pcts : [pcts, pcts] -%}
+{%- set c = pcts[0]|round(0, 'floor') -%}
+{%- set d = pcts[1]|round(0, 'floor') - c -%}
+{%- set t = 100 - d - c -%}
+{%- set titles = titles ?? [] -%}
+<table class="progress progress-{{ c }}"><tr>
+{%- if c > 0 %}<td style="width: {{ c }}%;" class="closed" title="{{ titles[0] ?? (c ~ '%') }}"></td>{% endif -%}
+{%- if d > 0 %}<td style="width: {{ d }}%;" class="done"{% if titles[1] is defined %} title="{{ titles[1] }}"{% endif %}></td>{% endif -%}
+{%- if t > 0 %}<td style="width: {{ t }}%;" class="todo"{% if titles[2] is defined %} title="{{ titles[2] }}"{% endif %}></td>{% endif -%}
+</tr></table><p class="percent">{{ legend ?? '' }}</p>
+{%- endmacro %}
+
+{#- link_to_version with date title (and optional anchor name) -#}
+{% macro link_to_version(version, project, name) -%}
+{%- set label = version_format_name(version, project) -%}
+{%- if allowed_to('view_issues', version.project) -%}
+<a title="{{ format_date(version.effectiveDate) }}"{% if name is not null %} name="{{ name }}"{% endif %} href="{{ path('version_show', {id: version.id}) }}">{{ label }}</a>
+{%- else -%}{{ label }}{%- endif -%}
+{%- endmacro %}
+
+{% macro link_if(cond, text, url) -%}
+{%- if cond and url %}<a href="{{ url }}">{{ text }}</a>{% else %}{{ text }}{% endif -%}
+{%- endmacro %}
+
+{% macro errors(errors) -%}
+{%- if errors is not empty %}<div id="errorExplanation"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif -%}
+{%- endmacro %}
+
+{% macro calendar_headers() -%}
+{%- set sow = setting('start_of_week') -%}
+{%- if sow is empty %}{% set sow = l('general_first_day_of_week') %}{% endif -%}
+<script>
+//<![CDATA[
+var datepickerOptions={dateFormat: 'yy-mm-dd', firstDay: {{ (sow|default(1)) % 7 }}, showOn: 'button', buttonImageOnly: true, buttonImage: '/assets/calendar.png', showButtonPanel: true, showWeek: true, showOtherMonths: true, selectOtherMonths: true, changeMonth: true, changeYear: true, beforeShow: beforeShowDatePicker};
+//]]>
+</script>
+{%- endmacro %}
+
+{% macro context_menu_tags() -%}
+<script src="/assets/context_menu.js"></script>
+<link rel="stylesheet" href="/assets/context_menu.css" media="screen" />
+{%- endmacro %}
+
+{#- issues list of roadmap / version page -#}
+{% macro related_issues(issues, project) -%}
+<form{% if path_exists('issues_context_menu') %} data-cm-url="{{ path('issues_context_menu') }}"{% endif %} action="" method="post">{{ csrf_field() }}
+  <table class="list related-issues">
+  <caption>{{ l('label_related_issues') }}</caption>
+  {%- for issue in issues %}
+    <tr class="hascontextmenu {{ issue_css_classes(issue) }}">
+      <td class="checkbox"><input type="checkbox" name="ids[]" value="{{ issue.id }}" /></td>
+      <td class="assigned_to">{% if issue.assignedTo %}{{ avatar(issue.assignedTo, 16) }}{% endif %}</td>
+      <td class="subject">{% if path_exists('issue_show') %}{{ link_to_issue(issue, {project: issue.project.id != project.id}) }}{% else %}{{ issue.tracker.name }} #{{ issue.id }}: {{ issue.subject }}{% endif %}</td>
+      <td class="buttons hide-when-print"><a title="{{ l('button_actions') }}" class="icon-only icon-actions js-contextmenu " href="#">{{ sprite_icon('3-bullets', l('button_actions')) }}</a></td>
+    </tr>
+  {%- endfor %}
+  </table>
+</form>
+{%- endmacro %}
+
+{% macro link_html(html, url) -%}
+{%- if url %}<a href="{{ url }}">{{ html|raw }}</a>{% else %}{{ html|raw }}{% endif -%}
+{%- endmacro %}

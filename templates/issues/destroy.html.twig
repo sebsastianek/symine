@@ -1,0 +1,27 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_confirmation') }}</h2>
+{% if error %}<div class="flash error" id="flash_error">{{ error }}</div>{% endif %}
+
+<form action="{{ path('issues_destroy') }}" accept-charset="UTF-8" method="post">
+<input type="hidden" name="_method" value="delete" autocomplete="off" />{{ csrf_field() }}
+{% if back_url %}<input type="hidden" name="back_url" value="{{ back_url }}" />{% endif %}
+{% for i in issues %}<input type="hidden" name="ids[]" value="{{ i.id }}" autocomplete="off" />
+{% endfor %}
+<div class="box">
+<p><strong>{{ l('text_destroy_time_entries_question', {hours: format_hours(hours)}) }}</strong></p>
+<p>
+<label><input type="radio" name="todo" id="todo_destroy" value="destroy" checked="checked" /> {{ l('text_destroy_time_entries') }}</label><br />
+{% if 'issue_id' not in setting('timelog_required_fields') %}
+<label><input type="radio" name="todo" id="todo_nullify" value="nullify" /> {{ l('text_assign_time_entries_to_project') }}</label><br />
+{% endif %}
+{% if project %}
+<label><input type="radio" name="todo" id="todo_reassign" value="reassign" onchange="if (this.checked) { $(&quot;#reassign_to_id&quot;).focus(); }" /> {{ l('text_reassign_time_entries') }}</label>
+<input type="text" name="reassign_to_id" id="reassign_to_id" value="{{ reassign_to_id }}" size="6" onfocus="$(&quot;#todo_reassign&quot;).attr(&quot;checked&quot;, true);" />
+<script>observeAutocompleteField('reassign_to_id', '{{ path('issues_auto_complete', {project_id: project.identifier})|e('js') }}')</script>
+{% endif %}
+</p>
+</div>
+<input type="submit" name="commit" value="{{ l('button_apply') }}" />
+</form>
+{% endblock %}

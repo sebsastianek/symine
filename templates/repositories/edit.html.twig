@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_repository') }}</h2>
+
+<form class="tabular" id="repository-form" action="/repositories/{{ repository.id }}" accept-charset="UTF-8" method="post">
+  <input type="hidden" name="_method" value="put" autocomplete="off" />
+  {{ csrf_field() }}
+  {% include 'repositories/_form.html.twig' %}
+</form>
+{% endblock %}

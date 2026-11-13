@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}{% include 'repositories/_header_tags.html.twig' %}{% endblock %}
+{% block content %}
+<div class="contextual">
+  {% include 'repositories/_navigation.html.twig' %}
+</div>
+
+<h2 class="breadcrumbs">{% include 'repositories/_breadcrumbs.html.twig' with {kind: 'file'} %}</h2>
+
+{% include 'repositories/_link_to_functions.html.twig' %}
+
+{% if mime and mime starts with 'image/' %}
+  <img src="{{ raw_url }}" alt="{{ path }}" class="filecontent image" />
+{% elseif mime == 'application/pdf' %}
+  <iframe src="{{ raw_url }}" class="filecontent pdf"></iframe>
+{% elseif mime == 'text/markdown' and content is not null %}
+  <div class="filecontent wiki">{{ textilizable(content, project) }}</div>
+{% elseif content is not null %}
+  {% include 'repositories/_file.html.twig' with {content: content} %}
+{% else %}
+  {% set kind = mime and mime starts with 'video/' ? 'video' : (mime and mime starts with 'audio/' ? 'audio' : null) %}
+  {% set no_preview %}<p class="nodata">{{ l('label_no_preview') }}<a class="icon icon-download" href="{{ raw_url }}">{{ l('label_no_preview_download') }}</a></p>{% endset %}
+  {% if kind == 'video' %}<video class="filecontent" src="{{ raw_url }}" controls="controls">{{ no_preview }}</video>
+  {% elseif kind == 'audio' %}<audio class="filecontent" src="{{ raw_url }}" controls="controls">{{ no_preview }}</audio>
+  {% else %}{{ no_preview }}{% endif %}
+{% endif %}
+
+<span class="pagination filepreview">
+{% if sibling_index is not null and siblings|length > 1 %}
+<ul class="pages">
+  {% if sibling_index > 0 %}<li class="previous page"><a accesskey="p" href="{{ repo_url('entry', repository, {path: siblings[sibling_index - 1].path, rev: rev}) }}">« {{ l('label_previous') }}</a></li>{% endif %}
+  {% if sibling_index < siblings|length - 1 %}<li class="next page"><a accesskey="n" href="{{ repo_url('entry', repository, {path: siblings[sibling_index + 1].path, rev: rev}) }}">{{ l('label_next') }} »</a></li>{% endif %}
+</ul>
+<span><span class="items">({{ sibling_index + 1 }}/{{ siblings|length }})</span></span>
+{% endif %}
+</span>
+{% endblock %}

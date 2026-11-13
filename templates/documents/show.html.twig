@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<div class="contextual">
+{% if allowed_to('edit_documents', project) %}
+<a class="icon icon-edit" accesskey="e" href="{{ path('document_edit', {id: document.id}) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>
+{% endif %}
+{% if allowed_to('delete_documents', project) %}
+<a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('document_destroy', {id: document.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+{% endif %}
+</div>
+
+<h2>{{ document.title }}</h2>
+
+<p><em>{{ document.category.name }}<br />
+{{ format_date(document.createdOn) }}</em></p>
+
+{% if custom_values|length > 0 %}
+<ul>
+  {% for cv in custom_values %}
+    <li><span class="label">{{ cv.name }}:</span> {{ cv.value }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+<div class="wiki">
+{{ textilizable(document.description, project) }}
+</div>
+
+<h3>{{ l('label_attachment_plural') }}</h3>
+{% include 'content/_attachments_links.html.twig' with {attachments: attachments, deletable: allowed_to('delete_documents', project), author: true, thumbnails: true} %}
+
+{% if can_add_attachment %}
+<p><a onclick="$('#add_attachment_form').show(); return false;" id="attach_files_link" href="">{{ l('label_attachment_new') }}</a></p>
+  <form id="add_attachment_form" style="display:none;" enctype="multipart/form-data" action="{{ path('document_add_attachment', {id: document.id}) }}" accept-charset="UTF-8" method="post">
+  {{ csrf_field() }}
+  <div class="box">
+  <p>{% include 'content/_attachments_form.html.twig' %}</p>
+  </div>
+  <input type="submit" name="commit" value="{{ l('button_add') }}" data-disable-with="{{ l('button_add') }}" />
+  </form>
+{% endif %}
+{% endblock %}

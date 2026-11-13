@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_webhook_new') }}</h2>
+
+<form class="new_webhook" id="new_webhook" action="{{ path('webhook_create') }}" method="post">
+  {{ csrf_field() }}
+  {% include 'admin/webhooks/_form.html.twig' %}
+  {% if back_url %}<input type="hidden" name="back_url" value="{{ back_url }}" />{% endif %}
+  <input type="submit" name="commit" value="{{ l('button_create') }}" />
+  <a href="{{ back_url ?: path('webhooks_index') }}">{{ l('button_cancel') }}</a>
+</form>
+{% endblock %}

@@ -1,0 +1,84 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Wiki formatting</title>
+<link rel="stylesheet" href="{{ asset_base }}/assets/wiki_syntax.css" media="screen" />
+</head>
+<body>
+
+<h1>Wiki 语法快速参考</h1>
+
+<table style="width:100%">
+<tr><th colspan="3">字体风格 <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#5" target="_blank">more</a>)</span></th></tr>
+<tr><th><img alt="粗体" src="{{ asset_base }}/assets/jstoolbar/bold.svg" /></th><td style="width:50%;">*粗体*</td><td style="width:50%;"><strong>粗体</strong></td></tr>
+<tr><th><img alt="斜体" src="{{ asset_base }}/assets/jstoolbar/italic.svg" /></th><td>_Italic_</td><td><em>斜体</em></td></tr>
+<tr><th><img alt="下划线" src="{{ asset_base }}/assets/jstoolbar/underline.svg" /></th><td>+下划线+</td><td><ins>下划线</ins></td></tr>
+<tr><th><img alt="删除线" src="{{ asset_base }}/assets/jstoolbar/strikethrough.svg" /></th><td>-删除线-</td><td><del>删除线</del></td></tr>
+<tr><th></th><td>??引用??</td><td><cite>引用</cite></td></tr>
+<tr><th><img alt="内嵌程序代码" src="{{ asset_base }}/assets/jstoolbar/letter-c.svg" /></th><td>@内嵌程序代码@</td><td><code>内嵌程序代码</code></td></tr>
+<tr><th><span class="syntax-pre"/></th><td>&lt;pre&gt;<br />&nbsp;格式化<br />&nbsp;的段落<br />&lt;/pre&gt;</td><td>
+<pre>
+ 格式化
+ 的段落
+</pre>
+</td></tr>
+
+<tr><th colspan="3">Highlighted code <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#13" target="_blank">more</a> | <a href="{{ code_highlighting_url }}" target="_blank">supported languages</a>)</span></th></tr>
+<tr><th><img alt="Highlighted code" src="{{ asset_base }}/assets/jstoolbar/code.svg" /></th><td>&lt;pre&gt;&lt;code class="ruby"&gt;<br />3.times do<br />&nbsp;&nbsp;puts 'Hello'<br />end<br />&lt;/code&gt;&lt;/pre&gt;</td><td>
+<pre><code class="ruby syntaxhl"><span class="mi">3</span><span class="p">.</span><span class="nf">times</span> <span class="k">do</span>
+  <span class="nb">puts</span> <span class="s1">'Hello'</span>
+<span class="k">end</span>
+</code></pre>
+</td></tr>
+
+<tr><th colspan="3">Mermaid diagrams <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#15" target="_blank">more</a>)</span></th></tr>
+<tr><th></th><td>&lt;pre&gt;&lt;code class="mermaid"&gt;<br />flowchart TD<br />&nbsp;&nbsp;A[Start] --&gt; B[End]<br />&lt;/code&gt;&lt;/pre&gt;</td><td><img width="168" alt="Flowchart from Start to End" src="{{ asset_base }}/assets/help/mermaid_flowchart_simple.png" /></td></tr>
+
+<tr><th colspan="3">列表</th></tr>
+<tr><th><img alt="不排序列表" src="{{ asset_base }}/assets/jstoolbar/list.svg" /></th><td>* 列表项 1<br />** Sub<br />* 列表项 2</td><td><ul><li>列表项 1<ul><li>子项</li></ul></li><li>列表项 2</li></ul></td></tr>
+<tr><th><img alt="排序列表" src="{{ asset_base }}/assets/jstoolbar/list-numbers.svg" /></th><td># 列表项 1<br />## Sub<br /># 列表项 2</td><td><ol><li>列表项 1<ol><li>子项</li></ol></li><li>列表项 2</li></ol></td></tr>
+
+<tr><th colspan="3">标题 <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#8" target="_blank">more</a>)</span></th></tr>
+<tr><th><img alt="标题 1" src="{{ asset_base }}/assets/jstoolbar/h1.svg" /></th><td>h1. 标题 1</td><td><h1>标题 1</h1></td></tr>
+<tr><th><img alt="标题 2" src="{{ asset_base }}/assets/jstoolbar/h2.svg" /></th><td>h2. 标题 2</td><td><h2>标题 2</h2></td></tr>
+<tr><th><img alt="标题 3" src="{{ asset_base }}/assets/jstoolbar/h3.svg" /></th><td>h3. 标题 3</td><td><h3>标题 3</h3></td></tr>
+
+<tr><th colspan="3">链接 <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#4" target="_blank">more</a>)</span></th></tr>
+<tr><th></th><td>http://example.com</td><td><a href="#">http://example.com</a></td></tr>
+<tr><th></th><td>"Foo":http://example.com</td><td><a href="#">Foo</a></td></tr>
+
+<tr><th colspan="3">Redmine 链接 <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#3" target="_blank">more</a>)</span></th></tr>
+<tr><th><img alt="链接到一个Wiki 页面" src="{{ asset_base }}/assets/jstoolbar/wiki_link.svg" /></th><td>[[Wiki 页面]]</td><td><a href="#">Wiki 页面</a></td></tr>
+<tr><th></th><td>问题 #12</td><td>问题 <a href="#">#12</a></td></tr>
+<tr><th></th><td>##12</td><td><a href="#">Bug #12</a>: The issue subject</td></tr>
+<tr><th></th><td>修订 r43</td><td>修订 <a href="#">r43</a></td></tr>
+<tr><th></th><td>commit:f30e13e43</td><td>提交: <a href="#">f30e13e4</a></td></tr>
+<tr><th></th><td>source:some/file</td><td>代码：<a href="#">source:some/file</a></td></tr>
+
+<tr><th colspan="3">内嵌图片 <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#7" target="_blank">more</a>)</span></th></tr>
+<tr><th><img alt="Image" src="{{ asset_base }}/assets/jstoolbar/image.svg" /></th><td>!<em>image_url</em>!</td><td></td></tr>
+<tr><th></th><td>!<em>attached_image</em>!</td><td></td></tr>
+
+<tr><th colspan="3">表格</th></tr>
+<tr>
+  <th></th>
+  <td>|_. A |_. B |_. C |<br />| A | B | C |<br />|/2. row span | B | C |<br />|\2. col span |</td>
+  <td>
+    <table class="sample">
+      <tbody>
+        <th>A</th><th>B</th><th>C</th>
+        <tr><td>A</td><td>B</td><td>C</td></tr>
+        <tr><td rowspan="2">行合并</td><td>B</td><td>C</td></tr>
+        <tr><td colspan="2">列合并</td></tr>
+      </tbody>
+    </table>
+  </td>
+</tr>
+
+</table>
+
+<p><a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}" onclick="window.open('{{ path('help_wiki_syntax', {type: 'detailed'}) }}', '', ''); return false;">更多帮助信息</a></p>
+
+</body>
+</html>

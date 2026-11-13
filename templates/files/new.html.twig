@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_attachment_new') }}</h2>
+
+<form class="tabular" enctype="multipart/form-data" action="{{ path('file_create', {project_id: project.identifier}) }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+<div class="box">
+
+{% if versions|length > 0 %}
+<p><label for="version_id">{{ l('field_version') }}</label>
+<select name="version_id" id="version_id"><option value=""></option>{% for v in versions %}<option value="{{ v.id }}">{{ v.name }}</option>{% endfor %}</select></p>
+{% endif %}
+
+<p><label>{{ l('label_attachment_plural') }}</label>{% include 'content/_attachments_form.html.twig' %}</p>
+</div>
+<input type="submit" name="commit" value="{{ l('button_add') }}" data-disable-with="{{ l('button_add') }}" />
+</form>
+{% endblock %}

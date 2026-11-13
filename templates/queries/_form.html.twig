@@ -1,0 +1,140 @@
+{#- queries/_form.html.erb -#}
+{% import 'queries/_macros.html.twig' as qm %}
+{{ qm.error_messages(query.errors) }}
+
+<div class="box">
+<div class="tabular">
+{% if gantt %}<input type="hidden" name="gantt" id="gantt" value="1" autocomplete="off" />{% endif %}
+{% if calendar %}<input type="hidden" name="calendar" id="calendar" value="1" autocomplete="off" />{% endif %}
+
+<p>
+  <label for="query_name">
+    {{ l('field_name') }}
+    <span class="required">*</span>
+  </label>
+  <input size="80" type="text" value="{{ query.record.name }}" name="query[name]" id="query_name" />
+</p>
+<p><label for="query_description">{{ l('field_description') }}</label>
+<input size="80" type="text"{% if query.record.description %} value="{{ query.record.description }}"{% endif %} name="query[description]" id="query_description" /></p>
+
+{% if can_manage_public %}
+<p><label>{{ l('field_visible') }}</label>
+  {% set vis = query.record.visibility ?? 0 %}
+  <label class="block"><input type="radio" value="0"{% if vis == 0 %} checked="checked"{% endif %} name="query[visibility]" id="query_visibility_0" /> {{ l('label_visibility_private') }}</label>
+  <label class="block"><input type="radio" value="2"{% if vis == 2 %} checked="checked"{% endif %} name="query[visibility]" id="query_visibility_2" /> {{ l('label_visibility_public') }}</label>
+  {% if query.type() != 'ProjectQuery' %}
+    <label class="block"><input type="radio" value="1"{% if vis == 1 %} checked="checked"{% endif %} name="query[visibility]" id="query_visibility_1" /> {{ l('label_visibility_roles') }}:</label>
+      {% set role_ids = query.record.roles|map(r => r.id) %}
+      {% for role in roles %}
+        <label class="block role-visibility"><input type="checkbox" name="query[role_ids][]" value="{{ role.id }}"{% if role.id in role_ids %} checked="checked"{% endif %} /> {{ role.name }}</label>
+      {% endfor %}
+      <input type="hidden" name="query[role_ids][]" id="query_role_ids_" value="" autocomplete="off" />
+  {% endif %}
+</p>
+{% endif %}
+
+{% if query.type() != 'ProjectQuery' %}
+  <p><label for="query_is_for_all">{{ l('field_is_for_all') }}</label>
+  <input type="checkbox" name="query_is_for_all" id="query_is_for_all" value="1" class="{{ current_user().admin ? '' : 'disable-unless-private' }}"{% if query.record.project is null %} checked="checked"{% endif %}{% if not query.isNew() and query.record.project is null %} disabled="disabled"{% endif %} /></p>
+{% endif %}
+
+{% if not calendar %}
+  <fieldset id="options"><legend>{{ l('label_options') }}</legend>
+    {% if query.availableDisplayTypes()|length > 1 %}
+      <p><label for='display_type'>{{ l('label_display_type') }}</label>
+        {% for t in query.availableDisplayTypes() %}<input type="radio" name="display_type" id="display_type_{{ t }}" value="{{ t }}"{% if query.displayType() == t %} checked="checked"{% endif %} /><label for="display_type_{{ t }}" class="inline">{{ l('label_display_type_' ~ t) }}</label>{% endfor %}
+      </p>
+    {% elseif query.availableDisplayTypes()|length == 1 %}
+      <input type="hidden" name="query[display_type]" id="query_display_type" value="{{ query.availableDisplayTypes()|first }}" autocomplete="off" />
+    {% endif %}
+
+    <p id ="default_columns"><label for="query_default_columns">{{ l('label_default_columns') }}</label>
+    <input type="checkbox" name="default_columns" id="query_default_columns" value="1" data-disables="#columns, .block_columns input"{% if query.hasDefaultColumns() %} checked="checked"{% endif %} /></p>
+
+    {% if not gantt %}
+      <p id="group_by"><label for="query_group_by">{{ l('field_group_by') }}</label>
+      <select name="query[group_by]" id="query_group_by"><option value="" label=" "></option>
+{% for c in query.groupableColumns() %}<option value="{{ c.name }}"{% if query.getGroupBy() == c.name %} selected="selected"{% endif %}>{{ c.caption }}</option>{% if not loop.last %}{{ "\n" }}{% endif %}{% endfor %}</select></p>
+
+      {% if query.availableBlockColumns() is not empty %}
+        <p class="block_columns"><label>{{ l('button_show') }}</label>
+        {% for c in query.availableBlockColumns() %}<label class="inline"><input type="checkbox" name="c[]" value="{{ c.name }}"{% if query.hasColumn(c.name) %} checked="checked"{% endif %} /> {{ c.caption }}</label>{% endfor %}</p>
+      {% endif %}
+
+      {% if query.availableTotalableColumns() is not empty %}
+        <p class="totable_columns"><label>{{ l('label_total_plural') }}</label>
+        {% for c in query.availableTotalableColumns() %}<label class="inline"><input type="checkbox" name="t[]" value="{{ c.name }}"{% if c.name in query.totalableNames() %} checked="checked"{% endif %} /> {{ c.caption }}</label>{% endfor %}<input type="hidden" name="t[]" id="t_" value="" autocomplete="off" /></p>
+      {% endif %}
+    {% else %}
+      <p><label>{{ l('button_show') }}</label>
+      <input type="hidden" name="query[draw_relations]" id="query_draw_relations" value="0" autocomplete="off" />
+      <input type="hidden" name="query[draw_progress_line]" id="query_draw_progress_line" value="0" autocomplete="off" />
+      <input type="hidden" name="query[draw_selected_columns]" id="query_draw_selected_columns" value="0" autocomplete="off" />
+      <label class="inline"><input type="checkbox" name="query[draw_relations]" id="query_draw_relations" value="1"{% if query.drawRelations() %} checked="checked"{% endif %} /> {{ l('label_related_issues') }}</label>
+      <label class="inline"><input type="checkbox" name="query[draw_progress_line]" id="query_draw_progress_line" value="1"{% if query.drawProgressLine() %} checked="checked"{% endif %} /> {{ l('label_gantt_progress_line') }}</label>
+      <label class="inline"><input type="checkbox" name="query[draw_selected_columns]" id="query_draw_selected_columns" value="1" data-enables="#list-definition .query-columns select, #list-definition .query-columns input"{% if query.drawSelectedColumns() %} checked="checked"{% endif %} /> {{ l('description_selected_columns') }}</label>
+      </p>
+    {% endif %}
+  </fieldset>
+{% endif %}
+</div>
+
+<fieldset id="filters"><legend>{{ l('label_filter_plural') }}</legend>
+{% include 'queries/_filters.html.twig' with {query: query} %}
+</fieldset>
+
+{% if not calendar and not gantt %}
+  <fieldset id="sort"><legend>{{ l('label_sort') }}</legend>
+    {% for i in 0..2 %}
+    <span class="query_sort_criteria_count">{{ i + 1 }}:</span>
+    <label class="hidden-for-sighted" for="query_sort_criteria_attribute_{{ i }}">{{ l('description_query_sort_criteria_attribute') }}</label>
+    <select name="query[sort_criteria][{{ i }}][]" id="query_sort_criteria_attribute_{{ i }}"><option value=""></option>
+{% for c in query.availableColumns()|filter(c => c.isSortable()) %}<option{% if query.sortCriteriaKey(i) == c.name %} selected="selected"{% endif %} value="{{ c.name }}">{{ c.caption }}</option>{% if not loop.last %}{{ "\n" }}{% endif %}{% endfor %}</select>
+    <label class="hidden-for-sighted" for="query_sort_criteria_direction_{{ i }}">{{ l('description_query_sort_criteria_direction') }}</label>
+    <select name="query[sort_criteria][{{ i }}][]" id="query_sort_criteria_direction_{{ i }}"><option value=""></option>
+<option{% if query.sortCriteriaOrder(i) == 'asc' %} selected="selected"{% endif %} value="asc">{{ l('label_ascending') }}</option>
+<option{% if query.sortCriteriaOrder(i) == 'desc' %} selected="selected"{% endif %} value="desc">{{ l('label_descending') }}</option></select>
+    <br />
+    {% endfor %}
+  </fieldset>
+{% endif %}
+
+{% if not calendar %}
+  <fieldset id="columns">
+  <legend>{{ l('field_column_names') }}</legend>
+  <div id="list-definition">
+    <div>
+      {% include 'queries/_columns.html.twig' with {query: query, tag_name: 'c[]'} %}
+    </div>
+  </div>
+</fieldset>
+{% endif %}
+
+</div>
+
+<script>
+//<![CDATA[
+
+$(document).ready(function(){
+  $("input[name='query[visibility]']").change(function(){
+    var roles_checked = $('#query_visibility_1').is(':checked');
+    var private_checked = $('#query_visibility_0').is(':checked');
+    $("input[name='query[role_ids][]'][type=checkbox]").attr('disabled', !roles_checked);
+    if (!private_checked) $("input.disable-unless-private").attr('checked', false);
+    $("input.disable-unless-private").attr('disabled', !private_checked);
+  }).trigger('change');
+});
+
+$(function ($) {
+  $('input[name=display_type]').change(function () {
+    var option = $('input[name=display_type]:checked').val();
+    if (option == 'board') {
+      $('fieldset#columns, fieldset#sort, p#default_columns, p#group_by').hide();
+    } else {
+      $('fieldset#columns, fieldset#sort, p#default_columns, p#group_by').show();
+    }
+  }).change();
+});
+
+//]]>
+</script>

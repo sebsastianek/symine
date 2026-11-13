@@ -1,0 +1,6 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('groups_index') }}">{{ l('label_group_plural') }}</a> &#187; {{ group.getName() }}</h2>
+
+{% include 'admin/_tabs.html.twig' %}
+{% endblock %}

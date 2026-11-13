@@ -1,0 +1,38 @@
+<ul>
+  {% if entry %}
+    <li><a class="icon icon-edit{% if not can_edit %} disabled{% endif %}" href="{{ can_edit ? path('time_entry_edit', {id: entry.id}) : '#' }}">{{ sprite_icon('edit', l('button_edit')) }}</a></li>
+  {% else %}
+    <li><a class="icon icon-edit{% if not can_edit %} disabled{% endif %}" href="{{ can_edit ? path('time_entries_bulk_edit', {ids: ids}) : '#' }}">{{ sprite_icon('edit', l('label_bulk_edit')) }}</a></li>
+  {% endif %}
+
+  {% if activities is not empty %}
+  <li class="folder">
+    <a href="#" class="submenu">{{ l('field_activity') }}</a>
+    <span class="icon-only">{{ sprite_icon('angle-right', null, 18, false, 'icon-rtl') }}</span>
+    <ul>
+    {% for a in activities %}
+        <li><a{% if entry and entry.activity.id == a.id %} class="icon-checked{% if not can_edit %} disabled{% endif %}"{% elseif not can_edit %} class="disabled"{% endif %} rel="nofollow" data-method="post" href="{{ can_edit ? path('time_entries_bulk_update', {ids: ids, time_entry: {activity_id: a.id}, back_url: back}) : '#' }}">{% if entry and entry.activity.id == a.id %}{{ sprite_icon('checked', a.name) }}{% else %}{{ a.name }}{% endif %}</a></li>
+    {% endfor %}
+    </ul>
+  </li>
+  {% endif %}
+
+  {% for f in options_by_field %}
+    <li class="folder cf_{{ f.field.id }}">
+      <a href="#" class="submenu">{{ f.field.name }}</a>
+      <span class="icon-only">{{ sprite_icon('angle-right', null, 18, false, 'icon-rtl') }}</span>
+      <ul>
+      {% for o in f.options %}
+        <li><a rel="nofollow" data-method="post" href="{{ path('time_entries_bulk_update', {ids: ids, time_entry: {custom_field_values: {(f.field.id): o[0]}}, back_url: back}) }}">{{ o[1] }}</a></li>
+      {% endfor %}
+      {% if not f.field.isRequired %}
+        <li><a rel="nofollow" data-method="post" href="{{ path('time_entries_bulk_update', {ids: ids, time_entry: {custom_field_values: {(f.field.id): '__none__'}}, back_url: back}) }}">{{ l('label_none') }}</a></li>
+      {% endif %}
+      </ul>
+    </li>
+  {% endfor %}
+
+  <li>
+    <a data-confirm="{{ l('text_time_entries_destroy_confirmation') }}" class="icon icon-del{% if not can_edit %} disabled{% endif %}" rel="nofollow" data-method="delete" href="{{ can_edit ? path('time_entries_destroy', {ids: ids, back_url: back}) : '#' }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+  </li>
+</ul>

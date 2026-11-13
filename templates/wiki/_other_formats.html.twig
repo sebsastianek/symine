@@ -1,0 +1,12 @@
+{% if pages|length > 0 %}
+<p class="other-formats hide-when-print">{{ l('label_export_to') }}
+  {% if allowed_to('export_wiki_pages', project) %}
+  <span><a class="pdf" rel="nofollow" href="{{ path('wiki_export_format', {project_id: project.identifier, _format: 'pdf'}) }}">PDF</a></span>
+  <span><a class="html" rel="nofollow" href="{{ path('wiki_export_format', {project_id: project.identifier, _format: 'html'}) }}">HTML</a></span>
+  <span><a class="zip" rel="nofollow" href="{{ path('wiki_export_format', {project_id: project.identifier, _format: 'zip'}) }}">ZIP</a></span>
+  {% endif %}
+  {% if path_exists('project_activity') %}
+  <span><a class="atom" rel="nofollow" href="{{ path('project_activity', {id: project.identifier}) }}.atom?show_wiki_edits=1">Atom</a></span>
+  {% endif %}
+</p>
+{% endif %}

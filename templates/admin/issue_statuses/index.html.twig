@@ -1,0 +1,52 @@
+{% extends 'admin/layout.html.twig' %}
+{% import 'admin/workflows/_macros.html.twig' as h %}
+{% block content %}
+<div class="contextual">
+<a class="icon icon-add" href="{{ path('issue_status_new') }}">{{ sprite_icon('add', l('label_issue_status_new')) }}</a>
+{% if use_status_for_done_ratio %}<a class="icon icon-multiple" data-confirm="{{ l('text_are_you_sure') }}" rel="nofollow" data-method="post" href="{{ path('issue_statuses_update_issue_done_ratio') }}">{{ sprite_icon('table-multiple', l('label_update_issue_done_ratios')) }}</a>{% endif %}
+</div>
+
+<h2>{{ l('label_issue_status_plural') }}</h2>
+
+<table class="list issue_statuses">
+  <thead><tr>
+  <th>{{ l('field_status') }}</th>
+  {% if use_status_for_done_ratio %}
+  <th>{{ l('field_done_ratio') }}</th>
+  {% endif %}
+  <th>{{ l('field_is_closed') }}</th>
+  <th>{{ l('field_description') }}</th>
+  <th></th>
+  <th></th>
+  </tr></thead>
+  <tbody>
+{% for status in issue_statuses %}
+  <tr>
+  <td class="name"><a href="{{ path('issue_status_edit', {id: status.id}) }}">{{ status.name }}</a></td>
+  {% if use_status_for_done_ratio %}
+  <td>{{ status.defaultDoneRatio }}</td>
+  {% endif %}
+  <td>{{ h.checked_image(status.isClosed) }}</td>
+  <td class="description">{{ status.description }}</td>
+  <td>
+    {% if status.id not in used_ids %}
+      <span class="icon icon-warning">
+        {{ sprite_icon('warning', l('text_status_no_workflow')) }} (<a href="{{ path('workflows_edit', {used_statuses_only: 0}) }}">{{ l('button_edit') }}</a>)
+      </span>
+    {% endif %}
+  </td>
+  <td class="buttons">
+    {{ h.reorder_handle(path('issue_status_update', {id: status.id}), 'issue_status') }}
+    {{ h.delete_link(path('issue_status_destroy', {id: status.id})) }}
+  </td>
+  </tr>
+{% endfor %}
+  </tbody>
+</table>
+
+<script>
+//<![CDATA[
+  $(function() { $("table.issue_statuses tbody").positionedItems(); });
+//]]>
+</script>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% include 'messages/_errors.html.twig' %}
+
+<div class="box tabular">
+<p><label for="board_name">{{ l('field_name') }}<span class="required"> *</span></label><input type="text" value="{{ board.name }}" name="board[name]" id="board_name" /></p>
+<p><label for="board_description">{{ l('field_description') }}<span class="required"> *</span></label><input size="80" type="text" value="{{ board.description }}" name="board[description]" id="board_description" /></p>
+{% if parent_options|length > 0 %}
+<p><label for="board_parent_id">{{ l('field_board_parent') }}</label><select name="board[parent_id]" id="board_parent_id"><option value=""></option>
+{% for o in parent_options %}<option value="{{ o.id }}"{% if board.parent and board.parent.id == o.id %} selected="selected"{% endif %}>{{ o.label|raw }}</option>{% endfor %}
+</select></p>
+{% endif %}
+</div>

@@ -1,0 +1,64 @@
+{#- Port of SettingsHelper (setting_select, setting_check_box, ...). `v` = resolved setting values. -#}
+{% macro label(name, opts = {}) -%}
+{%- if opts.label is not defined or opts.label is not same as(false) -%}
+<label for="settings_{{ name }}">{{ opts.label_text ?? l(opts.label ?? ('setting_' ~ name)) }}</label>
+{%- endif -%}
+{%- endmacro %}
+
+{% macro select(v, name, choices, opts = {}) -%}
+{%- set current = v[name] is iterable ? '' : (v[name] is same as(true) ? '1' : (v[name] is same as(false) ? '0' : v[name] ~ '')) -%}
+{{ _self.label(name, opts) }}<select name="settings[{{ name }}]" id="{{ opts.id ?? 'settings_' ~ name }}"{% if opts.attrs is defined %} {{ opts.attrs|raw }}{% endif %}>{% if opts.blank is defined %}<option{% if current == '' or (current == '0' and '0' not in choices|map(c => c[1] ~ '')) %} selected="selected"{% endif %} value="">{{ opts.blank_text ?? l(opts.blank) }}</option>
+{% endif %}{% for c in choices %}<option{% if (c[1] ~ '') == current %} selected="selected"{% endif %} value="{{ c[1] }}">{{ c[0] }}</option>{% if not loop.last %}
+{% endif %}{% endfor %}</select>
+{%- endmacro %}
+
+{% macro check_box(v, name, opts = {}) -%}
+{%- set val = v[name] is same as(true) ? '1' : (v[name] is same as(false) or v[name] is null ? '0' : v[name] ~ '') -%}
+{{ _self.label(name, opts) }}<input type="hidden" name="settings[{{ name }}]" value="0" autocomplete="off" /><input type="checkbox" name="settings[{{ name }}]" id="settings_{{ name }}" value="1"{% if val != '0' %} checked="checked"{% endif %}{% if opts.attrs is defined %} {{ opts.attrs|raw }}{% endif %} />
+{%- endmacro %}
+
+{% macro text_field(v, name, opts = {}) -%}
+{{ _self.label(name, opts) }}<input type="text" name="settings[{{ name }}]" id="{{ opts.id ?? 'settings_' ~ name }}" value="{{ v[name] is iterable ? v[name]|join(',') : v[name] }}"{% if opts.size is defined %} size="{{ opts.size }}"{% endif %}{% if opts.attrs is defined %} {{ opts.attrs|raw }}{% endif %} />
+{%- endmacro %}
+
+{% macro textarea(v, name, opts = {}) -%}
+{{ _self.label(name, opts) }}<textarea name="settings[{{ name }}]" id="settings_{{ name }}"{% if opts.cols is defined %} cols="{{ opts.cols }}"{% endif %}{% if opts.rows is defined %} rows="{{ opts.rows }}"{% endif %}{% if opts.wiki is defined %} class="wiki-edit"{% endif %}>
+{{ v[name] is iterable ? v[name]|join("\n") : v[name] }}</textarea>
+{%- endmacro %}
+
+{% macro multiselect(v, name, choices, opts = {}) -%}
+{%- set values = v[name] is iterable ? v[name]|map(x => x ~ '') : [] -%}
+<label>{{ opts.label_text ?? l(opts.label ?? ('setting_' ~ name)) }}</label><input type="hidden" name="settings[{{ name }}][]" value="" autocomplete="off" />{% for c in choices %}<label class="{{ opts.inline ?? false ? 'inline' : 'block' }}"><input type="checkbox" name="settings[{{ name }}][]" value="{{ c[1] }}"{% if (c[1] ~ '') in values %} checked="checked"{% endif %} />{{ c[0] }}</label>{% endfor %}
+{%- endmacro %}
+
+{% macro columns(name, all, selected) -%}
+{#- queries/_columns: name = settings[...][...] (without []) -#}
+{%- set tag_name = name ~ '[]' -%}
+{%- set tag_id = name|replace({'[': '_', ']': '_'})|replace({'__': '_'})|trim('_', 'right') -%}
+{%- set selected = selected is iterable ? selected : [] -%}
+<div class="query-columns">
+      <label for="available_{{ tag_id }}">{{ l('description_available_columns') }}</label>
+      <select name="available_columns" id="available_{{ tag_id }}" multiple="multiple" size="10" ondblclick="moveOptions(this.form.available_{{ tag_id }}, this.form.selected_{{ tag_id }});">{% for k, caption in all %}{% if k not in selected %}<option value="{{ k }}">{{ caption }}</option>{% endif %}{% endfor %}</select>
+</div>
+<div class="buttons">
+      <button type="button" class="move-right" onclick="moveOptions(this.form.available_{{ tag_id }}, this.form.selected_{{ tag_id }});">{{ sprite_icon('arrow-narrow-right') }}</button>
+      <button type="button" class="move-left" onclick="moveOptions(this.form.selected_{{ tag_id }}, this.form.available_{{ tag_id }});">{{ sprite_icon('arrow-narrow-left') }}</button>
+</div>
+<div class="query-columns">
+      <label for="selected_{{ tag_id }}">{{ l('description_selected_columns') }}</label>
+      <select name="{{ tag_name }}" id="selected_{{ tag_id }}" multiple="multiple" size="10" ondblclick="moveOptions(this.form.selected_{{ tag_id }}, this.form.available_{{ tag_id }});">{% for k in selected %}{% if all[k] is defined %}<option value="{{ k }}">{{ all[k] }}</option>{% endif %}{% endfor %}</select>
+</div>
+<div class="buttons">
+      <button type="button" onclick="moveOptionTop(this.form.selected_{{ tag_id }});">&#8648;</button>
+      <button type="button" onclick="moveOptionUp(this.form.selected_{{ tag_id }});">&#8593;</button>
+      <button type="button" onclick="moveOptionDown(this.form.selected_{{ tag_id }});">&#8595;</button>
+      <button type="button" onclick="moveOptionBottom(this.form.selected_{{ tag_id }});">&#8650;</button>
+</div>
+<script>
+$(document).ready(function(){
+  $('.query-columns').closest('form').submit(function(){
+    $('#selected_{{ tag_id }} option:not(:disabled)').prop('selected', true);
+  });
+});
+</script>
+{%- endmacro %}

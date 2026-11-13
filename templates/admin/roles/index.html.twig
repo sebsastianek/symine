@@ -1,0 +1,44 @@
+{% extends 'admin/layout.html.twig' %}
+{% import 'admin/workflows/_macros.html.twig' as h %}
+{% block content %}
+{% if error_html %}<div class="flash error" id="flash_error">{{ error_html|raw }}</div>{% endif %}
+<div class="contextual">
+<a class="icon icon-add" href="{{ path('role_new') }}">{{ sprite_icon('add', l('label_role_new')) }}</a>
+<a class="icon icon-summary" href="{{ path('roles_permissions') }}">{{ sprite_icon('summary', l('label_permissions_report')) }}</a>
+</div>
+
+<h2>{{ l('label_role_plural') }}</h2>
+
+<table class="list roles">
+  <thead><tr>
+    <th>{{ l('label_role') }}</th>
+  <th></th>
+  <th></th>
+  </tr></thead>
+  <tbody>
+{% for role in roles %}
+  <tr class="{{ role.isBuiltin() ? 'builtin' : 'givable' }}">
+  <td class="name">{% if role.isBuiltin() %}<em>{% else %}<span>{% endif %}<a href="{{ path('role_edit', {id: role.id}) }}">{{ h.role_name(role) }}</a>{% if role.isBuiltin() %}</em>{% else %}</span>{% endif %}</td>
+  <td>
+    {% if not with_rules[role.id] %}
+      <span class="icon icon-warning">
+        {{ sprite_icon('warning', l('text_role_no_workflow')) }} (<a href="{{ path('workflows_edit', {role_id: role.id}) }}">{{ l('button_edit') }}</a>)
+      </span>
+    {% endif %}
+  </td>
+  <td class="buttons">
+    {% if not role.isBuiltin() %}{{ h.reorder_handle(path('role_update', {id: role.id}), 'role') }}{% endif %}
+    <a class="icon icon-copy" href="{{ path('role_new', {copy: role.id}) }}">{{ sprite_icon('copy', l('button_copy')) }}</a>
+    {% if not role.isBuiltin() %}{{ h.delete_link(path('role_destroy', {id: role.id})) }}{% endif %}
+  </td>
+  </tr>
+{% endfor %}
+  </tbody>
+</table>
+
+<script>
+//<![CDATA[
+  $(function() { $("table.roles tbody").positionedItems({items: ".givable"}); });
+//]]>
+</script>
+{% endblock %}

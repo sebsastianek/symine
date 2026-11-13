@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_issue_category') }}: {{ category.name }}</h2>
+
+<form action="{{ path('issue_category_destroy', {id: category.id}) }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="delete" autocomplete="off" />{{ csrf_field() }}
+<div class="box">
+<p><strong>{{ l('text_issue_category_destroy_question', {count: issue_count}) }}</strong></p>
+<p><label><input type="radio" name="todo" id="todo_nullify" value="nullify" checked="checked" /> {{ l('text_issue_category_destroy_assignments') }}</label><br />
+{% if categories|length > 0 %}
+<label><input type="radio" name="todo" id="todo_reassign" value="reassign" /> {{ l('text_issue_category_reassign_to') }}</label>:
+<label class="hidden-for-sighted" for="reassign_to_id">{{ l('description_issue_category_reassign') }}</label>
+<select name="reassign_to_id" id="reassign_to_id">{% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>
+{% endfor %}</select>
+{% endif %}
+</p>
+</div>
+
+<input type="submit" name="commit" value="{{ l('button_apply') }}" data-disable-with="{{ l('button_apply') }}" />
+<a href="{{ path_exists('project_settings') ? path('project_settings', {id: project.identifier, tab: 'categories'}) : '/projects/' ~ project.identifier ~ '/settings/categories' }}">{{ l('button_cancel') }}</a>
+</form>
+{% endblock %}

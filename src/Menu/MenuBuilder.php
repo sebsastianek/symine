@@ -6,6 +6,7 @@ namespace App\Menu;
 
 use App\Entity\Project;
 use App\I18n\Localizer;
+use App\Security\AccessControl;
 use App\Security\Authorization;
 use App\Security\CurrentUser;
 use App\Service\ProjectService;
@@ -27,8 +28,16 @@ final class MenuBuilder
         private readonly Settings $settings,
         private readonly Localizer $i18n,
         private readonly ProjectService $projects,
+        private readonly ?MenuRegistry $registry = null,
     ) {
     }
+
+    /** Items that stay at the end of their menu (Redmine :last => true) */
+    private const array LAST_ITEMS = [
+        'top_menu' => ['administration', 'help'],
+        'project_menu' => ['settings'],
+        'admin_menu' => ['plugins', 'info'],
+    ];
 
     private function url(string $route, array $params = []): ?string
     {
@@ -54,7 +63,7 @@ final class MenuBuilder
         }
         $items[] = ['name' => 'help', 'url' => 'https://www.redmine.org/guide', 'caption' => $this->i18n->l('label_help'), 'html' => ['target' => '_blank', 'rel' => 'noopener']];
 
-        return $items;
+        return $this->applyRegistry('top_menu', $items, null);
     }
 
     /** @return list<array> */
@@ -73,7 +82,7 @@ final class MenuBuilder
             $this->push($items, 'logout', 'signout', [], 'label_logout', ['data-method' => 'post']);
         }
 
-        return $items;
+        return $this->applyRegistry('account_menu', $items, null);
     }
 
     /** Global (no project) main menu @return list<array> */
@@ -95,7 +104,7 @@ final class MenuBuilder
             }
         }
 
-        return $this->markSelected($items, $selected);
+        return $this->markSelected($this->applyRegistry('application_menu', $items, null), $selected);
     }
 
     /** @return list<array> */
@@ -173,7 +182,7 @@ final class MenuBuilder
             $this->push($items, 'settings', 'project_settings', ['id' => $project->identifier], 'label_settings');
         }
 
-        return $this->markSelected($items, $selected);
+        return $this->markSelected($this->applyRegistry('project_menu', $items, $project), $selected);
     }
 
     /** @return list<array> */
@@ -192,19 +201,23 @@ final class MenuBuilder
             ['enumerations', 'enumerations_index', 'label_enumerations', 'list'],
             ['settings', 'settings_index', 'label_settings', 'settings'],
             ['ldap_authentication', 'auth_sources_index', 'label_ldap_authentication', 'server-authentication'],
+            ['applications', 'oauth_applications', 'doorkeeper.layouts.admin.nav.applications', 'apps'],
             ['webhooks', 'admin_webhooks', 'label_webhook_plural', 'webhook'],
             ['plugins', 'admin_plugins', 'label_plugins', 'plugins'],
             ['info', 'admin_info', 'label_information_plural', 'help'],
         ];
         foreach ($defs as [$name, $route, $caption, $icon]) {
+            if ('applications' === $name && !$this->settings->restApiEnabled()) {
+                continue;
+            }
             $this->push($items, $name, $route, [], $caption);
             if ($items && end($items)['name'] === $name) {
                 $items[array_key_last($items)]['icon'] = $icon;
-                $items[array_key_last($items)]['class'] = 'icon icon-'.$icon;
+                $items[array_key_last($items)]['class'] = 'icon icon-'.('applications' === $name ? 'applications' : $icon);
             }
         }
 
-        return $this->markSelected($items, $selected);
+        return $this->markSelected($this->applyRegistry('admin_menu', $items, null), $selected);
     }
 
     private function push(array &$items, string $name, string $route, array $params, string $caption, array $html = []): void
@@ -214,6 +227,169 @@ final class MenuBuilder
             return;
         }
         $items[] = ['name' => $name, 'url' => $url, 'caption' => $this->i18n->l($caption), 'html' => $html];
+    }
+
+    /**
+     * Applies the items pushed/deleted/replaced by plugins (MenuRegistry) to the core items of a menu,
+     * with Redmine's positioning rules (first, before, after, last; other items go before the "last" ones).
+     *
+     * @param list<array> $items
+     *
+     * @return list<array>
+     */
+    private function applyRegistry(string $menu, array $items, ?Project $project): array
+    {
+        $ops = $this->registry?->operations($menu) ?? [];
+        if ([] === $ops) {
+            return $items;
+        }
+        foreach ($items as &$item) {
+            $item['last'] = \in_array($item['name'], self::LAST_ITEMS[$menu] ?? [], true);
+        }
+        unset($item);
+        foreach ($ops as $op) {
+            $name = $op['name'];
+            if ('delete' === $op['op']) {
+                $items = self::removeItem($items, $name);
+                continue;
+            }
+            $options = $op['options'];
+            $item = $this->buildItem($menu, $name, $op['url'], $options, $project);
+            $position = null;
+            if ('replace' === $op['op'] && !isset($options['first']) && !isset($options['before']) && !isset($options['after']) && !isset($options['last'])) {
+                $position = self::positionOf($items, $name);
+            }
+            $items = self::removeItem($items, $name);
+            if (null === $item) {
+                continue;
+            }
+            if (isset($options['parent']) && null !== ($p = self::positionOf($items, (string) $options['parent']))) {
+                $items[$p]['children'] = [...($items[$p]['children'] ?? []), $item];
+                continue;
+            }
+            $lastCount = \count(array_filter($items, static fn (array $i) => $i['last'] ?? false));
+            if (null === $position) {
+                if (!empty($options['first'])) {
+                    $position = 0;
+                } elseif (isset($options['before']) && null !== ($p = self::positionOf($items, (string) $options['before']))) {
+                    $position = $p;
+                } elseif (isset($options['after']) && null !== ($p = self::positionOf($items, (string) $options['after']))) {
+                    $position = $p + 1;
+                } elseif (!empty($options['last'])) {
+                    $position = \count($items);
+                } else {
+                    $position = \count($items) - $lastCount;
+                }
+            }
+            array_splice($items, max(0, min($position, \count($items))), 0, [$item]);
+        }
+
+        return array_values(array_map(static function (array $i): array {
+            unset($i['last']);
+
+            return $i;
+        }, $items));
+    }
+
+    /**
+     * Builds a menu item from registry options, or null when it is not allowed / its route does not exist
+     * (MenuItem#allowed?, caption, url).
+     */
+    private function buildItem(string $menu, string $name, mixed $url, array $options, ?Project $project): ?array
+    {
+        $user = $this->currentUser->get();
+        if (isset($options['if']) && !($options['if'])($project, $user)) {
+            return null;
+        }
+        $route = \is_string($url) && null !== $this->router->getRouteCollection()->get($url) ? $url : (\is_array($url) ? (string) ($url['route'] ?? '') : null);
+        if (null !== $project) {
+            $permission = \array_key_exists('permission', $options) ? $options['permission'] : (null !== $route ? AccessControl::permissionForRoute($route) : null);
+            if (\is_string($permission) && '' !== $permission && !$this->auth->allowedTo($permission, $project)) {
+                return null;
+            }
+        }
+        if ($url instanceof \Closure) {
+            $href = (string) $url($project);
+        } elseif (null !== $route && '' !== $route) {
+            $params = \is_array($url) ? (array) ($url['params'] ?? []) : [];
+            if (null !== $project && 'project_menu' === $menu) {
+                $params = [(string) ($options['param'] ?? 'id') => $project->identifier, ...$params];
+            }
+            $href = $this->url($route, $params);
+            if (null === $href) {
+                return null;
+            }
+        } elseif (\is_string($url) && (str_starts_with($url, '/') || str_starts_with($url, '#') || str_contains($url, '://'))) {
+            $href = $url;
+        } else {
+            return null; // unknown route
+        }
+        $caption = $options['caption'] ?? null;
+        if ($caption instanceof \Closure) {
+            $caption = (string) $caption($project);
+            if ('' === $caption) {
+                $caption = self::humanize($name);
+            }
+        } elseif (null === $caption) {
+            $caption = $this->i18n->has('label_'.$name) ? $this->i18n->l('label_'.$name) : self::humanize($name);
+        } else {
+            $caption = $this->i18n->has((string) $caption) ? $this->i18n->l((string) $caption) : (string) $caption;
+        }
+        $item = ['name' => $name, 'url' => $href, 'caption' => $caption, 'html' => array_map('strval', (array) ($options['html'] ?? [])), 'last' => !empty($options['last'])];
+        if (isset($options['icon'])) {
+            $item['icon'] = (string) $options['icon'];
+            $item['class'] = trim(($options['class'] ?? '').' icon icon-'.$options['icon']);
+        } elseif (isset($options['class'])) {
+            $item['class'] = (string) $options['class'];
+        }
+        if (isset($options['children'])) {
+            $children = [];
+            foreach (($options['children'])($project) as $child) {
+                [$cName, $cUrl, $cOptions] = array_pad(array_values((array) $child), 3, []);
+                if (null !== ($c = $this->buildItem($menu, (string) $cName, $cUrl, (array) $cOptions, $project))) {
+                    $children[] = $c;
+                }
+            }
+            $item['children'] = $children;
+        }
+        if (isset($options['plugin'])) {
+            $item['plugin'] = (string) $options['plugin'];
+        }
+
+        return $item;
+    }
+
+    private static function humanize(string $name): string
+    {
+        return ucfirst(str_replace('_', ' ', preg_replace('/_id$/', '', $name) ?? $name));
+    }
+
+    private static function positionOf(array $items, string $name): ?int
+    {
+        foreach ($items as $i => $item) {
+            if ($item['name'] === $name) {
+                return $i;
+            }
+        }
+
+        return null;
+    }
+
+    /** Removes an item (and the children with that name) */
+    private static function removeItem(array $items, string $name): array
+    {
+        $out = [];
+        foreach ($items as $item) {
+            if ($item['name'] === $name) {
+                continue;
+            }
+            if (!empty($item['children'])) {
+                $item['children'] = self::removeItem($item['children'], $name);
+            }
+            $out[] = $item;
+        }
+
+        return $out;
     }
 
     private function markSelected(array $items, ?string $selected): array

@@ -1,0 +1,27 @@
+<p>
+<label class="hidden-for-sighted" for="user_mail_notification">{{ l('description_user_mail_notification') }}</label>
+<select name="user[mail_notification]" id="user_mail_notification" onchange="if (this.value == &quot;selected&quot;) {$(&quot;#notified-projects&quot;).show();} else {$(&quot;#notified-projects&quot;).hide();}">
+{% for value, label in mail_notification_options %}<option value="{{ value }}"{% if edited_user.mailNotification == value %} selected="selected"{% endif %}>{{ l(label) }}</option>{% endfor %}
+</select>
+</p>
+<fieldset id="notified-projects" style="{{ edited_user.mailNotification == 'selected' ? '' : 'display:none;' }}">
+  <legend><a title="{{ l('button_check_all') }}/{{ l('button_uncheck_all') }}" class="icon-only icon-checked" href="#" onclick="toggleCheckboxesBySelector(&quot;#notified-projects input[type=checkbox]&quot;); return false;">{{ sprite_icon('checked', l('button_check_all') ~ '/' ~ l('button_uncheck_all'), 18, true) }}</a>{{ l('label_project_plural') }}</legend>
+  <ul class="projects root">
+  {% for project in user_projects %}
+    <li class="root"><div class="root"><label><input type="checkbox" name="user[notified_project_ids][]" value="{{ project.id }}"{% if project.id in notified_project_ids %} checked="checked"{% endif %} /> {{ project.name }}</label></div></li>
+  {% endfor %}
+  </ul>
+  <input type="hidden" name="user[notified_project_ids][]" value="" />
+  <p><em class="info">{{ l('text_user_mail_option') }}</em></p>
+</fieldset>
+
+{% if high_priority %}
+<p>
+  <input name="pref[notify_about_high_priority_issues]" type="hidden" value="0" /><input type="checkbox" value="1" name="pref[notify_about_high_priority_issues]" id="pref_notify_about_high_priority_issues"{% if pref.get('notify_about_high_priority_issues') in [true, '1'] %} checked="checked"{% endif %} />
+  <label for="pref_notify_about_high_priority_issues">{{ l('label_user_mail_notify_about_high_priority_issues_html', {prio: high_priority.name|lower})|raw }}</label>
+</p>
+{% endif %}
+<p>
+  <input name="pref[no_self_notified]" type="hidden" value="0" /><input type="checkbox" value="1" name="pref[no_self_notified]" id="pref_no_self_notified"{% if pref.noSelfNotified() %} checked="checked"{% endif %} />
+  <label for="pref_no_self_notified">{{ l('label_user_mail_no_self_notified') }}</label>
+</p>

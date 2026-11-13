@@ -1,0 +1,17 @@
+{#- gantts/show.html.erb -#}
+{% extends 'base.html.twig' %}
+{% import 'queries/_macros.html.twig' as qm %}
+
+{% block header_tags %}
+{{ qm.calendar_headers() }}
+<link rel="stylesheet" href="/assets/gantt.css" media="all" />
+{{ qm.context_menu_tags() }}
+{% endblock %}
+
+{% block content %}
+{% include 'gantts/_content.html.twig' %}
+{% endblock %}
+
+{% block sidebar %}
+{% include 'issues/_sidebar.html.twig' with {query: query, project: project} %}
+{% endblock %}

@@ -1,0 +1,9 @@
+<div class="contextual">
+{% if allowed_to('edit_wiki_pages', project) %}
+<a class="icon icon-add" data-remote="true" href="{{ path('wiki_new', {project_id: project.identifier}) }}">{{ sprite_icon('add', l('label_wiki_page_new')) }}</a>
+{% endif %}
+{% include 'content/_watch_link.html.twig' with {watched_type: 'wiki', watched_class: 'Wiki', watched_id: wiki.id} %}
+{% if allowed_to('manage_wiki', project) %}
+<a class="icon icon-del" href="{{ path('wikis_destroy', {id: project.identifier}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+{% endif %}
+</div>

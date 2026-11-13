@@ -1,0 +1,22 @@
+{%- set me = current_user() -%}
+<div id="activity">
+{% for day in event_days %}
+<h3{% if day.non_working %} class="non-working-day"{% endif %}>
+  {% if day.today %}{{ l('label_today')|title }}{% else %}{{ format_date(day.date) }}{% endif %}
+  {% if not day.today %}<span class="day-of-week">({{ l('date.abbr_day_names.' ~ day.date|date('w')) }})</span>{% endif %}
+</h3>
+<dl>
+{% for item in day.events %}{% set e = item.event %}
+  <dt class="{{ e.type }} icon icon-{{ e.type }} {{ item.grouped ? 'grouped' : '' }} {{ me.isLogged() and e.author and e.author.id == me.id ? 'me' : '' }}">
+  {{ activity_event_type_icon(e.type) }}
+  {{ e.author ? avatar(e.author) : '' }}
+  <span class="time">{{ format_time(e.datetime, false) }}</span>
+  {% if e.project and (project is null or project.id != e.project.id) %}<span class="project">{{ e.project.name }}</span>{% endif %}
+  <a href="{{ app.request.baseUrl ~ e.url }}">{{ e.title }}</a>
+  </dt>
+  <dd class="{{ item.grouped ? 'grouped' : '' }}"><span class="description">{{ format_activity_description(e.description) }}</span>
+  <span class="author">{% if e.author %}{{ link_to_user(e.author) }}{% elseif e.authorName %}{{ e.authorName }}{% endif %}</span></dd>
+{% endfor %}
+</dl>
+{% endfor %}
+</div>

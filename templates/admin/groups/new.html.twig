@@ -1,0 +1,13 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('groups_index') }}">{{ l('label_group_plural') }}</a> &#187; {{ l('label_group_new') }}</h2>
+
+<form class="new_group" id="new_group" enctype="multipart/form-data" action="{{ path('group_create') }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+{% include 'admin/groups/_form.html.twig' %}
+<p>
+  <input type="submit" name="commit" value="{{ l('button_create') }}" />
+  <input type="submit" name="continue" value="{{ l('button_create_and_continue') }}" />
+</p>
+</form>
+{% endblock %}

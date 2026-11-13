@@ -1,0 +1,8 @@
+{% extends 'mailer/layout.html.twig' %}
+{% block content %}
+<a href="{{ added_to_url }}">{{ added_to }}</a><br />
+
+<ul>{% for attachment in attachments %}
+<li>{{ attachment.filename }}</li>
+{% endfor %}</ul>
+{% endblock %}

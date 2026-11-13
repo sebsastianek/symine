@@ -1,0 +1,16 @@
+{% extends 'mailer/layout.txt.twig' %}
+{% block content %}
+{% if journal.privateNotes %}({{ l('field_private_notes') }}) {% endif %}{{ l('text_issue_updated', {id: '#' ~ issue.id, author: journal.user.name}) }}
+
+{% for string in details_text %}
+{{ string }}
+{% endfor %}
+
+{% if journal.notes is not empty %}
+{{ journal.notes }}
+
+{% endif %}
+----------------------------------------
+{% include 'mailer/_issue.txt.twig' %}
+
+{% endblock %}

@@ -1,0 +1,7 @@
+{% extends 'mailer/layout.txt.twig' %}
+{% block content %}
+{{ l('mail_body_wiki_content_added', {id: page.prettyTitle, author: wiki_content.author ? wiki_content.author.name : ''}) }}
+{{ wiki_content.comments }}
+
+{{ wiki_content_url }}
+{% endblock %}

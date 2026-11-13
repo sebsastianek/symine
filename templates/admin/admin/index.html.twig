@@ -1,0 +1,23 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2>{{ l('label_administration') }}</h2>
+
+<div id="admin-index">
+  {% if no_configuration_data %}
+  <div class="nodata">
+  <form action="{{ path('admin_default_configuration') }}" method="post">
+    {{ csrf_field() }}
+    <p>{{ l("text_no_configuration_data")|nl2br }}</p>
+    <p>{{ l('field_language') }}:
+    <select name="lang" id="lang">
+      {% for code, name in languages %}<option value="{{ code }}"{% if code == current_language %} selected="selected"{% endif %}>{{ name }}</option>{% endfor %}
+    </select>
+    <input type="submit" name="commit" value="{{ l('text_load_default_configuration') }}" /></p>
+  </form>
+  </div>
+  {% endif %}
+  <div id="admin-menu">
+  {% include 'common/_menu.html.twig' with {items: admin_menu(null)} %}
+  </div>
+</div>
+{% endblock %}

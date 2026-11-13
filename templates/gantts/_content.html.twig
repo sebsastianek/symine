@@ -1,0 +1,16 @@
+{% import 'queries/_macros.html.twig' as qm %}
+<div class="contextual"></div>
+
+<h2>{{ query.isNew() ? l('label_gantt') : query.name() }}</h2>
+
+{% if not query.isNew() and query.record.description %}
+<p class="subtitle">{{ query.record.description }}</p>
+{% endif %}
+
+{% include 'gantts/_query_form.html.twig' %}
+{{ qm.error_messages(query.errors) }}
+{{ qm.filter_warnings(query) }}
+
+{% if query_valid %}
+{% include 'gantts/_chart.html.twig' %}
+{% endif %}

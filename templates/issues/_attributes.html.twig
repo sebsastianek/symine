@@ -1,0 +1,77 @@
+<div class="splitcontent">
+<div class="splitcontentleft">
+{% if 'status_id' in safe and allowed_statuses|length > 0 %}
+<p>
+  <label for="issue_status_id">{{ l('field_status') }}<span class="required"> *</span></label><select onchange="updateIssueFrom('{{ form_update_url|e('js') }}', this)"{% if issue.status.description %} title="{{ issue.status.description }}"{% endif %} name="issue[status_id]" id="issue_status_id">{% for s in allowed_statuses %}<option{% if s.id == issue.status.id %} selected="selected"{% endif %} value="{{ s.id }}">{{ s.name }}</option>
+{% endfor %}</select>
+  {% if transition_warning %}<span class="icon-only icon-warning" title="{{ transition_warning }}">{{ sprite_icon('warning', transition_warning) }}</span>{% endif %}
+</p>
+{% if is_default_status %}<input type="hidden" name="was_default_status" value="{{ issue.status.id }}" autocomplete="off" />{% endif %}
+{% else %}
+<p><label>{{ l('field_status') }}</label> {{ issue.status.name }}</p>
+{% endif %}
+
+{% if 'priority_id' in safe %}
+<p><label for="issue_priority_id">{{ l('field_priority') }}<span class="required"> *</span></label><select name="issue[priority_id]" id="issue_priority_id">{% for p in priorities %}<option{% if p.id == issue.priority.id %} selected="selected"{% endif %} value="{{ p.id }}">{{ p.name }}</option>
+{% endfor %}</select></p>
+{% endif %}
+
+{% if 'assigned_to_id' in safe %}
+<p>
+  <label for="issue_assigned_to_id">{{ l('field_assigned_to') }}{% include 'issues/_req.html.twig' with {req: 'assigned_to_id' in required_attrs} %}</label><select name="issue[assigned_to_id]" id="issue_assigned_to_id"><option value="" label=" "></option>
+{{ issue_principals_options(assignable_users, issue.assignedTo, issue) }}</select>
+  {% if me_assignable %}
+    <a class="assign-to-me-link{{ issue.assignedTo and issue.assignedTo.id == current_user().id ? ' hidden' : '' }}" href="#" data-id="{{ current_user().id }}">{{ l('label_assign_to_me') }}</a>
+  {% endif %}
+</p>
+{% endif %}
+
+{% if 'category_id' in safe and categories|length > 0 %}
+<p><label for="issue_category_id">{{ l('field_category') }}{% include 'issues/_req.html.twig' with {req: 'category_id' in required_attrs} %}</label><select{% if issue.isNew() %} onchange="updateIssueFrom('{{ form_update_url|e('js') }}', this)"{% endif %} name="issue[category_id]" id="issue_category_id"><option value="" label=" "></option>
+{% for c in categories %}<option{% if issue.category and issue.category.id == c.id %} selected="selected"{% endif %} value="{{ c.id }}">{{ c.name }}</option>
+{% endfor %}</select>
+{% if allowed_to('manage_categories', issue.project) and path_exists('issue_category_new') %}<a title="{{ l('label_issue_category_new') }}" tabindex="200" class="icon-only icon-add" data-remote="true" data-method="get" href="{{ path('issue_category_new', {project_id: issue.project.identifier}) }}">{{ sprite_icon('add', l('label_issue_category_new')) }}</a>{% endif %}</p>
+{% endif %}
+
+{% if 'fixed_version_id' in safe and assignable_versions|length > 0 %}
+<p><label for="issue_fixed_version_id">{{ l('field_fixed_version') }}{% include 'issues/_req.html.twig' with {req: 'fixed_version_id' in required_attrs} %}</label><select name="issue[fixed_version_id]" id="issue_fixed_version_id"><option value="" label=" "></option>
+{{ issue_version_options(assignable_versions, issue.fixedVersion) }}</select>
+{% if allowed_to('manage_versions', issue.project) and path_exists('version_new') %}<a title="{{ l('label_version_new') }}" tabindex="200" class="icon-only icon-add" data-remote="true" data-method="get" href="{{ path('version_new', {project_id: issue.project.identifier}) }}">{{ sprite_icon('add', l('label_version_new')) }}</a>{% endif %}
+</p>
+{% endif %}
+</div>
+
+<div class="splitcontentright">
+{% if 'parent_issue_id' in safe %}
+<p id="parent_issue"><label for="issue_parent_issue_id">{{ l('field_parent_issue') }}{% include 'issues/_req.html.twig' with {req: 'parent_issue_id' in required_attrs} %}</label><input size="10" onchange="updateIssueFrom('{{ form_update_url|e('js') }}', this)" type="text" value="{{ parent_issue_id }}" name="issue[parent_issue_id]" id="issue_parent_issue_id" /></p>
+<script>observeAutocompleteField('issue_parent_issue_id', '{{ parent_autocomplete_url|e('js') }}')</script>
+{% endif %}
+
+{% if 'start_date' in safe %}
+<p id="start_date_area">
+  <label for="issue_start_date">{{ l('field_start_date') }}{% include 'issues/_req.html.twig' with {req: 'start_date' in required_attrs} %}</label><input max="9999-12-31" size="10" value="{{ issue.startDate ? issue.startDate|date('Y-m-d') : '' }}" type="date" name="issue[start_date]" id="issue_start_date" />
+  <script>$(function() { $('#issue_start_date').addClass('date').datepickerFallback(typeof datepickerOptions !== 'undefined' ? datepickerOptions : {}); });</script>
+</p>
+{% endif %}
+
+{% if 'due_date' in safe %}
+<p id="due_date_area">
+  <label for="issue_due_date">{{ l('field_due_date') }}{% include 'issues/_req.html.twig' with {req: 'due_date' in required_attrs} %}</label><input max="9999-12-31" size="10" value="{{ issue.dueDate ? issue.dueDate|date('Y-m-d') : '' }}" type="date" name="issue[due_date]" id="issue_due_date" />
+  <script>$(function() { $('#issue_due_date').addClass('date').datepickerFallback(typeof datepickerOptions !== 'undefined' ? datepickerOptions : {}); });</script>
+</p>
+{% endif %}
+
+{% if 'estimated_hours' in safe %}
+<p><label for="issue_estimated_hours">{{ l('field_estimated_hours') }}{% include 'issues/_req.html.twig' with {req: 'estimated_hours' in required_attrs} %}</label><input placeholder="h:mm" size="6" value="{{ issue.estimatedHours is not null ? format_hours(issue.estimatedHours) : '' }}" type="text" name="issue[estimated_hours]" id="issue_estimated_hours" /> {{ l('field_hours') }}</p>
+{% endif %}
+
+{% if 'done_ratio' in safe and use_field_for_done_ratio %}
+<p><label for="issue_done_ratio">{{ l('field_done_ratio') }}{% include 'issues/_req.html.twig' with {req: 'done_ratio' in required_attrs} %}</label><select name="issue[done_ratio]" id="issue_done_ratio">{% for r in done_ratio_options %}<option value="{{ r }}"{% if r == issue.doneRatio %} selected="selected"{% endif %}>{{ r }} %</option>
+{% endfor %}</select></p>
+{% endif %}
+</div>
+</div>
+
+{% if 'custom_field_values' in safe %}
+{% include 'issues/_form_custom_fields.html.twig' %}
+{% endif %}

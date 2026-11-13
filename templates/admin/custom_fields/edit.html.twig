@@ -1,0 +1,9 @@
+{% extends 'admin/layout.html.twig' %}
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+{% block content %}
+{{ f.title(custom_field, type, type_label) }}
+
+<form class="edit_custom_field" id="custom_field_form" action="{{ path('custom_field_update', {id: custom_field.id}) }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="put" autocomplete="off" />{{ csrf_field() }}
+{% include 'admin/custom_fields/_form.html.twig' %}
+</form>
+{% endblock %}

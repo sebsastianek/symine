@@ -1,0 +1,15 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('enumerations_index') }}">{{ l(option_name) }}</a> &#187; {{ enumeration.name }}</h2>
+
+<form action="{{ path('enumeration_destroy', {id: enumeration.id}) }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="delete" autocomplete="off" />{{ csrf_field() }}
+<div class="box">
+<p><strong>{{ l('text_enumeration_destroy_question', {name: enumeration.name, count: objects_count}) }}</strong></p>
+<p><label for='reassign_to_id'>{{ l('text_enumeration_category_reassign_to') }}</label>
+<select name="reassign_to_id" id="reassign_to_id"><option value="">--- {{ l('actionview_instancetag_blank_option') }} ---</option>{% for e in enumerations %}<option value="{{ e.id }}">{{ e.name }}</option>{% endfor %}</select></p>
+</div>
+
+<input type="submit" name="commit" value="{{ l('button_apply') }}" data-disable-with="{{ l('button_apply') }}" />
+<a href="{{ path('enumerations_index') }}">{{ l('button_cancel') }}</a>
+</form>
+{% endblock %}

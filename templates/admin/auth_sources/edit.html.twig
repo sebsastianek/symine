@@ -1,0 +1,11 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('auth_sources_index') }}">{{ l('label_auth_source_plural') }}</a> &#187; {{ auth_source.name }}</h2>
+
+<form class="edit_auth_source" id="auth_source_form" action="{{ path('auth_source_update', {id: auth_source.id}) }}" method="post">
+  {{ csrf_field() }}
+  <input type="hidden" name="_method" value="patch" />
+  {% include 'admin/auth_sources/_form.html.twig' %}
+  <input type="submit" name="commit" value="{{ l('button_save') }}" />
+</form>
+{% endblock %}

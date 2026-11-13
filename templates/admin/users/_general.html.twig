@@ -1,0 +1,9 @@
+<form class="edit_user" id="edit_user_{{ edited_user.id }}" enctype="multipart/form-data" action="{{ path('user_update', {id: edited_user.id}) }}" accept-charset="UTF-8" method="post">
+  {{ csrf_field() }}
+  <input type="hidden" name="_method" value="put" autocomplete="off" />
+  {% include 'admin/users/_form.html.twig' %}
+  {% if edited_user.isActive() and edited_user.id != current_user().id %}
+    <p><label><input type="checkbox" name="send_information" id="send_information" value="1" /> {{ l('label_send_information') }}</label></p>
+  {% endif %}
+  <p class="mobile-show"><input type="submit" name="commit" value="{{ l('button_save') }}" /></p>
+</form>

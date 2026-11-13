@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}{% if path_exists('project_activity') %}<link rel="alternate" type="application/atom+xml" title="ATOM" href="{{ path('project_activity', {id: project.identifier}) }}.atom?show_wiki_edits=1" />{% endif %}{% endblock %}
+{% block content %}
+{% include 'wiki/_index_contextual.html.twig' %}
+
+<h2>{{ l('label_index_by_date') }}</h2>
+
+{% if pages is empty %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}
+
+{% for date, ps in pages_by_date %}
+<h3>{{ date ? format_date(date(date)) : '' }}</h3>
+<ul>
+{% for page in ps %}
+    <li><a href="{{ path('wiki_show', {project_id: project.identifier, id: page.title}) }}">{{ page.prettyTitle() }}</a></li>
+{% endfor %}
+</ul>
+{% endfor %}
+
+{% include 'wiki/_other_formats.html.twig' %}
+{% endblock %}
+{% block sidebar %}{% include 'wiki/_sidebar.html.twig' %}{% endblock %}

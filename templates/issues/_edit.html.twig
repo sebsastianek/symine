@@ -1,0 +1,70 @@
+<form class="edit_issue" id="issue-form" enctype="multipart/form-data" action="{{ path('issue_update', {id: issue.id}) }}" accept-charset="UTF-8" method="post">
+    <input type="hidden" name="_method" value="patch" autocomplete="off" />{{ csrf_field() }}
+    {{ call_hook('view_issues_edit_top', {issue: issue, form: null}) }}
+    {% include 'issues/_errors.html.twig' %}
+    {% if conflict %}{% include 'issues/_conflict.html.twig' %}{% endif %}
+    <div class="box">
+    {% if attributes_editable %}
+        <fieldset class="tabular"><legend>{{ l('label_change_properties') }}</legend>
+        <div id="all_attributes">
+        {% include 'issues/_form.html.twig' %}
+        </div>
+        </fieldset>
+    {% endif %}
+    {% if time_loggable %}
+        <fieldset class="tabular" id="log_time"><legend>{{ l('button_log_time') }}</legend>
+        <div class="splitcontent">
+        <div class="splitcontentleft">
+        <p><label for="time_entry_hours">{{ l('label_spent_time') }}</label><input size="6" placeholder="h:mm" type="text" value="{{ time_entry.hours ?? '' }}" name="time_entry[hours]" id="time_entry_hours" /> {{ l('field_hours') }}</p>
+        </div>
+        <div class="splitcontentright">
+        <p><label for="time_entry_activity_id">{{ l('field_activity') }}</label><select name="time_entry[activity_id]" id="time_entry_activity_id">
+        {% set default_activity = activities|filter(a => a.isDefault)|first %}
+        {% if not default_activity %}<option value="">--- {{ l('actionview_instancetag_blank_option') }} ---</option>{% endif %}
+        {% for a in activities %}<option value="{{ a.id }}"{% if (time_entry.activity_id ?? (default_activity ? default_activity.id : '')) ~ '' == a.id ~ '' %} selected="selected"{% endif %}>{{ a.name }}</option>{% endfor %}
+        </select></p>
+        </div>
+        </div>
+        <p><label for="time_entry_comments">{{ l('field_comments') }}</label><input size="60" maxlength="1024" type="text" value="{{ time_entry.comments ?? '' }}" name="time_entry[comments]" id="time_entry_comments" /></p>
+    </fieldset>
+    {% endif %}
+    {% if notes_addable %}
+      <fieldset id="add_notes"><legend>{{ l('field_notes') }}</legend>
+      {% include 'issues/_wiki_textarea.html.twig' with {name: 'issue[notes]', id: 'issue_notes', value: notes ?? '', rows: 10, cols: 60, preview_url: path('preview_issue', {project_id: issue.project.identifier, issue_id: issue.id})} %}
+      {% if 'private_notes' in safe %}
+      <input name="issue[private_notes]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1" name="issue[private_notes]" id="issue_private_notes"{% if private_notes %} checked="checked"{% endif %} /> <label for="issue_private_notes">{{ l('field_private_notes') }}</label>
+      {% endif %}
+      {{ call_hook('view_issues_edit_notes_bottom', {issue: issue, notes: notes ?? '', form: null}) }}
+      </fieldset>
+    {% endif %}
+    {% if attachments_addable %}
+      <fieldset id="add_attachments"><legend>{{ l('label_attachment_plural') }}</legend>
+        {% if existing_attachments|length > 0 and 'deleted_attachment_ids' in safe %}
+        <div class="contextual"><a href="#" onclick="$('#existing-attachments').toggle(); return false;">{{ l('label_edit_attachments') }}</a></div>
+        <div id="existing-attachments" style="{{ deleted_attachment_ids is empty ? 'display:none;' : '' }}">
+          {% for attachment in existing_attachments %}
+          <span class="existing-attachment">
+            {{ sprite_icon('file', null, 12) }}
+            <input type="text" value="{{ attachment.filename }}" class="icon icon-attachment filename" disabled="disabled" />
+            <label>
+              <input type="checkbox" name="issue[deleted_attachment_ids][]" value="{{ attachment.id }}"{% if attachment.id in deleted_attachment_ids %} checked="checked"{% endif %} class="deleted_attachment" /> {{ l('button_delete') }}
+            </label>
+          </span>
+          {% endfor %}
+          <hr />
+        </div>
+        {% endif %}
+
+        <div id="new-attachments" style="display:inline-block;">
+          {% include 'attachments/_form.html.twig' with {saved_attachments: saved_attachments ?? []} %}
+        </div>
+      </fieldset>
+    {% endif %}
+    </div>
+
+    <input autocomplete="off" type="hidden" value="{{ lock_version ?? issue.lockVersion }}" name="issue[lock_version]" id="issue_lock_version" />
+    <input type="hidden" name="last_journal_id" id="last_journal_id" value="{{ last_journal_id }}" autocomplete="off" />
+    <input type="submit" name="commit" value="{{ l('button_submit') }}" data-disable-with="{{ l('button_submit') }}" />
+    <a {% if body_css is defined and 'action-show' in body_css %}onclick="$('#update').hide(); return false;" {% endif %}href="{{ path('issue_show', {id: issue.id}) }}">{{ l('button_cancel') }}</a>
+    {% for _nav in ['prev_issue_id', 'next_issue_id', 'issue_position', 'issue_count'] %}{% if attribute(_context, _nav) ?? null %}<input type="hidden" name="{{ _nav }}" id="{{ _nav }}" value="{{ attribute(_context, _nav) }}" autocomplete="off" />{% endif %}{% endfor %}
+</form>

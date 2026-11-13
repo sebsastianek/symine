@@ -1,0 +1,4 @@
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+{% include 'admin/custom_fields/formats/_regexp.html.twig' %}
+<p>{{ f.text_field('url_pattern', custom_field.getFormatOption('url_pattern'), l('field_url'), 50) }}</p>
+<p>{{ f.text_field('default_value', custom_field.defaultValue, l('field_default_value')) }}</p>

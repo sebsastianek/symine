@@ -1,0 +1,19 @@
+{#- Port of admin/projects.html.erb (content part, also rendered alone for XHR requests) -#}
+<div class="contextual">
+{% if path_exists('project_new') %}<a class="icon icon-add" href="{{ path('project_new') }}">{{ sprite_icon('add', l('label_project_new')) }}</a>{% endif %}
+</div>
+
+<h2>{{ query.isNew() ? l('label_project_plural') : query.name() }}</h2>
+{% if not query.isNew() and query.record.description %}<p class="subtitle">{{ query.record.description }}</p>{% endif %}
+
+<form id="query_form" action="{{ path('admin_projects') }}" accept-charset="UTF-8" method="get">
+{% include 'queries/_query_form.html.twig' with {query: query, project: null} %}
+</form>
+
+{% if query.isValid() %}
+  {% if entries|length > 0 %}
+    {% include 'projects/_query_list.html.twig' with {admin_list: true} %}
+  {% else %}
+    <p class="nodata">{{ l('label_no_data') }}</p>
+  {% endif %}
+{% endif %}

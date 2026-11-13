@@ -1,0 +1,40 @@
+{% import 'admin/workflows/_macros.html.twig' as h %}
+<table class="list workflows transitions transitions-{{ name }}">
+<thead>
+  <tr>
+    <th>
+      {{ h.toggle_checkboxes_link('table.transitions-' ~ name ~ ' input[type=checkbox]:not(:disabled)', 'no-tooltip') }}
+      {{ l('label_current_status') }}
+    </th>
+    <th colspan="{{ statuses|length }}">{{ l('label_new_statuses_allowed') }}</th>
+  </tr>
+  <tr>
+    <td></td>
+    {% for new_status in statuses %}
+    <td style="width:{{ (75 / statuses|length)|round(0, 'floor') }}%;">
+      {{ h.toggle_checkboxes_link('table.transitions-' ~ name ~ ' input[type=checkbox]:not(:disabled).new-status-' ~ new_status.id, 'no-tooltip') }}
+      {{ new_status.name }}
+    </td>
+    {% endfor %}
+  </tr>
+</thead>
+<tbody>
+  {% for row in table.rows %}
+  <tr>
+    <td class="name">
+      {{ h.toggle_checkboxes_link('table.transitions-' ~ name ~ ' input[type=checkbox]:not(:disabled).old-status-' ~ row.old_id, 'no-tooltip') }}
+      {% if row.is_new %}<em>{{ row.old_name }}</em>{% else %}{{ row.old_name }}{% endif %}
+    </td>
+    {% for c in row.cells %}
+    <td class="no-tooltip {{ c.checked ? 'enabled' : '' }}" title="{{ c.title }}">
+      {% if c.kind == 'disabled' %}<input type="checkbox" name="{{ c.tag_name }}" id="{{ c.tag_id }}" value="1" checked="checked" disabled="disabled" class="{{ c.css }}" />
+      {%- elseif c.kind == 'checkbox' %}<input type="hidden" name="{{ c.tag_name }}" value="0" autocomplete="off" /><input type="checkbox" name="{{ c.tag_name }}" id="{{ c.tag_id }}" value="1" class="{{ c.css }}"{% if c.value %} checked="checked"{% endif %} />
+      {%- else %}<select name="{{ c.tag_name }}" id="{{ c.tag_id }}"><option value="1">{{ l('general_text_Yes') }}</option>
+<option value="0">{{ l('general_text_No') }}</option>
+<option selected="selected" value="no_change">{{ l('label_no_change_option') }}</option></select>{% endif %}
+    </td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+</tbody>
+</table>

@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_project_new') }}</h2>
+
+<form class="new_project" id="new_project" enctype="multipart/form-data" action="{{ path('project_create') }}" method="post">
+{{ csrf_field() }}
+{% include 'projects/_form.html.twig' %}
+<input type="submit" name="commit" value="{{ l('button_create') }}" data-disable-with="{{ l('button_create') }}" />
+<input type="submit" name="continue" value="{{ l('button_create_and_continue') }}" data-disable-with="{{ l('button_create_and_continue') }}" />
+</form>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'base.html.twig' %}
+{% import 'versions/_macros.html.twig' as vm %}
+{% block header_tags %}{{ vm.context_menu_tags() }}{% endblock %}
+{% block content %}
+<div class="contextual">
+  {% if allowed_to('manage_versions', project) %}
+  <a class="icon icon-add" href="{{ path('version_new', {project_id: project.identifier}) }}">{{ sprite_icon('add', l('label_version_new')) }}</a>
+  <span class="drdn"><span class="drdn-trigger"><span class="icon-only icon-actions" title="{{ l('button_actions') }}">{{ sprite_icon('3-bullets', l('button_actions')) }}</span></span><div class="drdn-content"><div class="drdn-items">
+  {% if path_exists('project_settings') %}<a class="icon icon-settings" href="{{ path('project_settings', {id: project.identifier, tab: 'versions'}) }}">{{ sprite_icon('settings', l('label_settings')) }}</a>{% endif %}
+</div></div></span>
+  {% endif %}
+</div>
+
+<h2>{{ l('label_roadmap') }}</h2>
+
+{% if versions is empty %}
+  <p class="nodata">{{ l('label_no_data') }}</p>
+{% else %}
+  <div id="roadmap">
+  {% for version in versions %}
+  <article class="version-article {{ version_css_classes(version) }}">
+    <header id="version-{{ version.id }}">
+      {% if allowed_to('manage_versions', version.project) %}
+        <div class="contextual">
+          <a title="{{ l('button_edit') }}" class="icon-only icon-edit" href="{{ path('version_edit', {id: version.id}) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>
+        </div>
+      {% endif %}
+      <h3 class="icon icon-package version inline-flex">
+        {{ sprite_icon('package') }}
+        {{ vm.link_to_version(version, project, (version.project.id == project.id ? version.name : version.project.identifier ~ '-' ~ version.name)|replace({' ': '_'})) }}
+      </h3>
+      <span class="badge badge-status-{{ version.status }}">{{ l('version_status_' ~ version.status) }}</span>
+    </header>
+    {% include 'versions/_overview.html.twig' with {version: version} %}
+    {% include 'versions/_wiki_content.html.twig' with {page: version_wiki_page(version), project: version.project} %}
+    {% set issues = issues_by_version[version.id] ?? [] %}
+    {% if issues is not empty %}
+      {{ vm.related_issues(issues, project) }}
+    {% endif %}
+    {{ call_hook('view_projects_roadmap_version_bottom', {version: version}) }}
+  </article>
+  {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block sidebar %}
+<form action="{{ path('project_roadmap', {project_id: project.identifier}) }}" accept-charset="UTF-8" method="get">
+<input type="hidden" name="tracker_ids[]" autocomplete="off" />
+<h3>{{ l('label_roadmap') }}</h3>
+<ul>
+{% for tracker in trackers %}
+  <li>
+    <label>
+      <input type="checkbox" name="tracker_ids[]" value="{{ tracker.id }}"{% if (tracker.id ~ '') in selected_tracker_ids %} checked="checked"{% endif %} />
+      {{ tracker.name }}
+    </label>
+  </li>
+{% endfor %}
+</ul>
+<p></p>
+<ul>
+  <li>
+    <label for="completed">
+      <input type="checkbox" name="completed" id="completed" value="1"{% if show_completed %} checked="checked"{% endif %} /> {{ l('label_show_completed_versions') }}
+    </label>
+  </li>
+  {% if show_subprojects_option %}
+  <li>
+    <input type="hidden" name="with_subprojects" value="0" autocomplete="off" />
+    <label>
+      <input type="checkbox" name="with_subprojects" id="with_subprojects" value="1"{% if with_subprojects %} checked="checked"{% endif %} /> {{ l('label_subproject_plural') }}
+    </label>
+  </li>
+  {% endif %}
+</ul>
+<p><input type="submit" value="{{ l('button_apply') }}" class="button-small" data-disable-with="{{ l('button_apply') }}" /></p>
+</form>
+
+<h3>{{ l('label_version_plural') }}</h3>
+<ul>
+{% for version in versions %}
+  <li>
+    <a href="#version-{{ version.id }}">{{ version_format_name(version, project) }}</a>
+  </li>
+{% endfor %}
+</ul>
+{% if completed_versions is not empty %}
+<p>
+  <a href="#" onclick="$(&quot;#toggle-completed-versions&quot;).toggleClass(&quot;icon-collapsed icon-expanded&quot;); $(&quot;#completed-versions&quot;).toggle(); toggleExpandCollapseIcon(this);; return false;" id="toggle-completed-versions" class="icon icon-collapsed collapsible">{{ sprite_icon('angle-right', l('label_completed_versions'), 18, false, 'icon-rtl') }}</a>
+  <ul id = "completed-versions" style = "display:none;">
+    {% for version in completed_versions %}
+      <li>{{ vm.link_to_version(version, project, null) }}</li>
+    {% endfor %}
+  </ul>
+</p>
+{% endif %}
+{% endblock %}

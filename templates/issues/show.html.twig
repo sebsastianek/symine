@@ -1,0 +1,162 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}
+<link rel="alternate" type="application/atom+xml" title="{{ issue.project.name }} - {{ issue.tracker.name }} #{{ issue.id }}: {{ issue.subject }}" href="{{ path('issue_show', {id: issue.id, _format: 'atom'}) }}" />
+<script src="/assets/context_menu.js"></script>
+<link rel="stylesheet" href="/assets/context_menu.css" media="screen" />
+<script src="/assets/attachments.js"></script>
+{% endblock %}
+{% block content %}
+{% include 'issues/_action_menu.html.twig' %}
+
+<h2 class="inline-block">{{ issue_heading(issue) }}</h2>{% if issue.status.isClosed %}<span class="badge badge-status-closed">{{ l('label_closed_issues') }}</span>{% else %}<span class="badge badge-status-open">{{ l('label_open_issues') }}</span>{% endif %}
+{% if issue.isPrivate %}
+  <span class="badge badge-private private">{{ l('field_is_private') }}</span>
+{% endif %}
+
+<div class="{{ issue_css_classes(issue) }} details">
+  {% if (prev_issue_id ?? false) or (next_issue_id ?? false) %}
+    <div class="next-prev-links contextual">
+      <span class="pagination">
+        <ul class="pages">
+          <li class="{{ prev_issue_id ? 'previous page' : 'previous' }}">
+            {% if prev_issue_id %}
+              <a title="#{{ prev_issue_id }}" accesskey="p" href="{{ path('issue_show', {id: prev_issue_id}) }}">« {{ l('label_previous') }}</a>
+            {% else %}
+              <span>« {{ l('label_previous') }}</span>
+            {% endif %}
+          </li>
+          {% if issue_position and issue_count %}
+            <li class="page position">
+              {% set position_label = l('label_item_position', {position: issue_position, count: issue_count}) %}
+              {% if query_path %}
+                <a href="{{ query_path }}">{{ position_label }}</a>
+              {% else %}
+                <span>{{ position_label }}</span>
+              {% endif %}
+            </li>
+          {% endif %}
+          <li class="{{ next_issue_id ? 'next page' : 'next' }}">
+            {% if next_issue_id %}
+              <a title="#{{ next_issue_id }}" accesskey="n" href="{{ path('issue_show', {id: next_issue_id}) }}">{{ l('label_next') }} »</a>
+            {% else %}
+              <span>{{ l('label_next') }} »</span>
+            {% endif %}
+          </li>
+        </ul>
+      </span>
+    </div>
+  {% endif %}
+
+  <div class="avatar-with-child">
+    {{ avatar(issue.author, 50) }}
+    {% if issue.assignedTo %}{{ avatar(issue.assignedTo, 22, 'avatar-child') }}{% endif %}
+  </div>
+
+<div data-controller="sticky-issue-header">
+  <div class="subject" data-sticky-issue-header-target="original">
+    {{ issue_subject_with_tree(issue) }}
+  </div>
+  <div id="sticky-issue-header" data-sticky-issue-header-target="stickyHeader" class="issue">
+    <span class="issue-heading">{{ issue_heading(issue) }}:</span>
+    <span class="subject">{{ issue.subject }}</span>
+  </div>
+</div>
+
+<div class="reaction">
+  {{ reaction_button(issue) }}
+</div>
+
+        <p class="author">
+        {{ authoring(issue.createdOn, issue.author) }}.
+        {% if issue.createdOn != issue.updatedOn %}
+        {{ l('label_updated_time', {value: time_tag(issue.updatedOn)})|raw }}.
+        {% endif %}
+        </p>
+
+{% set disabled = issue.tracker.getDisabledCoreFields() %}
+<div class="attributes">
+<div class="splitcontent"><div class="splitcontentleft">
+<div class="status attribute"><div class="label">{{ l('field_status') }}:</div><div class="value">{{ issue.status.name }}</div></div>
+{% if 'priority_id' not in disabled %}<div class="priority attribute"><div class="label">{{ l('field_priority') }}:</div><div class="value">{{ issue.priority.name }}</div></div>{% endif %}
+{% if 'assigned_to_id' not in disabled %}<div class="assigned-to attribute"><div class="label">{{ l('field_assigned_to') }}:</div><div class="value">{% if issue.assignedTo %}{% if issue.assignedTo.isGroup() == false %}{{ avatar(issue.assignedTo, 16) }}{% endif %}{{ link_to_principal(issue.assignedTo) }}{% else %}-{% endif %}</div></div>{% endif %}
+{% if 'category_id' not in disabled and (issue.category or issue.project.issueCategories|length > 0) %}<div class="category attribute"><div class="label">{{ l('field_category') }}:</div><div class="value">{{ issue.category ? issue.category.name : '-' }}</div></div>{% endif %}
+{% if 'fixed_version_id' not in disabled and (issue.fixedVersion or has_assignable_versions) %}<div class="fixed-version attribute"><div class="label">{{ l('field_fixed_version') }}:</div><div class="value">{{ issue.fixedVersion ? link_to_version(issue.fixedVersion) : '-' }}</div></div>{% endif %}
+</div><div class="splitcontentright">
+{% if 'start_date' not in disabled %}<div class="start-date attribute"><div class="label">{{ l('field_start_date') }}:</div><div class="value">{{ format_date(issue.startDate) }}</div></div>{% endif %}
+{% if 'due_date' not in disabled %}<div class="due-date attribute"><div class="label">{{ l('field_due_date') }}:</div><div class="value">{{ issue_due_date_details(issue) }}</div></div>{% endif %}
+{% if 'done_ratio' not in disabled %}<div class="progress attribute"><div class="label">{{ l('field_done_ratio') }}:</div><div class="value">{{ progress_bar(issue.doneRatio, issue.doneRatio ~ '%', 'progress', issue.doneRatio ~ '%') }}</div></div>{% endif %}
+{% if 'estimated_hours' not in disabled %}<div class="estimated-hours attribute"><div class="label">{{ l('field_estimated_hours') }}:</div><div class="value">{{ issue_estimated_hours_details(issue) }}</div></div>{% endif %}
+{% set spent_details = can_view_time ? issue_spent_hours_details(issue) : '' %}
+{% if spent_details %}<div class="spent-time attribute"><div class="label">{{ l('label_spent_time') }}:</div><div class="value">{{ spent_details|raw }}</div></div>{% endif %}
+</div></div>
+{% if half_custom_values|length > 0 %}
+{% set half = (half_custom_values|length / 2)|round(0, 'ceil') %}
+<div class="splitcontent"><div class="splitcontentleft">
+{% for cv in half_custom_values %}{% if loop.index0 == half %}</div><div class="splitcontentright">{% endif %}<div class="{{ cv.field.fieldFormat }}_cf cf_{{ cv.field.id }} attribute"><div class="label"><span>{{ cv.field.name }}</span>:</div><div class="value">{{ issue_cf_value_html(cv.field, cv.value, issue.project) }}</div></div>{% endfor %}
+</div>{% if half_custom_values|length == 1 %}<div class="splitcontentright"></div>{% endif %}</div>
+{% endif %}
+{{ call_hook('view_issues_show_details_bottom', {issue: issue}) }}
+</div>
+
+{% if issue.description is not empty %}
+<hr />
+<div class="description" data-controller="quote-reply">
+  <div class="contextual">
+  {% if notes_addable %}{{ quote_reply_button(path('issue_quoted', {id: issue.id})) }}{% endif %}
+  </div>
+
+  <p><strong>{{ l('field_description') }}</strong></p>
+  <div id="issue_description_wiki" class="wiki" data-quote-reply-target="content">
+  {{ textilizable(issue.description, issue.project) }}
+  </div>
+</div>
+{% endif %}
+{% if attachments|length > 0 %}
+  <hr />
+  <p><strong>{{ l('label_attachment_plural') }}</strong></p>
+  {% include 'attachments/_links.html.twig' with {container_type: 'issues', container_id: issue.id, attachments: attachments, editable: is_editable and attachments_deletable, deletable: attachments_deletable, author: true, thumbnails: true, journals: journals_by_attachment} %}
+{% endif %}
+
+{% for cv in full_custom_values %}{% set v = issue_cf_value_html(cv.field, cv.value, issue.project) %}{% if v %}<div class="{{ cv.field.fieldFormat }}_cf cf_{{ cv.field.id }} attribute"><hr /><p><strong>{{ cv.field.name }}</strong></p><div class="value">{{ v }}</div></div>{% endif %}{% endfor %}
+
+{{ call_hook('view_issues_show_description_bottom', {issue: issue}) }}
+
+{% if not issue.isLeaf() or allowed_to('manage_subtasks', project) %}
+<hr />
+<div id="issue_tree" class="{{ setting('display_related_issues_table_headers') in ['1', 1, true] ? 'with-related-issues-table-headers' : '' }}">
+  {% include 'issues/_subtasks.html.twig' %}
+</div>
+{% endif %}
+
+{% if relations|length > 0 or allowed_to('manage_issue_relations', project) %}
+<hr />
+<div id="relations" class="{{ setting('display_related_issues_table_headers') in ['1', 1, true] ? 'with-related-issues-table-headers' : '' }}">
+  {% include 'issues/_relations.html.twig' %}
+</div>
+{% endif %}
+
+</div>
+
+{% set reverse = current_user().getPref().commentsSorting() == 'desc' %}
+{% if reverse %}{% include 'issues/_action_menu_edit.html.twig' %}{% endif %}
+
+<div id="history" class="journals">
+{% include 'issues/_history_tabs.html.twig' %}
+</div>
+
+{% if not reverse %}{% include 'issues/_action_menu_edit.html.twig' %}{% endif %}
+
+<p class="other-formats hide-when-print">{{ l('label_export_to') }}
+  {% if allowed_to('export_issues', project) %}<span><a class="pdf" rel="nofollow" href="{{ path('issue_show', {id: issue.id, _format: 'pdf'}) }}">PDF</a></span>{% endif %}
+  <span><a class="atom" rel="nofollow" href="{{ path('issue_show', {id: issue.id, _format: 'atom'}) }}">Atom</a></span>
+</p>
+{% endblock %}
+
+{% block sidebar %}
+  {% include 'issues/_sidebar.html.twig' ignore missing %}
+  {% if allowed_to('add_issue_watchers', project) or (issue_watchers|length > 0 and allowed_to('view_issue_watchers', project)) %}
+    <div id="watchers" data-watchable-id="{{ issue.id }}">
+      {% include 'watchers/_watchers.html.twig' with {watched: issue} %}
+    </div>
+  {% endif %}
+{% endblock %}

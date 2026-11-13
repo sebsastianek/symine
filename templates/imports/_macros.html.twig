@@ -1,0 +1,18 @@
+{# ImportsHelper#mapping_select_tag #}
+{% macro mapping_select(columns, mapping, field, options = {}) %}
+{%- set current = mapping[field] ?? null -%}
+{%- set selected_value = current ?? (options.default_value ?? null) -%}
+<select name="import_settings[mapping][{{ field }}]" id="import_mapping_{{ field }}">
+{%- if options.required ?? false %}<option value="">-- {{ l('actionview_instancetag_blank_option') }} --</option>{% else %}<option value="">&nbsp;</option>{% endif -%}
+{%- for col in columns %}<option value="{{ col[1] }}"{% if current is not null and (current ~ '') == (col[1] ~ '') %} selected="selected"{% endif %}>{{ col[0] }}</option>{% endfor -%}
+{%- if options.values is defined %}<option value="" disabled="disabled">--</option>
+{%- for v in options.values %}<option value="value:{{ v[1] }}"{% if selected_value is not null and (selected_value ~ '') == ('value:' ~ v[1]) %} selected="selected"{% endif %}>{{ v[0] }}</option>{% endfor -%}
+{%- endif -%}
+</select>
+{%- endmacro %}
+
+{% macro project_select(project_options, selected_project_id) %}
+<select name="import_settings[mapping][project_id]" id="import_mapping_project_id">
+{%- for p in project_options %}<option value="{{ p[0] }}"{% if p[0] == selected_project_id %} selected="selected"{% endif %}>{{ p[1] }}</option>{% endfor -%}
+</select>
+{%- endmacro %}

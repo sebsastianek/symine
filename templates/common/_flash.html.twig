@@ -1,1 +1,2 @@
-{% for type, messages in app.flashes %}{% for message in messages %}<div class="flash {{ type }}" id="flash_{{ type }}">{{ message }}</div>{% endfor %}{% endfor %}
+{#- Flash types ending in "_html" carry trusted HTML built by controllers (e.g. links); others are escaped. -#}
+{% for type, messages in app.flashes %}{% set css = type|replace({'_html': ''}) %}{% for message in messages %}<div class="flash {{ css }}" id="flash_{{ css }}">{% if type ends with '_html' %}{{ message|raw }}{% else %}{{ message }}{% endif %}</div>{% endfor %}{% endfor %}

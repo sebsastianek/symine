@@ -1,0 +1,16 @@
+{% extends 'mailer/layout.html.twig' %}
+{% block content %}
+<h1>{{ message.board.project.name }} - {{ message.board.name }}: <a href="{{ message_url }}">{{ message.subject }}</a></h1>
+<em>{{ message.author ? message.author.name : '' }}</em>
+
+{{ mail.textilizable(message.content, message.board.project)|raw }}
+
+{% set attachments = mail.attachmentsOf('Message', message.id) %}
+{% if attachments is not empty %}
+<fieldset class="attachments"><legend>{{ l('label_attachment_plural') }}</legend>
+{% for attachment in attachments %}
+  {{ mail.linkToAttachment(attachment)|raw }} ({{ mail.humanSize(attachment.filesize) }})<br />
+{% endfor %}
+</fieldset>
+{% endif %}
+{% endblock %}

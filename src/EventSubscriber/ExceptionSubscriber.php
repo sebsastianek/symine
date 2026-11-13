@@ -17,7 +17,7 @@ use Twig\Environment;
 /** Renders 403/404/409/422 like Redmine (render_403, render_404, API status codes). */
 final class ExceptionSubscriber implements EventSubscriberInterface
 {
-    public function __construct(private readonly Environment $twig, private readonly Localizer $i18n)
+    public function __construct(private readonly Environment $twig, private readonly Localizer $i18n, private readonly ?\App\Security\CurrentUser $currentUser = null)
     {
     }
 
@@ -30,6 +30,17 @@ final class ExceptionSubscriber implements EventSubscriberInterface
     public function onException(ExceptionEvent $event): void
     {
         $e = $event->getThrowable();
+        // AccountController#logout: GET /logout displays the logout form (the firewall only logs out on a
+        // request carrying the CSRF token), anonymous users are redirected to the home page
+        if ($e->getPrevious() instanceof \Symfony\Component\Security\Core\Exception\LogoutException && $event->getRequest()->isMethod('GET')) {
+            $logged = $this->currentUser?->isLogged() ?? false;
+            $event->setResponse($logged
+                ? new Response($this->twig->render('account/logout.html.twig', ['body_css' => 'controller-account action-logout']))
+                : new \Symfony\Component\HttpFoundation\RedirectResponse($event->getRequest()->getBasePath().'/'));
+            $event->allowCustomResponseCode();
+
+            return;
+        }
         if (!$e instanceof HttpExceptionInterface) {
             if ($e instanceof \Doctrine\ORM\OptimisticLockException) {
                 $status = 409;
@@ -43,7 +54,13 @@ final class ExceptionSubscriber implements EventSubscriberInterface
             return;
         }
         $request = $event->getRequest();
-        if (ApiRequestMatcher::isApiRequest($request) || 'json' === $request->getPreferredFormat()) {
+        if (ApiRequestMatcher::isApiRequest($request)) {
+            // render_error: format.any { head @status } (empty body)
+            $event->setResponse(new Response('', $status));
+
+            return;
+        }
+        if ('json' === $request->getPreferredFormat()) {
             $event->setResponse(new JsonResponse(null, $status));
 
             return;

@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<div class="contextual">
+{% if allowed_to('add_hello_greetings', project) %}
+<a class="icon icon-add new-greeting" onclick="showAndScrollTo(&quot;add-greeting&quot;, &quot;greeting_message&quot;); return false;" href="#">{{ sprite_icon('add', l('label_hello_greeting_new')) }}</a>
+{% endif %}
+</div>
+
+<h2>{{ l('label_hello_greeting_plural') }}</h2>
+
+{% if errors|length > 0 %}
+<div id="errorExplanation"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+{% endif %}
+
+{% if allowed_to('add_hello_greetings', project) %}
+<div id="add-greeting"{% if errors is empty %} style="display:none;"{% endif %}>
+<form id="greeting-form" action="{{ path('hello_create', {project_id: project.identifier}) }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+<div class="box tabular">
+<p><label for="greeting_message">{{ l('field_hello_message') }} <span class="required">*</span></label>
+<input type="text" name="greeting[message]" id="greeting_message" size="60" maxlength="255" /></p>
+</div>
+<input type="submit" name="commit" value="{{ l('button_create') }}" />
+</form>
+</div>
+{% endif %}
+
+<div id="hello-greetings">
+{% if greetings is empty %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% else %}
+<ul class="hello-greetings">
+{% for g in greetings %}
+  <li id="greeting-{{ g.id }}" class="hello-greeting">{{ avatar(g.author, 16) }} <strong>{{ greeting_word }}!</strong> {{ g.message }} <span class="author">{{ authoring(g.createdOn, g.author) }}</span></li>
+{% endfor %}
+</ul>
+{% endif %}
+</div>
+{% endblock %}
+
+{% block sidebar %}
+<h3>{{ l('label_hello_greeting_plural') }}</h3>
+<p><a href="{{ path('project_activity', {id: project.identifier, show_hello_greetings: 1}) }}">{{ l('label_activity') }}</a></p>
+{% endblock %}

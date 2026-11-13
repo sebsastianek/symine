@@ -1,0 +1,19 @@
+{% extends 'admin/layout.html.twig' %}
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+{% block content %}
+<div class="contextual">
+<a href="#" onclick="location.href = '{{ path('custom_field_new') }}?tab=' + encodeURIComponent(($('.tabs a.selected').attr('id')||'').split('tab-').pop()); return false;" class="icon icon-add">{{ sprite_icon('add', l('label_custom_field_new')) }}</a>
+</div>
+
+<h2>{{ l('label_custom_field_plural') }}</h2>
+
+{% if custom_fields_by_type|length > 0 %}
+  {% include 'admin/_tabs.html.twig' with {tabs: tabs} %}
+{% else %}
+  <p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}
+
+<script>
+  $(function() { $("table.custom_fields tbody").positionedItems(); });
+</script>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends layout %}
+{% block content %}
+<h2>{{ import_title }}</h2>
+
+{% if saved_count > 0 %}
+  <p>{{ l('notice_import_finished', {count: saved_count}) }}:</p>
+
+  {% include 'imports/_' ~ partial_prefix ~ '_saved_objects.html.twig' %}
+{% endif %}
+
+{% if unsaved_items|length > 0 %}
+  <div class="flash error">
+    {{ sprite_icon('warning') }}
+    {{ l('notice_import_finished_with_errors', {count: unsaved_items|length, total: import.totalItems ?? 0}) }}
+  </div>
+
+  <table id="unsaved-items" class="list">
+    <thead>
+    <tr>
+      <th>{{ l('label_position') }}</th>
+      <th>{{ l('label_message') }}</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for item in unsaved_items %}
+    <tr>
+      <td>{{ item.position }}</td>
+      <td>{{ (item.message ?? '')|nl2br }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+{% endblock %}

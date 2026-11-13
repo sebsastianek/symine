@@ -1,0 +1,50 @@
+{% import _self as forum %}
+{#- Project settings "Forums" tab (projects/settings/_boards.html.erb). Needs only `project`. -#}
+{% if allowed_to('manage_boards', project) %}
+<p><a class="icon icon-add" href="{{ path('board_new', {project_id: project.identifier}) }}">{{ sprite_icon('add', l('label_board_new')) }}</a></p>
+{% endif %}
+
+{% set nodes = project_boards(project) %}
+{% if nodes|length > 0 %}
+<div class="table-list boards">
+  <div class="table-list-header">
+    <div class="table-list-cell">{{ l('label_board') }}</div>
+  </div>
+  {{ forum.tree(nodes, null, project) }}
+</div>
+
+<script>
+  $(function() { $("div.sort-level").positionedItems(); });
+</script>
+
+{% else %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}
+
+  {% macro tree(nodes, parent_id, project) %}
+  {% import _self as forum %}
+  {% set children = nodes|filter(n => (n.board.parent ? n.board.parent.id : null) == parent_id) %}
+  {% if children|length > 0 %}
+  <div class="sort-level">
+  {% for n in children %}
+    {% set board = n.board %}
+    <div>
+    <div class="table-list-row">
+      <div class="table-list-cell name" style="padding-left: {{ 2 + n.level * 16 }}px">
+        <a href="{{ path('board_show', {project_id: project.identifier, id: board.id}) }}">{{ board.name }}</a>
+      </div>
+      <div class="table-list-cell description">{{ board.description }}</div>
+      <div class="table-list-cell buttons">
+      {% if allowed_to('manage_boards', project) %}
+        <span class="icon-only icon-sort-handle sort-handle" data-reorder-url="{{ path('board_update', {project_id: project.identifier, id: board.id}) }}" data-reorder-param="board" title="{{ l('button_sort') }}">{{ sprite_icon('reorder', '') }}</span>
+        <a class="icon icon-edit" href="{{ path('board_edit', {project_id: project.identifier, id: board.id}) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>
+        <a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('board_destroy', {project_id: project.identifier, id: board.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+      {% endif %}
+      </div>
+    </div>
+    {{ forum.tree(nodes, board.id, project) }}
+    </div>
+  {% endfor %}
+  </div>
+  {% endif %}
+{% endmacro %}

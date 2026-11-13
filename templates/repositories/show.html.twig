@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}{% include 'repositories/_header_tags.html.twig' %}
+{% if can_view_changesets and supports_history %}<link rel="alternate" type="application/atom+xml" title="ATOM" href="{{ repo_url('revisions', repository) }}.atom" />{% endif %}
+{% endblock %}
+{% block content %}
+<div class="contextual">
+  {% include 'repositories/_navigation.html.twig' %}
+</div>
+
+<h2 class="breadcrumbs">{% include 'repositories/_breadcrumbs.html.twig' with {kind: 'dir'} %}</h2>
+
+{% if entries is not null and can_browse %}
+  {% include 'repositories/_dir_list.html.twig' %}
+{% endif %}
+
+{% include 'repositories/_properties.html.twig' %}
+
+{% if can_view_changesets %}
+  {% if changesets|length > 0 %}
+    <h3>{{ l('label_latest_revision_plural') }}</h3>
+    {% include 'repositories/_revisions.html.twig' with {revisions: changesets} %}
+  {% endif %}
+  <p>
+  {% set sep = '' %}
+  {% if supports_history and path == '' %}
+    <a href="{{ repo_url('revisions', repository) }}">{{ l('label_view_all_revisions') }}</a>
+    {% set sep = '|' %}
+  {% endif %}
+  {% if supports_directory_revisions and (branches|length > 0 or path != '' or rev) %}
+    {{ sep }}
+    <a href="{{ repo_url('changes', repository, {path: path, rev: rev}) }}">{{ l('label_view_revisions') }}</a>
+  {% endif %}
+  </p>
+  {% if supports_history %}
+  <p class="other-formats hide-when-print">{{ l('label_export_to') }}
+  <span><a class="atom" rel="nofollow" href="{{ repo_url('revisions', repository) }}.atom">Atom</a></span>
+  </p>
+  {% endif %}
+{% endif %}
+{% endblock %}
+{% block sidebar %}
+{% if repositories|length > 1 %}
+  <h3>{{ l('label_repository_plural') }}</h3>
+  <p>
+    {% for repo in repositories %}<a class="repository{{ repo.id == repository.id ? ' selected' : '' }}" href="{{ repo_url('show', repo) }}">{{ repository_name(repo) }}</a>{% if not loop.last %}<br />{% endif %}{% endfor %}
+  </p>
+{% endif %}
+{% endblock %}

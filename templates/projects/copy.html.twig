@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_project_new') }}</h2>
+
+<form class="new_project" id="new_project" action="{{ path('project_copy', {id: source_project.identifier}) }}" method="post">
+{{ csrf_field() }}
+{% include 'projects/_form.html.twig' %}
+
+<fieldset class="box tabular"><legend><a href="#" onclick="toggleCheckboxesBySelector('.box input[type=&quot;checkbox&quot;][name=&quot;only[]&quot;]'); return false;" title="{{ l('button_check_all') }} / {{ l('button_uncheck_all') }}" class="icon icon-checked">{{ sprite_icon('checked', '') }}</a>{{ l('button_copy') }}</legend>
+  <label class="block"><input type="checkbox" name="only[]" value="members" checked="checked" /> {{ l('label_member_plural') }} ({{ copy_counts.members }})</label>
+  <label class="block"><input type="checkbox" name="only[]" value="versions" checked="checked" /> {{ l('label_version_and_files', {count: copy_counts.versions}) }}</label>
+  <label class="block"><input type="checkbox" name="only[]" value="issue_categories" checked="checked" /> {{ l('label_issue_category_plural') }} ({{ copy_counts.issue_categories }})</label>
+  <label class="block"><input type="checkbox" name="only[]" value="issues" checked="checked" /> {{ l('label_issue_plural') }} ({{ copy_counts.issues }})</label>
+  <label class="block"><input type="checkbox" name="only[]" value="queries" checked="checked" /> {{ l('label_query_plural') }} ({{ copy_counts.queries }})</label>
+  <label class="block"><input type="checkbox" name="only[]" value="documents" checked="checked" /> {{ l('label_document_plural') }} ({{ copy_counts.documents }})</label>
+  <label class="block"><input type="checkbox" name="only[]" value="boards" checked="checked" /> {{ l('label_board_plural') }} ({{ copy_counts.boards }})</label>
+  <label class="block"><input type="checkbox" name="only[]" value="wiki" checked="checked" /> {{ l('label_wiki_page_plural') }} ({{ copy_counts.wiki }})</label>
+  <input type="hidden" name="only[]" value="" />
+  <br />
+  <label class="block"><input type="checkbox" name="notifications" value="1" /> {{ l('label_project_copy_notifications') }}</label>
+</fieldset>
+
+{% for t in form_project.trackers %}<input type="hidden" name="project[tracker_ids][]" value="{{ t.id }}" />
+{% endfor %}
+{% for f in form_project.issueCustomFields %}<input type="hidden" name="project[issue_custom_field_ids][]" value="{{ f.id }}" />
+{% endfor %}
+
+<input type="submit" name="commit" value="{{ l('button_copy') }}" data-disable-with="{{ l('button_copy') }}" />
+</form>
+{% endblock %}

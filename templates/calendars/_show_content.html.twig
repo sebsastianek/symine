@@ -1,0 +1,74 @@
+{% import 'queries/_macros.html.twig' as qm %}
+{% set cal_route = project ? 'project_calendar' : 'calendar' %}
+{% set cal_params = project ? {project_id: project.identifier} : {} %}
+<h2>{{ query.isNew() ? l('label_calendar') : query.name() }}</h2>
+{% if not query.isNew() and query.record.description %}<p class="subtitle">{{ query.record.description }}</p>{% endif %}
+
+<form id="query_form" action="{{ path(cal_route, cal_params) }}" accept-charset="UTF-8" method="get">
+<input type="hidden" name="set_filter" id="set_filter" value="1" autocomplete="off" />
+<input type="hidden" name="calendar" id="calendar" value="1" autocomplete="off" />
+
+<div id="query_form_with_buttons" class="hide-when-print">
+<div id="query_form_content">
+  <fieldset id="filters" class="collapsible {{ query.isNew() ? '' : 'collapsed' }}">
+    <legend onclick="toggleFieldset(this);" class="icon icon-{{ query.isNew() ? 'expanded' : 'collapsed' }}">
+      {{ sprite_icon(query.isNew() ? 'angle-down' : 'angle-right', null, 18, false, query.isNew() ? null : 'icon-rtl') }}
+      {{ l('label_filter_plural') }}
+    </legend>
+    <div style="{{ query.isNew() ? '' : 'display: none;' }}">
+      {% include 'queries/_filters.html.twig' with {query: query} %}
+    </div>
+  </fieldset>
+</div>
+
+{% set qp = app.request.query.all %}
+{% set prev_y = month == 1 ? year - 1 : year %}{% set prev_m = month == 1 ? 12 : month - 1 %}
+{% set next_y = month == 12 ? year + 1 : year %}{% set next_m = month == 12 ? 1 : month + 1 %}
+<span class="contextual pagination">
+  <ul class="pages">
+    <li class="previous page">
+      <a accesskey="p" href="{{ path(cal_route, cal_params|merge(qp)|merge({month: prev_m, year: prev_y})) }}">« {{ l('date.month_names.' ~ prev_m) }}{% if prev_m == 12 %} {{ prev_y }}{% endif %}</a>
+    </li><li class="next page">
+      <a accesskey="n" href="{{ path(cal_route, cal_params|merge(qp)|merge({month: next_m, year: next_y})) }}">{{ l('date.month_names.' ~ next_m) }}{% if next_m == 1 %} {{ next_y }}{% endif %} »</a>
+    </li>
+  </ul>
+</span>
+
+<p class="buttons">
+  <label for="month">{{ l('label_month') }}</label>
+  <select id="month" name="month">
+{% for m in 1..12 %}<option value="{{ m }}"{% if m == month %} selected="selected"{% endif %}>{{ l('date.month_names.' ~ m) }}</option>
+{% endfor %}</select>
+
+  <label for="year">{{ l('label_year') }}</label>
+  <select id="year" name="year">
+{% for y in (year - 5)..(year + 5) %}<option value="{{ y }}"{% if y == year %} selected="selected"{% endif %}>{{ y }}</option>
+{% endfor %}</select>
+
+
+  <a href="#" onclick="$(&quot;#query_form&quot;).submit(); return false;" class="icon icon-checked">{{ sprite_icon('checked', l('button_apply')) }}</a>
+  <a class="icon icon-reload" href="{{ path(cal_route, cal_params|merge({set_filter: 1})) }}">{{ sprite_icon('reload', l('button_clear')) }}</a>
+  {% if query.isNew() and can_save_queries %}
+    <a href="#" onclick="$(&#39;#query_form&#39;).attr(&#39;action&#39;, &#39;{{ project ? path('project_query_new', {project_id: project.identifier}) : path('query_new') }}&#39;).submit();; return false;" class="icon icon-save">{{ sprite_icon('save', l('button_save_object', {object_name: l('label_query')})|capitalize) }}</a>
+  {% endif %}
+  {% if not query.isNew() and query.isEditableBy() %}
+    <a class="icon icon-edit" href="{{ path('query_edit', {id: query.record.id, calendar: 1}) }}">{{ sprite_icon('edit', l('button_edit_object', {object_name: l('label_query')})|capitalize) }}</a>
+    <a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('query_destroy', {id: query.record.id, calendar: 1}) }}">{{ sprite_icon('del', l('button_delete_object', {object_name: l('label_query')})|capitalize) }}</a>
+  {% endif %}
+</p>
+</div>
+</form>
+
+{{ qm.error_messages(query.errors) }}
+{{ qm.filter_warnings(query) }}
+{% if query.isValid() %}
+{% include 'common/_calendar.html.twig' with {calendar: calendar} %}
+
+{{ call_hook('view_calendars_show_bottom', {year: year ?? null, month: month ?? null, project: project ?? null, query: query ?? null}) }}
+
+<p class="legend cal">
+  <span class="starting">{{ sprite_icon('bullet-go', l('text_tip_issue_begin_day'), 18, false, 'icon-rtl') }}</span>
+  <span class="ending">{{ sprite_icon('bullet-end', l('text_tip_issue_end_day'), 18, false, 'icon-rtl') }}</span>
+  <span class="starting ending">{{ sprite_icon('bullet-go-end', l('text_tip_issue_begin_end_day')) }}</span>
+</p>
+{% endif %}

@@ -1,0 +1,37 @@
+{#- custom_field_tag_with_label. Params: field, value, prefix (e.g. 'user'), options (list of [value,label]) -#}
+{%- set fid = prefix ~ '_custom_field_values_' ~ field.id -%}
+{%- set fname = prefix ~ '[custom_field_values][' ~ field.id ~ ']' -%}
+{%- set multiple = field.isMultiple() -%}
+{%- set vals = value is iterable ? value : (value is null ? [] : [value]) -%}
+{%- set style = field.getFormatOption('edit_tag_style', '') -%}
+<label for="{{ fid }}"{% if field.description %} title="{{ field.description }}"{% endif %}><span class="field-description">{{ field.name }}</span>{% if field.isRequired %}<span class="required"> *</span>{% endif %}</label>
+{%- if field.fieldFormat in ['list', 'enumeration', 'user', 'version'] -%}
+  {%- if style == 'check_box' -%}
+    <span id="{{ fid }}" class="check_box_group {{ field.fieldFormat }}_cf">
+    {% if not multiple and not field.isRequired %}<label><input type="radio" name="{{ fname }}" value=""{% if vals|length == 0 %} checked{% endif %}> {{ l('label_none') }}</label>{% endif %}
+    {% for opt in options %}<label><input type="{{ multiple ? 'checkbox' : 'radio' }}" name="{{ fname }}{{ multiple ? '[]' : '' }}" value="{{ opt[0] }}"{% if opt[0] in vals %} checked{% endif %}> {{ opt[1] }}</label>{% endfor %}
+    </span>{% if multiple %}<input type="hidden" name="{{ fname }}[]" value="">{% endif %}
+  {%- else -%}
+    <select name="{{ fname }}{{ multiple ? '[]' : '' }}" id="{{ fid }}" class="{{ field.fieldFormat }}_cf"{% if multiple %} multiple="multiple"{% endif %}>
+      {% if not multiple %}<option value="">{{ field.isRequired ? '--- ' ~ l('actionview_instancetag_blank_option') ~ ' ---' : '' }}</option>{% endif %}
+      {% for opt in options %}<option value="{{ opt[0] }}"{% if opt[0] in vals %} selected="selected"{% endif %}>{{ opt[1] }}</option>{% endfor %}
+    </select>{% if multiple %}<input type="hidden" name="{{ fname }}[]" value="">{% endif %}
+  {%- endif -%}
+{%- elseif field.fieldFormat == 'bool' -%}
+  {%- set v = vals|first -%}
+  {%- if style == 'check_box' -%}
+    <input type="hidden" name="{{ fname }}" value="0"><input type="checkbox" name="{{ fname }}" id="{{ fid }}" value="1" class="bool_cf"{% if v == '1' %} checked{% endif %}>
+  {%- elseif style == 'radio' -%}
+    <span id="{{ fid }}" class="check_box_group bool_cf">
+      {% for opt in [['', l('label_none')], ['1', l('general_text_Yes')], ['0', l('general_text_No')]] %}<label><input type="radio" name="{{ fname }}" value="{{ opt[0] }}"{% if (v ?? '') == opt[0] %} checked{% endif %}> {{ opt[1] }}</label>{% endfor %}
+    </span>
+  {%- else -%}
+    <select name="{{ fname }}" id="{{ fid }}" class="bool_cf"><option value=""></option><option value="1"{% if v == '1' %} selected="selected"{% endif %}>{{ l('general_text_Yes') }}</option><option value="0"{% if v == '0' %} selected="selected"{% endif %}>{{ l('general_text_No') }}</option></select>
+  {%- endif -%}
+{%- elseif field.fieldFormat == 'text' -%}
+  <textarea name="{{ fname }}" id="{{ fid }}" rows="{{ field.getFormatOption('full_width_layout') ? 3 : 3 }}" class="text_cf{% if field.getFormatOption('text_formatting') == 'full' %} wiki-edit{% endif %}">{{ vals|first }}</textarea>
+{%- elseif field.fieldFormat == 'date' -%}
+  <input type="date" name="{{ fname }}" id="{{ fid }}" value="{{ vals|first }}" size="10" class="date_cf">
+{%- else -%}
+  <input type="text" name="{{ fname }}" id="{{ fid }}" value="{{ vals|first }}" class="{{ field.fieldFormat }}_cf">
+{%- endif -%}

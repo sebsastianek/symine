@@ -1,0 +1,21 @@
+{% if allowed_to('manage_boards', project) and path_exists('board_new') %}
+<p><a class="icon icon-add" href="{{ path('board_new', {project_id: project.identifier}) }}">{{ sprite_icon('add', l('label_board_new')) }}</a></p>
+{% endif %}
+{% if boards|length > 0 %}
+<div class="table-list boards">
+  <div class="table-list-header">
+    <div class="table-list-cell">{{ l('label_board') }}</div>
+  </div>
+  {% for row in boards %}{% set board = row[0] %}
+  <div class="table-list-row">
+    <div class="table-list-cell name" style="padding-left: {{ 2 + row[1] * 16 }}px">
+      {% if path_exists('board_show') %}<a href="{{ path('board_show', {project_id: project.identifier, id: board.id}) }}">{{ board.name }}</a>{% else %}{{ board.name }}{% endif %}
+    </div>
+    <div class="table-list-cell description">{{ board.description }}</div>
+    <div class="table-list-cell buttons"></div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}

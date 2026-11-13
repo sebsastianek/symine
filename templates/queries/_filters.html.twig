@@ -1,0 +1,30 @@
+{#- queries/_filters.html.erb -#}
+<script>
+//<![CDATA[
+
+var operatorLabels = {{ query_operators_labels()|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_UNESCAPED_UNICODE'))|raw }};
+var operatorByType = {{ query_operators_by_filter_type()|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP'))|raw }};
+var availableFilters = {{ query.availableFiltersAsJson()|json_encode(constant('JSON_HEX_TAG') b-or constant('JSON_HEX_AMP') b-or constant('JSON_UNESCAPED_UNICODE'))|raw }};
+var labelDayPlural = {{ l('label_day_plural')|json_encode|raw }};
+
+var filtersUrl = {{ path('queries_filter', {project_id: query.project ? query.project.id : null, type: query.type()})|json_encode|raw }};
+
+$(document).ready(function(){
+  initFilters();
+  {% for field, options in query.getFilters() %}
+  addFilter({{ field|json_encode|raw }}, {{ options.operator|json_encode|raw }}, {{ options.values|json_encode|raw }});
+  {% endfor %}
+});
+
+//]]>
+</script>
+<div id="filters-table">
+</div>
+
+<div class="add-filter">
+<label for="add_filter_select">{{ l('label_filter_add') }}</label>
+<select id="add_filter_select">{{ filters_options_for_select(query) }}</select>
+</div>
+
+<input type="hidden" name="f[]" id="f_" value="" autocomplete="off" />
+{% set include_calendar = true %}

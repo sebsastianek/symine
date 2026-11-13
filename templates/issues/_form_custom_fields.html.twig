@@ -1,0 +1,20 @@
+{% set half_fields = form_custom_fields|filter(c => not c.full_width) %}
+{% set full_fields = form_custom_fields|filter(c => c.full_width) %}
+{% if half_fields|length > 0 %}
+<div class="splitcontent">
+<div class="splitcontentleft">
+{% set split_on = (half_fields|length / 2)|round(0, 'ceil') - 1 %}
+{% for c in half_fields %}
+  <p>{{ issue_cf_tag('issue', c.field, c.value, issue.project, c.required, true, issue) }}</p>
+{% if loop.index0 == split_on %}
+</div><div class="splitcontentright">
+{% endif %}
+{% endfor %}
+</div>
+</div>
+{% endif %}
+{% for c in full_fields %}
+  <div class="form-field">
+    {{ issue_cf_tag('issue', c.field, c.value, issue.project, c.required, true, issue) }}
+  </div>
+{% endfor %}

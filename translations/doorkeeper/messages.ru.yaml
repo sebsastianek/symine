@@ -1,0 +1,88 @@
+# Doorkeeper translations (doorkeeper-i18n 5.2.9 / doorkeeper 5.8.2, MIT), used by the OAuth2 provider.
+# Generated - merged into the "messages" domain.
+activerecord.attributes.doorkeeper/application.name: Наименование
+activerecord.attributes.doorkeeper/application.redirect_uri: 'URI для перенаправления'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.forbidden_uri: 'заблокирован со стороны сервера.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.fragment_present: 'не должен содержать фрагменты'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.invalid_uri: 'должен быть корректным URI'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.relative_uri: 'должен быть абсолютным URI'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.secured_uri: 'должен быть HTTPS/SSL URI'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.unspecified_scheme: 'должать содержать схему.'
+activerecord.errors.models.doorkeeper/application.attributes.scopes.not_match_configured: 'не соответствуют конфигурации сервера.'
+doorkeeper.applications.buttons.authorize: Авторизовать
+doorkeeper.applications.buttons.cancel: Отменить
+doorkeeper.applications.buttons.destroy: Удалить
+doorkeeper.applications.buttons.edit: Редактировать
+doorkeeper.applications.buttons.submit: Сохранить
+doorkeeper.applications.confirmations.destroy: 'Вы уверены?'
+doorkeeper.applications.edit.title: 'Редактировать приложение'
+doorkeeper.applications.form.error: 'Возникли ошибки! Проверьте правильность заполнения полей'
+doorkeeper.applications.help.blank_redirect_uri: 'Пакіньце пустым калі Ваш правайдар наладжаны на выкарыстанне Client Credentials, Resource Owner Password Credentials ці іншага метаду аўтарызацыі без URI зваротнага выкліку.'
+doorkeeper.applications.help.confidential: 'Приложение будет использоваться там, где секретный ключ защищён от просмотра. Мобильные приложения и одностраничные веб-приложения (SPA) рассматриваются как незащищённые.'
+doorkeeper.applications.help.redirect_uri: 'Указывайте каждый URI в отдельной строке'
+doorkeeper.applications.help.scopes: 'Записывайте скоупы через пробел. Оставьте поле пустым для использования значений по-умолчанию'
+doorkeeper.applications.index.actions: Действия
+doorkeeper.applications.index.callback_url: 'URL обратного вызова'
+doorkeeper.applications.index.confidential: 'Конфиденциально?'
+doorkeeper.applications.index.confidentiality.no: Нет
+doorkeeper.applications.index.confidentiality.yes: Да
+doorkeeper.applications.index.name: Наименование
+doorkeeper.applications.index.new: 'Новое приложение'
+doorkeeper.applications.index.title: 'Ваши приложения'
+doorkeeper.applications.new.title: 'Новое приложение'
+doorkeeper.applications.show.actions: Действия
+doorkeeper.applications.show.application_id: 'ID приложения:'
+doorkeeper.applications.show.callback_urls: 'Список URL обратного вызова:'
+doorkeeper.applications.show.confidential: 'Конфиденциально:'
+doorkeeper.applications.show.not_defined: 'Not defined'
+doorkeeper.applications.show.scopes: 'Скоупы:'
+doorkeeper.applications.show.secret: 'Секретный ключ:'
+doorkeeper.applications.show.secret_hashed: 'Secret hashed'
+doorkeeper.applications.show.title: 'Приложение: %{name}'
+doorkeeper.authorizations.buttons.authorize: Разрешить
+doorkeeper.authorizations.buttons.deny: Отклонить
+doorkeeper.authorizations.error.title: 'Произошла ошибка'
+doorkeeper.authorizations.form_post.title: 'Submit this form'
+doorkeeper.authorizations.new.able_to: 'Данное приложение требует следующие разрешения:'
+doorkeeper.authorizations.new.prompt: 'Разрешить %{client_name} использовать данные Вашей учётной записи?'
+doorkeeper.authorizations.new.title: 'Требуется авторизация'
+doorkeeper.authorizations.show.title: 'Код авторизации:'
+doorkeeper.authorized_applications.buttons.revoke: 'Отозвать авторизацию'
+doorkeeper.authorized_applications.confirmations.revoke: 'Вы уверены?'
+doorkeeper.authorized_applications.index.application: Приложение
+doorkeeper.authorized_applications.index.created_at: Создано
+doorkeeper.authorized_applications.index.date_format: '%d-%m-%Y %H:%M:%S'
+doorkeeper.authorized_applications.index.title: 'Ваши авторизованные приложения'
+doorkeeper.errors.messages.access_denied: 'Доступ запрещен: сервер или владелец ресурса отклонил запрос'
+doorkeeper.errors.messages.admin_authenticator_not_configured: 'Доступ к панели администратора заблокирован в связи настройкой опции Doorkeeper.configure.admin_authenticator.'
+doorkeeper.errors.messages.credential_flow_not_configured: 'Resource Owner Password Credentials не сконфигурированы, необходимо настроить Doorkeeper.configure.resource_owner_from_credentials'
+doorkeeper.errors.messages.forbidden_token.missing_scope: 'Для доступа к данному ресурсу необходим(ы) скоуп(ы): "%{oauth_scopes}".'
+doorkeeper.errors.messages.invalid_client: 'Ошибка аутентификации клиента: неверный токен, неизвестный клиент или неподдерживаемый метод аутентификации'
+doorkeeper.errors.messages.invalid_code_challenge_method: 'Code challenge method должен быть plain или S256.'
+doorkeeper.errors.messages.invalid_grant: 'Право на авторизацию истекло или отозвано'
+doorkeeper.errors.messages.invalid_redirect_uri: 'Некорректный URI для перенаправления'
+doorkeeper.errors.messages.invalid_request.missing_param: 'Отсутствует обязательный параметр: %{value}.'
+doorkeeper.errors.messages.invalid_request.request_not_authorized: 'Запрос должен быть авторизован. Необходимый параметр для авторизации отсутствует или неверный.'
+doorkeeper.errors.messages.invalid_request.unknown: 'В запросе отсутствуют необходимые параметры или они некорректны.'
+doorkeeper.errors.messages.invalid_scope: 'Неверный скоуп'
+doorkeeper.errors.messages.invalid_token.expired: 'Токен доступа устарел'
+doorkeeper.errors.messages.invalid_token.revoked: 'Токен доступа отозван'
+doorkeeper.errors.messages.invalid_token.unknown: 'Неверный токен доступа'
+doorkeeper.errors.messages.resource_owner_authenticator_not_configured: 'Resource Owner не найден, необходима конфигурация Doorkeeper.configure.resource_owner_authenticator'
+doorkeeper.errors.messages.revoke.unauthorized: 'Вы не авторизованы для удаления данного токена доступа'
+doorkeeper.errors.messages.server_error: 'На авторизационном сервере произошла ошибка; запрос не выполнен'
+doorkeeper.errors.messages.temporarily_unavailable: 'В настоящее время авторизационный сервер не может обработать запрос в силу высокой загруженности или тех. работ'
+doorkeeper.errors.messages.unauthorized_client: 'Клиент не авторизован для выполнения данного запроса'
+doorkeeper.errors.messages.unsupported_grant_type: 'Авторизационный сервер не поддерживает данный способ авторизации'
+doorkeeper.errors.messages.unsupported_response_mode: 'The authorization server does not support this response mode.'
+doorkeeper.errors.messages.unsupported_response_type: 'Сервер авторизации не поддерживает данный тип запроса'
+doorkeeper.flash.applications.create.notice: 'Приложение создано'
+doorkeeper.flash.applications.destroy.notice: 'Приложение удалено'
+doorkeeper.flash.applications.update.notice: 'Приложение обновлено'
+doorkeeper.flash.authorized_applications.destroy.notice: 'Приложение отозвано'
+doorkeeper.layouts.admin.nav.applications: Приложения
+doorkeeper.layouts.admin.nav.home: Главная
+doorkeeper.layouts.admin.nav.oauth2_provider: 'OAuth 2 провайдер'
+doorkeeper.layouts.admin.title: Doorkeeper
+doorkeeper.layouts.application.title: 'Необходима авторизация'
+doorkeeper.pre_authorization.status: 'Предварительная авторизация'

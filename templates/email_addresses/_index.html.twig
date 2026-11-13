@@ -1,0 +1,31 @@
+{% import 'my/_macros.html.twig' as m %}
+{% if addresses is not empty %}
+  <table class="list email_addresses">
+  {% for a in addresses %}
+    <tr>
+      <td class="email">{{ a.address }}</td>
+      <td class="buttons">
+        {% if a.notify %}
+        <a title="{{ l('label_disable_notifications') }}" class="icon-only icon-email" data-remote="true" rel="nofollow" data-method="put" href="{{ path('my_email_address_update', {user_id: user.id, id: a.id, notify: '0'}) }}">{{ sprite_icon('email', l('label_disable_notifications')) }}</a>
+        {% else %}
+        <a title="{{ l('label_enable_notifications') }}" class="icon-only icon-email-disabled" data-remote="true" rel="nofollow" data-method="put" href="{{ path('my_email_address_update', {user_id: user.id, id: a.id, notify: '1'}) }}">{{ sprite_icon('email-disabled', l('label_enable_notifications')) }}</a>
+        {% endif %}
+        <a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" data-remote="true" rel="nofollow" data-method="delete" href="{{ path('my_email_address_destroy', {user_id: user.id, id: a.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+      </td>
+    </tr>
+  {% endfor %}
+  </table>
+{% endif %}
+
+{% if addresses|length < settings.int('max_additional_emails') %}
+  <div>
+  <form class="new_email_address" id="new_email_address" action="{{ path('my_email_address_create', {user_id: user.id}) }}" accept-charset="UTF-8" data-remote="true" method="post">{{ csrf_field() }}
+    <p>{{ l('label_email_address_add') }}</p>
+    {{ m.errors(errors) }}
+    <p>
+      <input size="40" type="text" name="email_address[address]" id="email_address_address" value="{{ address }}" />
+      <input type="submit" name="commit" value="{{ l('button_add') }}" />
+    </p>
+  </form>
+  </div>
+{% endif %}

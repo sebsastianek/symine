@@ -1,0 +1,9 @@
+{% include 'queries/_query_form.html.twig' with {query: query, project: project} %}
+
+<div class="tabs hide-when-print">
+{% set qp = app.request.query.all %}
+<ul>
+    <li><a{% if active_tab == 'details' %} class="selected"{% endif %} href="{{ path(project ? 'project_time_entries' : 'time_entries_index', route_params|merge(qp)) }}">{{ l('label_details') }}</a></li>
+    <li><a{% if active_tab == 'report' %} class="selected"{% endif %} href="{{ path(project ? 'project_time_entries_report' : 'time_entries_report', route_params|merge(qp)) }}">{{ l('label_report') }}</a></li>
+</ul>
+</div>

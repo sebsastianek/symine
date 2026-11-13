@@ -1,0 +1,27 @@
+{% set title = watchables|length > 0 ? l('permission_add_' ~ object_type ~ '_watchers') : l('permission_add_issue_watchers') %}
+<h3 class="title">{{ title }}</h3>
+
+<form id="new-watcher-form" data-remote="true" action="{{ watchables|length > 0 ? path('watchers_create') : path('watchers_append') }}" accept-charset="UTF-8" method="post" data-controller="searchable-selection" data-searchable-selection-url-value="{{ path('watchers_autocomplete_for_user', {object_type: object_type, object_id: object_ids|length > 0 ? object_ids : null, project_id: project ? project.identifier : null}) }}">
+  {{ csrf_field() }}
+  {% if watchables|length > 0 %}
+    <input type="hidden" name="object_type" id="object_type" value="{{ object_type }}" autocomplete="off" />
+    {% for w in watchables %}<input type="hidden" name="object_id[]" value="{{ w.id }}" autocomplete="off" />{% endfor %}
+  {% endif %}
+  {% if project %}<input type="hidden" name="project_id" id="project_id" value="{{ project.id }}" autocomplete="off" />{% endif %}
+
+  <p>
+    <label for="user_search">{{ l('label_user_search') }}</label>
+    <input type="text" name="user_search" id="user_search" class="autocomplete" autocomplete="off" data-searchable-selection-target="input" data-action="input->searchable-selection#search keydown->searchable-selection#keydown" />
+  </p>
+
+  <div id="users_for_watcher" data-searchable-selection-target="list" data-action="change->searchable-selection#toggle">
+    {% include 'watchers/_users_for_watcher.html.twig' %}
+  </div>
+
+  <div data-searchable-selection-target="hiddenContainer"></div>
+
+  <p class="buttons">
+    <input type="submit" value="{{ l('button_add') }}" onclick="hideModal(this);" data-disable-with="{{ l('button_add') }}" />
+    <a href="#" onclick="hideModal(this); return false;">{{ l('button_cancel') }}</a>
+  </p>
+</form>

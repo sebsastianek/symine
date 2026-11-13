@@ -1,0 +1,9 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_issue_category') }}</h2>
+
+<form class="edit_issue_category" id="edit_issue_category" action="{{ path('issue_category_update', {id: category.id}) }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="put" autocomplete="off" />{{ csrf_field() }}
+{% include 'issue_categories/_form.html.twig' %}
+<input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>
+{% endblock %}

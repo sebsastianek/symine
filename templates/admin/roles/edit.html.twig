@@ -1,0 +1,10 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('roles_index') }}">{{ l('label_role_plural') }}</a> &#187; {{ role_display_name }}</h2>
+
+<form class="edit_role" id="edit_role_{{ role.id }}" action="{{ path('role_update', {id: role.id}) }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="patch" autocomplete="off" />
+{{ csrf_field() }}
+{% include 'admin/roles/_form.html.twig' %}
+<input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>
+{% endblock %}

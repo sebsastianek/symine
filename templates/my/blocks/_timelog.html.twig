@@ -1,0 +1,66 @@
+<div class="contextual">
+  <a href="#" onclick="$('#timelog-settings').toggle();; return false;" class="icon-only icon-settings" title="{{ l('label_options') }}">{{ sprite_icon('settings', l('label_options')) }}</a>
+</div>
+
+<h3>
+  <a href="{{ path('time_entries_index', {user_id: 'me'}) }}">{{ l('label_spent_time') }}</a>
+  ({{ l('label_last_n_days', {count: b.days}) }}: {{ l_hours_short(b.total_hours) }})
+  {% if allowed_to('log_time', null, true) %}<a class="icon-only icon-add" title="{{ l('button_log_time') }}" href="{{ path('time_entry_new_global') }}">{{ sprite_icon('time-add', l('button_log_time')) }}</a>{% endif %}
+</h3>
+
+
+<div id="timelog-settings" style="display:none;">
+  <form action="{{ path('my_update_page') }}" accept-charset="UTF-8" data-remote="true" method="post">{{ csrf_field() }}
+    <div class="box">
+      <p>
+      <label>
+        {{ l('button_show') }}:
+        <input type="text" name="settings[timelog][days]" id="settings_timelog_days" value="{{ b.days }}" size="6" />
+        {{ l('label_day_plural') }}
+      </label>
+      </p>
+    </div>
+    <p>
+      <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+      <a href="#" onclick="$('#timelog-settings').toggle();; return false;">{{ l('button_cancel') }}</a>
+    </p>
+  </form>
+</div>
+
+{% if b.entries is not empty %}
+<form data-cm-url="{{ path('time_entries_context_menu') }}" action="{{ path('my_page') }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+<table class="list time-entries odd-even">
+<thead><tr>
+<th>{{ l('field_activity') }}</th>
+<th>{{ l('label_project') }}</th>
+<th>{{ l('field_comments') }}</th>
+<th>{{ l('field_hours') }}</th>
+<th></th>
+</tr></thead>
+<tbody>
+{% for day, entries in b.entries_by_day %}
+  <tr class="odd">
+    <td><strong>{{ day == b.today ? l('label_today')|capitalize : format_date(date(day)) }}</strong></td>
+    <td colspan="2"></td>
+    <td class="hours"><em>{{ format_hours(entries|reduce((s, e) => s + e.hours, 0))|html_hours }}</em></td>
+    <td></td>
+  </tr>
+  {% for entry in entries %}
+  <tr id="time-entry-{{ entry.id }}" class="time-entry hascontextmenu">
+    <td class="activity">
+      <input type="checkbox" name="ids[]" value="{{ entry.id }}" style="display:none;" />
+      {{ entry.activity.name }}
+    </td>
+    <td class="subject">{{ entry.project.name }} {% if entry.issue %} - {{ link_to_issue(entry.issue, {truncate: 50}) }}{% endif %}</td>
+    <td class="comments">{{ entry.comments }}</td>
+    <td class="hours">{{ format_hours(entry.hours)|html_hours }}</td>
+    <td class="buttons"><a title="{{ l('button_actions') }}" class="icon-only icon-actions js-contextmenu " href="#">{{ sprite_icon('3-bullets', l('button_actions')) }}</a></td>
+  </tr>
+  {% endfor %}
+{% endfor %}
+</tbody>
+</table>
+</form>
+{% else %}
+  <p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}

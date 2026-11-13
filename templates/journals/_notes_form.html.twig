@@ -1,0 +1,12 @@
+<form id="journal-{{ journal.id }}-form" data-remote="true" action="{{ path('journal_update', {id: journal.id}) }}" accept-charset="UTF-8" method="post">
+    {{ csrf_field() }}<input type="hidden" name="_method" value="put" />
+    <label class="hidden-for-sighted" for="journal_{{ journal.id }}_notes">{{ l('description_notes') }}</label>
+    {% include 'issues/_wiki_textarea.html.twig' with {name: 'journal[notes]', id: 'journal_' ~ journal.id ~ '_notes', value: journal.notes, rows: (journal.notes is empty ? 10 : min(max(10, (journal.notes|length / 50)|round(0, 'floor')), 100)), preview_url: path('preview_issue', {project_id: journal.issue.project.identifier, issue_id: journal.issue.id})} %}
+    {% if can_set_private %}
+      <input type="hidden" name="journal[private_notes]" value="0" />
+      <input type="checkbox" name="journal[private_notes]" value="1" id="journal_{{ journal.id }}_private_notes"{% if journal.privateNotes %} checked="checked"{% endif %} />
+      <label for="journal_{{ journal.id }}_private_notes">{{ l('field_private_notes') }}</label>
+    {% endif %}
+    <p><input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+    <a href="#" onclick="$('#journal-{{ journal.id }}-form').remove(); $('#journal-{{ journal.id }}-notes').show(); return false;">{{ l('button_cancel') }}</a></p>
+</form>

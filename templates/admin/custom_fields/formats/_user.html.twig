@@ -1,0 +1,22 @@
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+{% set user_role = custom_field.getFormatOption('user_role') %}
+<p>{{ f.select('possible_principals', [[l('label_user_plural'), 'user'], [l('label_users_and_groups'), 'user_group'], [l('label_group_plural'), 'group']], custom_field.getFormatOption('possible_principals', 'user'), l('field_possible_values')) }}</p>
+<p>
+  <label>{{ l('label_role') }}</label>
+  <label class="block">
+    <input type="radio" name="status" id="custom_field_user_role_all" value="1" data-disables=".custom_field_user_role input"{% if user_role is empty %} checked="checked"{% endif %} />
+    {{ l('label_all') }}
+  </label>
+  <label class="block">
+    <input type="radio" name="status" id="custom_field_user_role_only" value="0" data-enables=".custom_field_user_role input"{% if user_role is not empty %} checked="checked"{% endif %} />
+    {{ l('label_only') }}:
+  </label>
+  {% for role in givable_roles %}
+    <label class="block custom_field_user_role" style="padding-left:2em;">
+      <input type="checkbox" name="custom_field[user_role][]" value="{{ role.id }}"{% if user_role is iterable and (role.id ~ '') in user_role %} checked="checked"{% endif %} />
+      {{ role.name }}
+    </label>
+  {% endfor %}
+  <input type="hidden" name="custom_field[user_role][]" id="custom_field_user_role_" value="" autocomplete="off" />
+</p>
+<p>{{ f.edit_tag_style(custom_field) }}</p>

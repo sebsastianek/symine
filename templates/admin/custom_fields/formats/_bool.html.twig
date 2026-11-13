@@ -1,0 +1,4 @@
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+<p>{{ f.select('default_value', possible_values_options, custom_field.defaultValue, l('field_default_value'), true) }}</p>
+<p>{{ f.text_field('url_pattern', custom_field.getFormatOption('url_pattern'), l('label_link_values_to'), 50) }}</p>
+<p>{{ f.edit_tag_style(custom_field, true) }}</p>

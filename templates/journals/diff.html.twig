@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ issue.tracker.name }} #{{ issue.id }}</h2>
+<p>{{ authoring(journal.createdOn, journal.user, 'label_updated_time_by') }}</p>
+
+<pre class="text-diff">{{ diff_html|raw }}</pre>
+
+<p>
+  <a onclick="if (document.referrer != &quot;&quot;) {history.back(); return false;}" href="{{ path('issue_show', {id: issue.id}) }}">{{ l('button_back') }}</a>
+</p>
+{% endblock %}

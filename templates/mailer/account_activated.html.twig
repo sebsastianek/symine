@@ -1,0 +1,5 @@
+{% extends 'mailer/layout.html.twig' %}
+{% block content %}
+<p>{{ l('notice_account_activated') }}</p>
+<p>{{ l('label_login') }}: <a href="{{ login_url }}">{{ login_url }}</a></p>
+{% endblock %}

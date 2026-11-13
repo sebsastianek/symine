@@ -1,0 +1,13 @@
+{% import 'admin/settings/_macros.html.twig' as s %}
+<form action="{{ path('settings_edit', {tab: 'integrations'}) }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+
+<div class="box tabular settings">
+<p>{{ s.check_box(values, 'rest_api_enabled') }}</p>
+
+<p>{{ s.check_box(values, 'jsonp_enabled') }}</p>
+
+<p>{{ s.check_box(values, 'webhooks_enabled') }}</p>
+</div>
+
+<input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>

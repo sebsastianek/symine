@@ -1,0 +1,18 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2>{{ l('label_user_new') }}</h2>
+
+<form class="edit_group" id="edit_group_{{ group.id }}" action="{{ path('group_users_add', {id: group.id}) }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+<fieldset class="box">
+  <legend><label for="user_search">{{ l('label_user_search') }}</label></legend>
+  <p><input type="text" name="user_search" id="user_search" /></p>
+  <script>observeSearchfield('user_search', 'users', '{{ path('group_autocomplete_for_user', {id: group.id})|e('js') }}', {checkboxSelector: 'input[name="user_ids[]"]'})</script>
+
+  <div id="users">
+    {% include 'admin/groups/_principals.html.twig' %}
+  </div>
+</fieldset>
+<p><input type="submit" name="commit" value="{{ l('button_add') }}" /></p>
+</form>
+{% endblock %}

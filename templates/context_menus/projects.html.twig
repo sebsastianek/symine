@@ -1,0 +1,19 @@
+<ul>
+  {% if project and not scheduled_for_deletion %}
+    {% if project.isArchived() %}
+      <li><a class="icon icon-unlock" rel="nofollow" data-method="post" href="{{ path('project_unarchive', {id: project.identifier}) }}">{{ sprite_icon('unlock', l('button_unarchive')) }}</a></li>
+    {% else %}
+      <li><a data-confirm="{{ l('text_project_archive_confirmation', {value: project.name}) }}" class="icon icon-lock" rel="nofollow" data-method="post" href="{{ path('project_archive', {id: project.identifier}) }}">{{ sprite_icon('lock', l('button_archive')) }}</a></li>
+    {% endif %}
+    <li>
+      <a class="icon icon-copy" href="{{ path('project_copy', {id: project.identifier}) }}">{{ sprite_icon('copy', l('button_copy')) }}</a>
+    </li>
+    <li>
+      <a class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('project_destroy', {id: project.identifier}) }}{% if back is not null %}?back_url={{ back|url_encode }}{% endif %}">{{ sprite_icon('del', l('button_delete')) }}</a>
+    </li>
+  {% else %}
+    <li>
+      <a data-confirm="{{ l('text_projects_bulk_destroy_confirmation') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ bulk_destroy_url }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+    </li>
+  {% endif %}
+</ul>

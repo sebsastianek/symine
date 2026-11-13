@@ -1,0 +1,48 @@
+{% extends 'admin/layout.html.twig' %}
+{% import 'admin/workflows/_macros.html.twig' as h %}
+{% block content %}
+{% if error_html %}<div class="flash error" id="flash_error">{{ error_html|raw }}</div>{% endif %}
+<div class="contextual">
+<a class="icon icon-add" href="{{ path('tracker_new') }}">{{ sprite_icon('add', l('label_tracker_new')) }}</a>
+<a class="icon icon-summary" href="{{ path('trackers_fields') }}">{{ sprite_icon('summary', l('field_summary')) }}</a>
+</div>
+
+<h2>{{ l('label_tracker_plural') }}</h2>
+
+<table class="list trackers">
+  <thead><tr>
+  <th>{{ l('label_tracker') }}</th>
+  <th>{{ l('field_default_status') }}</th>
+  <th>{{ l('field_description') }}</th>
+  <th></th>
+  <th></th>
+  </tr></thead>
+  <tbody>
+{% for tracker in trackers %}
+  <tr>
+  <td class="name"><a href="{{ path('tracker_edit', {id: tracker.id}) }}">{{ tracker.name }}</a></td>
+  <td>{{ tracker.defaultStatus ? tracker.defaultStatus.name : '' }}</td>
+  <td class="description">{{ tracker.description }}</td>
+  <td>
+    {% if not with_rules[tracker.id] %}
+      <span class="icon icon-warning">
+        {{ sprite_icon('warning', l('text_tracker_no_workflow')) }} (<a href="{{ path('workflows_edit', {tracker_id: tracker.id}) }}">{{ l('button_edit') }}</a>)
+      </span>
+    {% endif %}
+  </td>
+  <td class="buttons">
+    {{ h.reorder_handle(path('tracker_update', {id: tracker.id}), 'tracker') }}
+    <a class="icon icon-copy" href="{{ path('tracker_new', {copy: tracker.id}) }}">{{ sprite_icon('copy', l('button_copy')) }}</a>
+    {{ h.delete_link(path('tracker_destroy', {id: tracker.id})) }}
+  </td>
+  </tr>
+{% endfor %}
+  </tbody>
+</table>
+
+<script>
+//<![CDATA[
+  $(function() { $("table.trackers tbody").positionedItems(); });
+//]]>
+</script>
+{% endblock %}

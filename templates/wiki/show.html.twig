@@ -1,0 +1,107 @@
+{% extends 'base.html.twig' %}
+{% set p = {project_id: project.identifier, id: page.title} %}
+{% block header_tags %}{% if not current %}<meta name="robots" content="noindex,follow,noarchive" />{% endif %}{% endblock %}
+{% block content %}
+<div class="contextual">
+{% if editable and current %}
+  {% if allowed_to('edit_wiki_pages', project) %}<a class="icon icon-edit" accesskey="e" href="{{ path('wiki_edit', p) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>{% endif %}
+  {% include 'content/_watch_link.html.twig' with {watched_type: 'wiki_page', watched_class: 'WikiPage', watched_id: page.id} %}
+{% endif %}
+{% set actions %}
+    {% if allowed_to('view_wiki_edits', project) %}<a class="icon icon-history" href="{{ path('wiki_history', p) }}">{{ sprite_icon('history', l('label_history')) }}</a>{% endif %}
+    {% if editable %}
+    {% if current %}
+      {% if allowed_to('protect_wiki_pages', project) %}
+        {% if not page.protected %}<a class="icon icon-lock" rel="nofollow" data-method="post" href="{{ path('wiki_protect', p) }}?protected=1">{{ sprite_icon('lock', l('button_lock')) }}</a>{% endif %}
+        {% if page.protected %}<a class="icon icon-unlock" rel="nofollow" data-method="post" href="{{ path('wiki_protect', p) }}?protected=0">{{ sprite_icon('unlock', l('button_unlock')) }}</a>{% endif %}
+      {% endif %}
+      {% if allowed_to('rename_wiki_pages', project) or allowed_to('manage_wiki', project) %}<a class="icon icon-move" href="{{ path('wiki_rename', p) }}">{{ sprite_icon('move', l('button_rename')) }}</a>{% endif %}
+      {% if allowed_to('delete_wiki_pages', project) %}<a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('wiki_destroy', p) }}">{{ sprite_icon('del', l('button_delete')) }}</a>{% endif %}
+    {% else %}
+      {% if allowed_to('edit_wiki_pages', project) %}<a class="icon icon-cancel" href="{{ path('wiki_edit', p) }}?version={{ content.version }}">{{ sprite_icon('cancel', l('button_rollback')) }}</a>{% endif %}
+    {% endif %}
+    {% endif %}
+    {% if allowed_to('edit_wiki_pages', project) %}
+      <a class="icon icon-add" data-remote="true" href="{{ path('wiki_new', {project_id: project.identifier, parent: page.title}) }}">{{ sprite_icon('add', l('label_wiki_page_new')) }}</a>
+    {% endif %}
+{% endset %}
+{% if actions|trim is not empty %}
+  <span class="dropdown" data-controller="dropdown" data-action="clipboard:copied->dropdown#hide"><span class="icon-only icon-actions dropdown-trigger" title="{{ l('button_actions') }}" data-action="click->dropdown#toggle">{{ sprite_icon('3-bullets', l('button_actions')) }}</span><span class="dropdown-content hidden" data-dropdown-target="content"><span class="dropdown-items">{{ actions }}</span></span></span>
+{% endif %}
+</div>
+
+{% include 'wiki/_breadcrumb.html.twig' %}
+
+{% if not current %}
+  <h2><a href="{{ path('wiki_show', p) }}">{{ page.prettyTitle() }}</a> &#187; <a href="{{ path('wiki_history', p) }}">{{ l('label_history') }}</a> &#187; {{ l('label_revision') }} {{ content.version }}</h2>
+
+    <p>
+    {% if previous %}
+      <a href="{{ path('wiki_show_version', p|merge({version: previous.version})) }}">« {{ l('label_previous') }}</a> |
+    {% endif %}
+    {{ l('label_revision') }} {{ content.version }}/{{ page.content.version }}
+    {% if previous %}
+      (<a href="{{ path('wiki_diff_version', p|merge({version: content.version})) }}">{{ l('label_diff') }}</a>)
+    {% endif %}
+    {% if next %}
+      | <a href="{{ path('wiki_show_version', p|merge({version: next.version})) }}">{{ l('label_next') }} »</a>
+    {% endif %}
+    <br />
+    <em>{{ content.author ? link_to_user(content.author) : l('label_user_anonymous') }}, {{ format_time(content.updatedOn) }} </em><br />
+    {{ content.comments }}
+    </p>
+    <hr />
+{% endif %}
+
+<div class="wiki wiki-page">
+  {{ html|raw }}
+</div>
+
+<fieldset class="collapsible collapsed hide-when-print">
+  <legend onclick="toggleFieldset(this);" class="icon icon-collapsed">
+    <svg class="s18 icon-svg icon-rtl" aria-hidden="true"><use href="/assets/icons.svg#icon--angle-right"></use></svg>
+    {{ l('label_attachment_plural') }} ({{ attachments|length }})
+  </legend>
+  <div style="display: none;">
+
+  {% include 'content/_attachments_links.html.twig' with {attachments: attachments, thumbnails: true, deletable: editable and allowed_to('delete_wiki_pages_attachments', project)} %}
+
+  {% if editable and allowed_to('edit_wiki_pages', project) %}
+  <div id="wiki_add_attachment">
+    <form id="add_attachment_form" enctype="multipart/form-data" action="{{ path('wiki_add_attachment', p) }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+      <div class="box">
+      <p>{% include 'content/_attachments_form.html.twig' %}</p>
+      </div>
+      <input type="submit" name="commit" value="{{ l('button_add') }}" data-disable-with="{{ l('button_add') }}" />
+    </form>
+  </div>
+  {% endif %}
+  </div>
+</fieldset>
+
+<p class="wiki-update-info">
+  {% if allowed_to('view_wiki_edits', project) %}
+    {{ l('label_updated_time_by', {author: link_to_user(content.author), age: time_tag(content.updatedOn)})|raw }}
+    · <a href="{{ path('wiki_history', p) }}">{{ l('label_x_revisions', {count: versions_count}) }}</a>
+  {% endif %}
+  {% if page.protected %}
+    <span class="badge badge-status-locked">{{ l('status_locked') }}</span>
+  {% endif %}
+</p>
+
+{% if allowed_to('export_wiki_pages', project) %}
+<p class="other-formats hide-when-print">{{ l('label_export_to') }}
+  {% set vq = current ? '' : '?version=' ~ content.version %}
+  <span><a class="pdf" rel="nofollow" href="{{ path('wiki_show_format', p|merge({_format: 'pdf'})) }}{{ vq }}">PDF</a></span>
+  <span><a class="html" rel="nofollow" href="{{ path('wiki_show_format', p|merge({_format: 'html'})) }}{{ vq }}">HTML</a></span>
+  <span><a class="txt" rel="nofollow" href="{{ path('wiki_show_format', p|merge({_format: 'txt'})) }}{{ vq }}">TXT</a></span>
+</p>
+{% endif %}
+{% endblock %}
+
+{% block sidebar %}
+  {% include 'wiki/_sidebar.html.twig' %}
+  {% if allowed_to('add_wiki_page_watchers', project) or (watchers_of('WikiPage', page.id)|length > 0 and allowed_to('view_wiki_page_watchers', project)) %}
+    {% include 'content/_watchers.html.twig' with {watched_type: 'wiki_page', watched_id: page.id} %}
+  {% endif %}
+{% endblock %}

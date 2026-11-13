@@ -1,0 +1,26 @@
+{% include 'admin/_error_messages.html.twig' %}
+
+<div class="box tabular">
+  <p><label for="auth_source_name">{{ l('field_name') }}<span class="required"> *</span></label><input type="text" value="{{ auth_source.name }}" name="auth_source[name]" id="auth_source_name" /></p>
+  <p><label for="auth_source_host">{{ l('field_host') }}<span class="required"> *</span></label><input type="text" value="{{ auth_source.host }}" name="auth_source[host]" id="auth_source_host" /></p>
+  <p>
+    <label for="auth_source_port">{{ l('field_port') }}<span class="required"> *</span></label><input size="6" type="text" value="{{ auth_source.port is not null and auth_source.port >= 0 ? auth_source.port : '' }}" name="auth_source[port]" id="auth_source_port" />
+    <select name="auth_source[ldap_mode]" id="auth_source_ldap_mode">
+      {% for m in ldap_modes %}<option value="{{ m }}"{% if m == ldap_mode %} selected="selected"{% endif %}>{{ l('label_' ~ m) }}</option>{% endfor %}
+    </select>
+    <em class="info ldaps_warning">{{ l('label_ldaps_warning') }}</em>
+  </p>
+  <p><label for="auth_source_account">{{ l('field_account') }}</label><input type="text" value="{{ auth_source.account }}" name="auth_source[account]" id="auth_source_account" /></p>
+  <p><label for="auth_source_account_password">{{ l('field_password') }}</label><input name="dummy_password" value="{{ auth_source.id is null or auth_source.accountPassword is empty ? '' : 'xxxxxxxxxxxxxxx' }}" onfocus="this.value=''; this.name='auth_source[account_password]';" onchange="this.name='auth_source[account_password]';" type="password" id="auth_source_account_password" /></p>
+  <p><label for="auth_source_base_dn">{{ l('field_base_dn') }}<span class="required"> *</span></label><input size="60" type="text" value="{{ auth_source.baseDn }}" name="auth_source[base_dn]" id="auth_source_base_dn" /></p>
+  <p><label for="auth_source_filter">{{ l('field_auth_source_ldap_filter') }}</label><textarea cols="60" name="auth_source[filter]" id="auth_source_filter">{{ auth_source.filter }}</textarea></p>
+  <p><label for="auth_source_timeout">{{ l('field_timeout') }}</label><input size="4" type="text" value="{{ auth_source.timeout is not null and auth_source.timeout >= 0 ? auth_source.timeout : '' }}" name="auth_source[timeout]" id="auth_source_timeout" /></p>
+  <p><label for="auth_source_onthefly_register">{{ l('field_onthefly') }}</label><input name="auth_source[onthefly_register]" type="hidden" value="0" /><input type="checkbox" value="1" name="auth_source[onthefly_register]" id="auth_source_onthefly_register"{% if auth_source.ontheflyRegister %} checked="checked"{% endif %} /></p>
+</div>
+
+<fieldset class="box tabular"><legend>{{ l('label_attribute_plural') }}</legend>
+  <p><label for="auth_source_attr_login">{{ l('field_attr_login') }}<span class="required"> *</span></label><input size="20" type="text" value="{{ auth_source.attrLogin }}" name="auth_source[attr_login]" id="auth_source_attr_login" /></p>
+  <p><label for="auth_source_attr_firstname">{{ l('field_attr_firstname') }}</label><input size="20" type="text" value="{{ auth_source.attrFirstname }}" name="auth_source[attr_firstname]" id="auth_source_attr_firstname" /></p>
+  <p><label for="auth_source_attr_lastname">{{ l('field_attr_lastname') }}</label><input size="20" type="text" value="{{ auth_source.attrLastname }}" name="auth_source[attr_lastname]" id="auth_source_attr_lastname" /></p>
+  <p><label for="auth_source_attr_mail">{{ l('field_attr_mail') }}</label><input size="20" type="text" value="{{ auth_source.attrMail }}" name="auth_source[attr_mail]" id="auth_source_attr_mail" /></p>
+</fieldset>

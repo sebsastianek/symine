@@ -1,0 +1,10 @@
+{% extends 'mailer/layout.txt.twig' %}
+{% block content %}
+{{ message }}
+
+{{ url ?: title }}
+
+{{ l('field_user') }}: {{ sender.login }}
+{{ l('field_remote_ip') }}: {{ remote_ip }}
+{{ l('label_date') }}: {{ format_time(now) }}
+{% endblock %}

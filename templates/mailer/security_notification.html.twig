@@ -1,0 +1,10 @@
+{% extends 'mailer/layout.html.twig' %}
+{% block content %}
+<p>{{ message }}<br />
+{% if url and title %}<a href="{{ url }}">{{ title }}</a>{% elseif url %}<a href="{{ url }}">{{ url }}</a>{% elseif title %}<h1>{{ title }}</h1>{% endif %}
+</p>
+
+<p>{{ l('field_user') }}: <strong>{{ sender.login }}</strong><br/>
+{{ l('field_remote_ip') }}: <strong>{{ remote_ip }}</strong><br/>
+{{ l('label_date') }}: <strong>{{ format_time(now) }}</strong></p>
+{% endblock %}

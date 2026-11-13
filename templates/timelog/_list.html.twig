@@ -1,0 +1,62 @@
+<form data-cm-url="{{ path('time_entries_context_menu') }}" action="{{ app.request.pathInfo }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}<input type="hidden" name="back_url" value="{{ app.request.requestUri }}" autocomplete="off" />
+<div class="autoscroll">
+<table class="list odd-even time-entries">
+<thead>
+  <tr>
+    <th class="checkbox hide-when-print">
+      <input type="checkbox" name="check_all" id="check_all" value="" class="toggle-selection" title="{{ l('button_check_all') }} / {{ l('button_uncheck_all') }}" />
+    </th>
+    {% for column in query.inlineColumns() %}
+      {{ query_column_header(query, column) }}
+    {% endfor %}
+    <th class="buttons hide-when-print"></th>
+  </tr>
+</thead>
+<tbody>
+{% set cyc = 0 %}
+{% for row in rows %}
+  {% set entry = row.entry %}
+  {% if row.group_name is not null %}
+    {% set cyc = 0 %}
+    <tr class="group open">
+      <td colspan="{{ query.inlineColumns()|length + 2 }}">
+        <span class="expander icon icon-expanded" onclick="toggleRowGroup(this);">{{ sprite_icon('angle-down') }}</span>
+        <span class="name">{{ row.group_name|raw }}</span>
+        {% if row.group_count is not null %}
+        <span class="badge badge-count count">{{ row.group_count }}</span>
+        {% endif %}
+        <span class="totals">{{ row.group_totals|raw }}</span>
+        <a href="#" onclick="toggleAllRowGroups(this); return false;" class="toggle-all">{{ l('button_collapse_all') }}/{{ l('button_expand_all') }}</a>
+      </td>
+    </tr>
+  {% endif %}
+  {% set cyc = cyc + 1 %}
+  <tr id="time-entry-{{ entry.id }}" class="time-entry {{ cyc is odd ? 'odd' : 'even' }} hascontextmenu">
+    <td class="checkbox hide-when-print"><input type="checkbox" name="ids[]" value="{{ entry.id }}" /></td>
+    {% for column in query.inlineColumns() %}
+    <td class="{{ column.cssClasses() }}">{{ te_column_content(query, column, entry) }}</td>
+    {% endfor %}
+    <td class="buttons hide-when-print">
+    {% if te_editable(entry) %}
+        <a title="{{ l('button_edit') }}" class="icon-only icon-edit" href="{{ path('time_entry_edit', {id: entry.id}) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>
+        <a data-confirm="{{ l('text_are_you_sure') }}" title="{{ l('button_delete') }}" class="icon-only icon-del" rel="nofollow" data-method="delete" href="{{ path('time_entry_destroy', {id: entry.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+    {% endif %}
+        <a title="{{ l('button_actions') }}" class="icon-only icon-actions js-contextmenu " href="#">{{ sprite_icon('3-bullets', l('button_actions')) }}</a>
+    </td>
+  </tr>
+  {% for column in query.blockColumns() %}
+    {% set text = te_column_content(query, column, entry) %}
+    {% if text is not empty %}
+  <tr class="{{ cyc is odd ? 'odd' : 'even' }}">
+    <td colspan="{{ query.inlineColumns()|length + 1 }}" class="{{ column.cssClasses() }}">
+    {% if query.blockColumns()|length > 1 %}<span>{{ column.caption }}</span>{% endif %}
+    {{ text }}
+    </td>
+  </tr>
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+</tbody>
+</table>
+</div>
+</form>

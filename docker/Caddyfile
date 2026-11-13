@@ -1,0 +1,6 @@
+:80 {
+    root * /srv/symine/public
+    encode zstd gzip
+    php_fastcgi symine:9000
+    file_server
+}

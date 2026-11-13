@@ -1,0 +1,18 @@
+<div class="autoscroll">
+<table class="filecontent syntaxhl">
+<tbody>
+{% for line in syntax_highlight_lines(filename ?? path, content) %}
+  <tr id="L{{ loop.index }}">
+    <th class="line-num"><a href="#L{{ loop.index }}" data-txt="{{ loop.index }}"></a></th>
+    <td class="line-code">
+      {% if line == "\n" or line == "\r\n" %}
+      <br>
+      {% else %}
+      <div>{{ line|raw }}</div>
+      {% endif %}
+    </td>
+  </tr>
+{% endfor %}
+</tbody>
+</table>
+</div>

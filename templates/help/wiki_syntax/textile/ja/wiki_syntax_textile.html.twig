@@ -1,0 +1,84 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>Wiki formatting</title>
+<link rel="stylesheet" href="{{ asset_base }}/assets/wiki_syntax.css" media="screen" />
+</head>
+<body>
+
+<h1>Wiki記法 クイックリファレンス</h1>
+
+<table style="width:100%">
+<tr><th colspan="3">フォントスタイル <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#5" target="_blank">詳細</a>)</span></th></tr>
+<tr><th><img alt="太字" src="{{ asset_base }}/assets/jstoolbar/bold.svg" /></th><td style="width:50%;">*太字*</td><td style="width:50%;"><strong>太字</strong></td></tr>
+<tr><th><img alt="斜体" src="{{ asset_base }}/assets/jstoolbar/italic.svg" /></th><td>_斜体_</td><td><em>斜体</em></td></tr>
+<tr><th><img alt="下線" src="{{ asset_base }}/assets/jstoolbar/underline.svg" /></th><td>+下線+</td><td><ins>下線</ins></td></tr>
+<tr><th><img alt="取り消し線" src="{{ asset_base }}/assets/jstoolbar/strikethrough.svg" /></th><td>-取り消し線-</td><td><del>取り消し線</del></td></tr>
+<tr><th></th><td>??引用??</td><td><cite>引用</cite></td></tr>
+<tr><th><img alt="コード" src="{{ asset_base }}/assets/jstoolbar/letter-c.svg" /></th><td>@コード@</td><td><code>コード</code></td></tr>
+<tr><th><span class="syntax-pre"/></th><td>&lt;pre&gt;<br />&nbsp;複数行の<br />&nbsp;コード<br />&lt;/pre&gt;</td><td>
+<pre>
+複数行の
+コード
+</pre>
+</td></tr>
+
+<tr><th colspan="3">コードハイライト <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#13" target="_blank">詳細</a> | <a href="{{ code_highlighting_url }}" target="_blank">対応言語</a>)</span></th></tr>
+<tr><th><img alt="コードハイライト" src="{{ asset_base }}/assets/jstoolbar/code.svg" /></th><td>&lt;pre&gt;&lt;code class="ruby"&gt;<br />3.times do<br />&nbsp;&nbsp;puts 'Hello'<br />end<br />&lt;/code&gt;&lt;/pre&gt;</td><td>
+<pre><code class="ruby syntaxhl"><span class="mi">3</span><span class="p">.</span><span class="nf">times</span> <span class="k">do</span>
+  <span class="nb">puts</span> <span class="s1">'Hello'</span>
+<span class="k">end</span>
+</code></pre>
+</td></tr>
+
+<tr><th colspan="3">Mermaidによる図 <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#15" target="_blank">詳細</a>)</span></th></tr>
+<tr><th></th><td>&lt;pre&gt;&lt;code class="mermaid"&gt;<br />flowchart TD<br />&nbsp;&nbsp;A[Start] --&gt; B[End]<br />&lt;/code&gt;&lt;/pre&gt;</td><td><img width="168" alt="StartからEndへのフローチャート" src="{{ asset_base }}/assets/help/mermaid_flowchart_simple.png" /></td></tr>
+
+<tr><th colspan="3">リスト</th></tr>
+<tr><th><img alt="リスト" src="{{ asset_base }}/assets/jstoolbar/list.svg" /></th><td>* 項目1<br />** 下位階層の項目<br />* 項目2</td><td><ul><li>項目1<ul><li>下位階層の項目</li></ul></li><li>項目2</li></ul></td></tr>
+<tr><th><img alt="順序付きリスト" src="{{ asset_base }}/assets/jstoolbar/list-numbers.svg" /></th><td># 項目1<br />## 下位階層の項目<br /># 項目2</td><td><ol><li>項目1<ol><li>下位階層の項目</li></ol></li><li>項目2</li></ol></td></tr>
+
+<tr><th colspan="3">見出し <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#8" target="_blank">詳細</a>)</span></th></tr>
+<tr><th><img alt="見出し1" src="{{ asset_base }}/assets/jstoolbar/h1.svg" /></th><td>h1. タイトル1</td><td><h1>タイトル1</h1></td></tr>
+<tr><th><img alt="見出し2" src="{{ asset_base }}/assets/jstoolbar/h2.svg" /></th><td>h2. タイトル2</td><td><h2>タイトル2</h2></td></tr>
+<tr><th><img alt="見出し3" src="{{ asset_base }}/assets/jstoolbar/h3.svg" /></th><td>h3. タイトル3</td><td><h3>タイトル3</h3></td></tr>
+
+<tr><th colspan="3">リンク <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#4" target="_blank">詳細</a>)</span></th></tr>
+<tr><th></th><td>http://example.com</td><td><a href="#">http://example.com</a></td></tr>
+<tr><th></th><td>"Foo":http://example.com</td><td><a href="#">Foo</a></td></tr>
+
+<tr><th colspan="3">Redmine内のリンク <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#3" target="_blank">詳細</a>)</span></th></tr>
+<tr><th><img alt="Wikiページへのリンク" src="{{ asset_base }}/assets/jstoolbar/wiki_link.svg" /></th><td>[[Wiki page]]</td><td><a href="#">Wiki page</a></td></tr>
+<tr><th></th><td>チケット #12</td><td>チケット <a href="#">#12</a></td></tr>
+<tr><th></th><td>##12</td><td><a href="#">Bug #12</a>: The issue subject</td></tr>
+<tr><th></th><td>リビジョン r43</td><td>リビジョン <a href="#">r43</a></td></tr>
+<tr><th></th><td>commit:f30e13e43</td><td><a href="#">f30e13e4</a></td></tr>
+<tr><th></th><td>source:some/file</td><td><a href="#">source:some/file</a></td></tr>
+
+<tr><th colspan="3">画像 <span class="more_info">(<a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}#7" target="_blank">詳細</a>)</span></th></tr>
+<tr><th><img alt="Image" src="{{ asset_base }}/assets/jstoolbar/image.svg" /></th><td>!<em>画像URL</em>!</td><td></td></tr>
+<tr><th></th><td>!<em>添付ファイル名</em>!</td><td></td></tr>
+
+<tr><th colspan="3">Tables</th></tr>
+<tr>
+  <th></th>
+  <td>|_. A |_. B |_. C |<br />| A | B | C |<br />|/2. row span | B | C |<br />|\2. col span |</td>
+  <td>
+    <table class="sample">
+      <tbody>
+        <th>A</th><th>B</th><th>C</th>
+        <tr><td>A</td><td>B</td><td>C</td></tr>
+        <tr><td rowspan="2">row span</td><td>B</td><td>C</td></tr>
+        <tr><td colspan="2">col span</td></tr>
+      </tbody>
+    </table>
+  </td>
+</tr>
+
+</table>
+
+<p><a href="{{ path('help_wiki_syntax', {type: 'detailed'}) }}" onclick="window.open('{{ path('help_wiki_syntax', {type: 'detailed'}) }}', '', ''); return false;">より詳細なリファレンス</a></p>
+
+</body>
+</html>

@@ -1,0 +1,65 @@
+{% if query.isValid() %}
+{% if report.criteria is not empty %}
+{% if report.hours is empty %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% else %}
+<div class="autoscroll">
+<table class="list" id="time-report">
+<thead>
+<tr>
+{% for c in report.criteria %}
+  <th>{{ report.availableCriteria()[c].label }}</th>
+{% endfor %}
+{% set columns_width = (40 / (report.periods|length + 1)) // 1 %}
+{% for period in report.periods %}
+  <th class="period" style="width:{{ columns_width }}%;">{{ period }}</th>
+{% endfor %}
+  <th class="total" style="width:{{ columns_width }}%;">{{ l('label_total_time') }}</th>
+</tr>
+</thead>
+<tbody>
+{% for r in rows %}
+<tr class="{{ r.last ? 'last-level' : 'subtotal' }}">
+{% if r.level > 0 %}{% for i in 1..r.level %}<td></td>{% endfor %}{% endif %}
+<td class="name">{{ te_criteria_value(report, r.criteria, r.value) }}</td>
+{% if report.criteria|length - r.level - 1 > 0 %}{% for i in 1..(report.criteria|length - r.level - 1) %}<td></td>{% endfor %}{% endif %}
+  {% for sum in r.periods %}
+    <td class="hours">{% if sum > 0 %}{{ format_hours(sum)|html_hours }}{% endif %}</td>
+  {% endfor %}
+  <td class="hours">{% if r.total > 0 %}{{ format_hours(r.total)|html_hours }}{% endif %}</td>
+</tr>
+{% endfor %}
+  <tr class="total">
+  <td>{{ l('label_total_time') }}</td>
+  {% if report.criteria|length > 1 %}{% for i in 1..(report.criteria|length - 1) %}<td></td>{% endfor %}{% endif %}
+  {% set total = 0 %}
+  {% for sum in report.periodTotals() %}
+    {% set total = total + sum %}
+    <td class="hours">{% if sum > 0 %}{{ format_hours(sum)|html_hours }}{% endif %}</td>
+  {% endfor %}
+  <td class="hours">{% if total > 0 %}{{ format_hours(total)|html_hours }}{% endif %}</td>
+  </tr>
+</tbody>
+</table>
+</div>
+
+{% if export_allowed %}
+{% set qp = app.request.query.all %}
+<p class="other-formats hide-when-print">{{ l('label_export_to') }}
+  <span><a class="csv" rel="nofollow" onclick="showModal('csv-export-options', '330px'); return false;" href="{{ path(project ? 'project_time_entries_report_format' : 'time_entries_report_format', route_params|merge(qp)|merge({_format: 'csv'})) }}">CSV</a></span>
+</p>
+<div id="csv-export-options" style="display: none;">
+  <h3 class="title">{{ l('label_export_options', {export_format: 'CSV'}) }}</h3>
+  <p><label>{{ l('label_encoding') }} <select name="encoding" id="encoding"><option selected="selected" value="UTF-8">UTF-8</option>
+{% if l('general_csv_encoding')|upper != 'UTF-8' %}<option value="{{ l('general_csv_encoding') }}">{{ l('general_csv_encoding') }}</option>{% endif %}</select></label></p>
+  <p><label>{{ l('label_fields_separator') }} <select name="field_separator" id="field_separator"><option selected="selected" value=",">{{ l('label_comma_char') }}</option>
+<option value=";">{{ l('label_semi_colon_char') }}</option></select></label></p>
+  <p class="buttons">
+    <input type="submit" value="{{ l('button_export') }}" id="csv-export-button" />
+    <input type="button" value="{{ l('button_cancel') }}" onclick="hideModal(this);" />
+  </p>
+</div>
+{% endif %}
+{% endif %}
+{% endif %}
+{% endif %}

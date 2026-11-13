@@ -1,0 +1,5 @@
+{#- Issues sidebar (issues/_sidebar.html.erb) -#}
+{{ call_hook('view_issues_sidebar_issues_bottom') }}
+{{ call_hook('view_issues_sidebar_planning_bottom') }}
+{% include 'issues/_sidebar_queries.html.twig' ignore missing %}
+{{ call_hook('view_issues_sidebar_queries_bottom') }}

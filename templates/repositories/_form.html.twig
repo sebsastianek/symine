@@ -1,0 +1,62 @@
+{% if errors|length > 0 %}
+<div id="errorExplanation"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+{% endif %}
+
+<div class="box tabular">
+<p>
+<label for="repository_scm">{{ l('label_scm') }}</label><select name="repository_scm" id="repository_scm"{% if repository.id %} disabled="disabled"{% endif %} data-remote="true" data-method="get" data-url="/projects/{{ project.identifier }}/repositories/new"><option value="">--- {{ l('actionview_instancetag_blank_option') }} ---</option>
+{% for value, label in scm_options %}<option{% if value == scm %} selected="selected"{% endif %} value="{{ value }}">{{ label }}</option>
+{% endfor %}</select>
+{% if not scm_available %}
+  <em class="info error">{{ l('text_scm_command_not_available') }}</em>
+{% endif %}
+</p>
+
+<p><label for="repository_is_default">{{ l('field_repository_is_default') }}</label><input name="repository[is_default]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1" name="repository[is_default]" id="repository_is_default"{% if repository.isDefault %} checked="checked"{% endif %} /></p>
+<p>
+<label for="repository_identifier">{{ l('field_identifier') }}</label><input type="text" name="repository[identifier]" id="repository_identifier" value="{{ repository.identifier }}"{% if identifier_frozen %} disabled="disabled"{% endif %} />
+{% if not identifier_frozen %}
+  <em class="info">
+    {{ l('text_length_between', {min: 1, max: 255}) }} {{ l('text_repository_identifier_info')|raw }}
+  </em>
+{% endif %}
+</p>
+
+{%- macro text_field(name, label, value, size, required, disabled, info) -%}
+<p><label{% if required %} class="required"{% endif %} for="repository_{{ name }}">{{ label }}{% if required %}<span class="required"> *</span>{% endif %}</label><input size="{{ size }}" type="text" name="repository[{{ name }}]" id="repository_{{ name }}" value="{{ value }}"{% if disabled %} disabled="disabled"{% endif %} />{% if info %}<em class="info">{{ info|raw }}</em>{% endif %}</p>
+{%- endmacro -%}
+{%- macro encoding_select(name, label, value, encodings, required, info) -%}
+<p><label{% if required %} class="required"{% endif %} for="repository_{{ name }}">{{ label }}{% if required %}<span class="required"> *</span>{% endif %}</label><select name="repository[{{ name }}]" id="repository_{{ name }}"><option value=""></option>
+{% for enc in encodings %}<option value="{{ enc }}"{% if enc == value %} selected="selected"{% endif %}>{{ enc }}</option>
+{% endfor %}</select>{% if info %}<em class="info">{{ info }}</em>{% endif %}</p>
+{%- endmacro -%}
+{% set new_record = repository.id is null %}
+{% if scm == 'Subversion' %}
+{{ _self.text_field('url', l('field_url'), repository.url, 60, true, not new_record, scm_path_info) }}
+<p><label for="repository_login">{{ l('field_login') }}</label><input size="30" type="text" name="repository[login]" id="repository_login" value="{{ repository.login }}" /></p>
+<p><label for="repository_password">{{ l('field_password') }}</label><input size="30" name="ignore" value="{{ new_record or not repository.password ? '' : 'xxxxxxxxxxxxxxx' }}" onfocus="this.value=''; this.name='repository[password]';" onchange="this.name='repository[password]';" type="password" id="repository_password" /></p>
+{% elseif scm == 'Mercurial' %}
+{{ _self.text_field('url', l('field_path_to_repository'), repository.url, 60, true, not new_record, scm_path_info) }}
+{{ _self.encoding_select('path_encoding', l('field_scm_path_encoding'), repository.pathEncoding, encodings, false, l('text_scm_path_encoding_note')) }}
+{% elseif scm == 'Cvs' %}
+{{ _self.text_field('root_url', l('field_cvsroot'), repository.rootUrl, 60, true, not new_record, scm_path_info) }}
+{{ _self.text_field('url', l('field_cvs_module'), repository.url, 30, true, not new_record, null) }}
+{{ _self.encoding_select('log_encoding', l('field_commit_logs_encoding'), repository.logEncoding, encodings, true, null) }}
+{{ _self.encoding_select('path_encoding', l('field_scm_path_encoding'), repository.pathEncoding, encodings, false, l('text_scm_path_encoding_note')) }}
+{% elseif scm == 'Bazaar' %}
+{{ _self.text_field('url', l('field_path_to_repository'), repository.url, 60, true, not new_record, scm_path_info) }}
+{{ _self.encoding_select('log_encoding', l('field_commit_logs_encoding'), repository.logEncoding, encodings, true, null) }}
+{% elseif scm == 'Filesystem' %}
+{{ _self.text_field('url', l('field_root_directory'), repository.url, 60, true, not new_record, scm_path_info) }}
+{{ _self.encoding_select('path_encoding', l('field_scm_path_encoding'), repository.pathEncoding, encodings, false, l('text_scm_path_encoding_note')) }}
+{% else %}
+{{ _self.text_field('url', l('field_path_to_repository'), repository.url, 60, true, not new_record, scm_path_info) }}
+{{ _self.encoding_select('path_encoding', l('field_scm_path_encoding'), repository.pathEncoding, encodings, false, l('text_scm_path_encoding_note')) }}
+<p><label for="repository_report_last_commit">{{ l('label_git_report_last_commit') }}</label><input name="repository[report_last_commit]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1" name="repository[report_last_commit]" id="repository_report_last_commit"{% if report_last_commit %} checked="checked"{% endif %} /></p>
+{% endif %}
+</div>
+
+<p>
+  <input type="submit" value="{{ repository.id ? l('button_save') : l('button_create') }}"{% if not scm_available %} disabled="disabled"{% endif %} />
+  <a href="/projects/{{ project.identifier }}/settings/repositories">{{ l('button_cancel') }}</a>
+</p>

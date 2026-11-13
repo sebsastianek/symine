@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+{% set p = {project_id: project.identifier, id: page.title} %}
+{% block content %}
+<div class="contextual">
+<a class="icon icon-history" href="{{ path('wiki_history', p) }}">{{ sprite_icon('history', l('label_history')) }}</a>
+</div>
+
+{% include 'wiki/_breadcrumb.html.twig' %}
+
+<h2><a href="{{ path('wiki_show', p) }}">{{ page.prettyTitle() }}</a> &#187; <a href="{{ path('wiki_history', p) }}">{{ l('label_history') }}</a> &#187; {{ l('label_revision') }} {{ diff.contentTo.version }}</h2>
+
+<p>
+{{ l('label_revision') }} <a href="{{ path('wiki_show_version', p|merge({version: diff.contentFrom.version})) }}">{{ diff.contentFrom.version }}</a>
+<em>({{ diff.contentFrom.author ? diff.contentFrom.author.getName() : l('label_user_anonymous') }}, {{ format_time(diff.contentFrom.updatedOn) }})</em>
+&#8594;
+{{ l('label_revision') }} <a href="{{ path('wiki_show_version', p|merge({version: diff.contentTo.version})) }}">{{ diff.contentTo.version }}</a>/{{ page.content.version }}
+<em>({{ diff.contentTo.author ? link_to_user(diff.contentTo.author) : l('label_user_anonymous') }}, {{ format_time(diff.contentTo.updatedOn) }})</em>
+</p>
+
+<pre class="text-diff">{{ diff.toHtml()|raw }}</pre>
+{% endblock %}

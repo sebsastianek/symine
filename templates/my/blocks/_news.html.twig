@@ -1,0 +1,10 @@
+<h3>{{ l('label_news_latest') }}</h3>
+
+{% for news in b.news %}
+<p>{{ link_to_project(news.project) }}: 
+<a href="{{ path_exists('news_show') ? path('news_show', {id: news.id}) : '/news/' ~ news.id }}">{{ news.title }}</a>
+{% if news.commentsCount > 0 %}<span class="comments">({{ l('label_x_comments', {count: news.commentsCount}) }})</span>{% endif %}
+<br />
+{% if news.summary %}<span class="summary">{{ news.summary }}</span><br />{% endif %}
+<span class="author">{{ authoring(news.createdOn, news.author) }}</span></p>
+{% endfor %}

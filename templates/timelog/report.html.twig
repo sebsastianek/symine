@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+{% import 'queries/_macros.html.twig' as qm %}
+{% block header_tags %}{{ qm.calendar_headers() }}{% endblock %}
+{% block content %}
+<div class="contextual">
+{% if allowed_to('log_time', project, true) %}
+<a class="icon icon-time-add" href="{{ project ? path('time_entry_new', {project_id: project.identifier}) : path('time_entry_new_global') }}">{{ sprite_icon('time-add', l('button_log_time')) }}</a>
+{% endif %}
+{% if project and allowed_to('manage_project_activities', project) %}
+<a class="icon icon-settings" href="{{ path('project_settings', {id: project.identifier, tab: 'activities'}) }}">{{ sprite_icon('settings', l('label_settings')) }}</a>
+{% endif %}
+</div>
+
+<h2>{{ query.isNew() ? l('label_spent_time') : query.name() }}</h2>
+
+<form id="query_form" action="{{ path(project ? 'project_time_entries_report' : 'time_entries_report', route_params) }}" accept-charset="UTF-8" method="get">
+  {% for c in report.criteria %}<input type="hidden" name="criteria[]" value="{{ c }}" autocomplete="off" />{% endfor %}
+  {% include 'timelog/_date_range.html.twig' with {active_tab: 'report'} %}
+
+  <p><label for='columns'>{{ l('label_details') }}</label>: <select name="columns" id="columns" onchange="this.form.submit();">{% for o in [['label_year', 'year'], ['label_month', 'month'], ['label_week', 'week'], ['label_day_plural', 'day']] %}<option{% if report.columns == o[1] %} selected="selected"{% endif %} value="{{ o[1] }}">{{ o[1] == 'day' ? l(o[0])|title : l(o[0]) }}</option>
+{% endfor %}</select>
+
+  <label for='criterias'>{{ l('button_add') }}</label>: <select name="criteria[]" id="criterias" onchange="this.form.submit();" style="width: 200px"{% if report.criteria|length >= 3 %} disabled="disabled"{% endif %}><option value=""></option>
+{% for k, c in report.availableCriteria() %}{% if k not in report.criteria %}<option value="{{ k }}">{{ c.label }}</option>
+{% endif %}{% endfor %}</select>
+     {% set qp = app.request.query.all %}
+     <a class="icon icon-reload" href="{{ path(project ? 'project_time_entries_report' : 'time_entries_report', route_params|merge(qp|filter((v, k) => k != 'criteria'))) }}">{{ sprite_icon('reload', l('button_clear')) }}</a></p>
+  {% if l('general_csv_encoding')|upper != 'UTF-8' %}<input type="hidden" name="encoding" id="encoding" value="{{ l('general_csv_encoding') }}" autocomplete="off" />{% endif %}
+</form>
+
+{% include 'timelog/_report_results.html.twig' %}
+
+<script>
+//<![CDATA[
+$(document).ready(function(){
+  $('input#csv-export-button').click(function(){
+    $('form input#encoding').val($('select#encoding option:selected').val());
+    $('form#query_form').attr('action', '{{ path(project ? 'project_time_entries_report_format' : 'time_entries_report_format', route_params|merge({_format: 'csv'}))|e('js') }}').submit();
+    $('form#query_form').attr('action', '{{ path(project ? 'project_time_entries_report' : 'time_entries_report', route_params)|e('js') }}');
+    hideModal(this);
+  });
+});
+//]]>
+</script>
+{% endblock %}
+
+{% block sidebar %}{% include 'timelog/_sidebar.html.twig' %}{% endblock %}

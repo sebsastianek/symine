@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}{% include 'repositories/_header_tags.html.twig' %}{% endblock %}
+{% block content %}
+{% include 'repositories/_revision_nav.html.twig' %}
+
+{% include 'repositories/_changeset.html.twig' %}
+
+{% if can_browse %}
+<ul id="changes-legend">
+<li class="change change-A">{{ scm_change_icon('A', l('label_added')) }}</li>
+<li class="change change-M">{{ scm_change_icon('M', l('label_modified')) }}</li>
+<li class="change change-C">{{ scm_change_icon('C', l('label_copied')) }}</li>
+<li class="change change-R">{{ scm_change_icon('R', l('label_renamed')) }}</li>
+<li class="change change-D">{{ scm_change_icon('D', l('label_deleted')) }}</li>
+</ul>
+
+<div class="changeset-changes">
+{{ render_changeset_changes(changeset) }}
+</div>
+{% endif %}
+{% endblock %}

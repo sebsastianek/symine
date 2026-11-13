@@ -1,0 +1,15 @@
+<div class="contextual">
+  {% if allowed_to('manage_subtasks', project) %}<a class="icon icon-add" href="{{ issue_new_subtask_url(issue) }}">{{ sprite_icon('add', l('button_add')) }}</a>{% endif %}
+</div>
+
+<p>
+  <strong>{{ l('label_subtask_plural') }}</strong>
+  {% if not issue.isLeaf() %}{{ issue_descendants_stats(issue) }}{% endif %}
+</p>
+
+<form data-cm-url="{{ path_exists('issues_context_menu') ? path('issues_context_menu') : '' }}" action="{{ path('issue_show', {id: issue.id}) }}" method="post">
+  {{ csrf_field() }}
+  <div class="subtasks-wrapper">
+    {% if not issue.isLeaf() %}{{ issue_descendants_tree(issue) }}{% endif %}
+  </div>
+</form>

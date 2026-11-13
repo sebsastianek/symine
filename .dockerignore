@@ -1,0 +1,13 @@
+# Build context of docker/Dockerfile: sources only (vendor is installed in the image)
+.git
+.idea
+.phpunit.cache
+var
+vendor
+reference
+tests
+docs
+docker-compose.override.yml
+.env.local
+.env.*.local
+*.db

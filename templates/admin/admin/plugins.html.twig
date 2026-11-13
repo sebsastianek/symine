@@ -1,0 +1,31 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2>{{ l('label_plugins') }}</h2>
+{% if plugins|length > 0 %}
+<div class="autoscroll">
+  <table class="list plugins">
+    <thead><tr>
+      <th>{{ l('field_name') }} / {{ l('field_description') }}</th>
+      <th>{{ l('field_author') }}</th>
+      <th>{{ l('label_version') }}</th>
+      <th></th>
+    </tr></thead>
+    <tbody>
+    {% for plugin in plugins %}
+      <tr id="plugin-{{ plugin.id }}">
+        <td class="name"><span class="name">{{ plugin.name }}</span>
+          {% if plugin.description %}<span class="description">{{ plugin.description }}</span>{% endif %}
+          {% if plugin.url %}<span class="url"><a href="{{ plugin.url }}">{{ plugin.url }}</a></span>{% endif %}
+        </td>
+        <td class="author">{% if plugin.authorUrl %}<a href="{{ plugin.authorUrl }}">{{ plugin.author }}</a>{% else %}{{ plugin.author }}{% endif %}</td>
+        <td class="version"><span class="icon">{{ plugin.version }}</span></td>
+        <td class="configure">{% if plugin.isConfigurable() %}<a href="{{ path('plugin_settings', {id: plugin.id}) }}">{{ l('button_configure') }}</a>{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}
+{% endblock %}

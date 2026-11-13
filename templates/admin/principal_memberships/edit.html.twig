@@ -1,0 +1,22 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2>{{ membership.principal.getName() }} - {{ membership.project.name }}</h2>
+
+<form class="edit_membership" id="edit_membership_{{ membership.id }}" action="{{ path('membership_update', {type: type, principal_id: principal.id, id: membership.id}) }}" accept-charset="UTF-8" method="post">
+  {{ csrf_field() }}
+  <input type="hidden" name="_method" value="put" autocomplete="off" />
+  <p>
+  {% for role in roles %}
+    {% set inherited = membership.memberRoles|filter(mr => mr.role.id == role.id and mr.inheritedFrom is not null)|length > 0 %}
+    {% set has = membership.memberRoles|filter(mr => mr.role.id == role.id)|length > 0 %}
+    <label class="block">
+      <input type="checkbox" name="membership[role_ids][]" value="{{ role.id }}"{% if has %} checked="checked"{% endif %}{% if inherited %} disabled="disabled"{% endif %} /> {{ role.name }}
+    </label>
+  {% endfor %}
+  </p>
+  <input type="hidden" name="membership[role_ids][]" value="" />
+  <p>
+    <input type="submit" name="commit" value="{{ l('button_save') }}" />
+  </p>
+</form>
+{% endblock %}

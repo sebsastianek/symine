@@ -1,0 +1,9 @@
+<ul id="saved-items">
+  {% for issue in saved_objects %}
+    <li>{{ link_to_issue(issue) }}</li>
+  {% endfor %}
+</ul>
+
+{% if path_exists('issues_index') %}
+<p><a href="{{ path('issues_index', {set_filter: 1, status_id: '*', issue_id: saved_objects|map(i => i.id)|join(',')}) }}">{{ l('label_issue_view_all') }}</a></p>
+{% endif %}

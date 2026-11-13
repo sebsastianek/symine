@@ -1,0 +1,79 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+{% include 'admin/workflows/_action_menu.html.twig' %}
+
+<h2>{{ l('label_workflow') }}</h2>
+
+<div class="tabs">
+  <ul>
+    <li><a href="{{ path('workflows_edit') ~ tab_query }}">{{ l('label_status_transitions') }}</a></li>
+    <li><a class="selected" href="{{ path('workflows_permissions') ~ tab_query }}">{{ l('label_fields_permissions') }}</a></li>
+  </ul>
+</div>
+
+{% include 'admin/workflows/_selectors.html.twig' with {form_action: path('workflows_permissions')} %}
+
+{% if trackers and roles and statuses is not empty %}
+  <form id="workflow_form" action="{{ path('workflows_update_permissions') }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="patch" autocomplete="off" />
+  {{ csrf_field() }}
+    {% include 'admin/workflows/_hidden_scope.html.twig' %}
+    <div class="autoscroll">
+    <table class="list workflows fields_permissions">
+    <thead>
+      <tr>
+        <th>
+        </th>
+        <th colspan="{{ statuses|length }}">{{ l('label_issue_status') }}</th>
+      </tr>
+      <tr>
+        <td></td>
+        {% for status in statuses %}
+        <td style="width:{{ (75 / statuses|length)|round(0, 'floor') }}%;">
+          {{ status.name }}
+        </td>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for group in [{key: 'core', label: 'field_core_fields'}, {key: 'custom', label: 'label_custom_field_plural'}] %}
+      {% if group.key == 'core' or rows.custom is not empty %}
+      <tr class="group open">
+        <td colspan="{{ statuses|length + 1 }}">
+          <span class="expander icon icon-expanded" onclick="toggleRowGroup(this);">{{ sprite_icon('angle-down') }}</span>
+          {{ l(group.label) }}
+        </td>
+      </tr>
+      {% for row in rows[group.key] %}
+      <tr>
+        <td class="name">
+          {{ row.label }} {% if row.required %}<span class="required">*</span>{% endif %}
+        </td>
+        {% for c in row.cells %}
+        <td class="{{ c.class }}" title="{{ row.label }} ({{ c.status.name }})">
+          <select name="{{ c.name }}" id="{{ c.id }}"{% if c.disabled %} disabled="disabled"{% endif %}>{% for o in c.options %}<option{% if c.selected is not null and o[1] == c.selected %} selected="selected"{% endif %} value="{{ o[1] }}">{{ o[0] }}</option>
+{% endfor %}</select>
+          {% if not loop.last %}<a href="#" class="repeat-value"{% if group.key == 'core' %} title="{{ l('button_copy') }}"{% endif %}>&#187;</a>{% endif %}
+        </td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+      {% endif %}
+      {% endfor %}
+    </tbody>
+    </table>
+    </div>
+    <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+  </form>
+{% endif %}
+
+<script>
+//<![CDATA[
+$("a.repeat-value").click(function(e){
+  e.preventDefault();
+  var td = $(this).closest('td');
+  var selected = td.find("select").find(":selected").val();
+  td.nextAll('td').find("select").val(selected);
+});
+//]]>
+</script>
+{% endblock %}

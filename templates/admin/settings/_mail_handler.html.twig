@@ -1,0 +1,35 @@
+{% import 'admin/settings/_macros.html.twig' as s %}
+<form action="{{ path('settings_edit', {tab: 'mail_handler'}) }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+
+<div class="box tabular settings">
+  <p>
+    {{ s.textarea(values, 'mail_handler_body_delimiters', {rows: 5}) }}
+    <label class="block">
+      {{ s.check_box(values, 'mail_handler_enable_regex_delimiters', {label: false}) }}
+      {{ l('setting_mail_handler_enable_regex') }}
+    </label>
+    <em class="info">{{ l('text_line_separated') }}</em>
+  </p>
+  <p>
+    {{ s.textarea(values, 'mail_handler_excluded_filenames') }}
+    <label class="block">
+      {{ s.check_box(values, 'mail_handler_enable_regex_excluded_filenames', {label: false}) }}
+      {{ l('setting_mail_handler_enable_regex') }}
+    </label>
+    <em class="info">{{ l('text_comma_separated') }}
+    {{ l('label_example') }}: smime.p7s, *.vcf</em>
+  </p>
+  <p>{{ s.select(values, 'mail_handler_preferred_body_part', opts.preferred_body_part) }}</p>
+</div>
+
+<div class="box tabular settings">
+<p>{{ s.check_box(values, 'mail_handler_api_enabled', {attrs: 'onclick="if (this.checked) { $(\'#settings_mail_handler_api_key\').removeAttr(\'disabled\'); } else { $(\'#settings_mail_handler_api_key\').attr(\'disabled\', true); }"'}) }}</p>
+
+<p>{{ s.text_field(values, 'mail_handler_api_key', {size: 30, attrs: (values.mail_handler_api_enabled ~ '') in ['1', 'true'] ? '' : 'disabled="disabled"'}) }}
+  <a href="#" onclick="if (!$('#settings_mail_handler_api_key').attr('disabled')) { $('#settings_mail_handler_api_key').val(randomKey(20)) }; return false;">{{ l('label_generate_key') }}</a>
+</p>
+</div>
+
+<input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+
+</form>

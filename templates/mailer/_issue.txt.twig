@@ -1,0 +1,15 @@
+{{ issue.tracker.name }} #{{ issue.id }}: {{ issue.subject }}
+{{ issue_url }}
+
+{% for item in mail.issueAttributes(issue, user) %}* {{ item.label }}: {{ item.value }}
+{% endfor %}
+----------------------------------------
+{{ issue.description }}
+
+{% set attachments = mail.attachmentsOf('Issue', issue.id) %}
+{% if attachments is not empty %}
+{{ mail.textSeparator(l('label_attachment_plural')) }}
+{% for attachment in attachments %}
+{{ attachment.filename }} ({{ mail.humanSize(attachment.filesize) }})
+{% endfor %}
+{% endif %}

@@ -1,0 +1,29 @@
+{% for time_entry in time_entries %}
+  <div id="time-entry-{{ time_entry.id }}" class="time_entry journal">
+    <h4 class="journal-header">
+        <span class="journal-info">
+          {{ avatar(time_entry.user, 24) }}
+          {{ authoring(time_entry.createdOn, time_entry.user) }}
+        </span>
+      {% if allowed_to('edit_time_entries', time_entry.project) or (time_entry.user.id == current_user().id and allowed_to('edit_own_time_entries', time_entry.project)) %}
+          <span class="journal-meta">
+            {% if path_exists('time_entry_edit') %}<a title="{{ l('button_edit') }}" class="icon-only icon-edit" href="{{ path('time_entry_edit', {id: time_entry.id}) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>{% endif %}
+            {% if path_exists('time_entry_destroy') %}<a data-confirm="{{ l('text_are_you_sure') }}" data-method="delete" title="{{ l('button_delete') }}" class="icon-only icon-del" rel="nofollow" href="{{ path('time_entry_destroy', {id: time_entry.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>{% endif %}
+          </span>
+      {% endif %}
+    </h4>
+    <div class="journal-content">
+      <ul class="journal-details">
+        <li>
+          <strong>{{ l('label_time_entry_plural') }}</strong>:
+          {{ l_hours_short(time_entry.hours) }}
+        </li>
+      </ul>
+      {% if time_entry.comments is not empty %}
+        <div class="journal-note">
+          {{ time_entry.comments }}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endfor %}

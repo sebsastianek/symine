@@ -1,0 +1,16 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<div class="contextual">
+<a class="icon icon-user" href="{{ path('user_show', {id: edited_user.id}) }}">{{ sprite_icon('user', l('label_profile')) }}</a>
+{% if edited_user.emailAddresses|length > 1 or settings.int('max_additional_emails') > 0 %}
+<a class="icon icon-email-add" href="{{ path('my_email_addresses', {user_id: edited_user.id}) }}">{{ sprite_icon('email', l('label_email_address_plural')) }}</a>
+{% endif %}
+{% if path_exists('user_avatar_edit') %}<a class="icon icon-avatar" href="{{ path('user_avatar_edit', {user_id: edited_user.id}) }}">{{ sprite_icon('avatar', l('button_change_avatar')) }}</a>{% endif %}
+{% include 'admin/users/_status_link.html.twig' with {u: edited_user} %}
+{% if edited_user.id != current_user().id %}<a data-confirm="{{ l('text_are_you_sure') }}" data-method="delete" class="icon icon-del" rel="nofollow" href="{{ path('user_destroy', {id: edited_user.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>{% endif %}
+</div>
+
+<h2><a href="{{ path('users_index') }}">{{ l('label_user_plural') }}</a> &#187; {{ avatar(edited_user, 24) }}{{ edited_user.login }}</h2>
+
+{% include 'admin/_tabs.html.twig' %}
+{% endblock %}

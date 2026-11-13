@@ -1,0 +1,37 @@
+{% extends layout %}
+{% block content %}
+<h2>{{ import_title }}</h2>
+
+<form id="import-form" action="{{ path('import_mapping', {id: import.filename}) }}" accept-charset="UTF-8" method="post">
+  {{ csrf_field() }}
+  {% include 'imports/_' ~ partial_prefix ~ '_mapping.html.twig' %}
+
+  <fieldset class="box">
+    <legend>{{ l('label_file_content_preview') }}</legend>
+
+    <div class="autoscroll">
+      <table class="sample-data">
+      {% for row in rows %}
+        <tr>
+          {% for c in row %}<td>{{ (c ?? '')|truncate(50) }}</td>{% endfor %}
+        </tr>
+      {% endfor %}
+      </table>
+    </div>
+  </fieldset>
+
+  <p>
+    <button name="previous" type="submit">&#171; {{ l('label_previous') }}</button>
+    <input type="submit" value="{{ l('button_import') }}" data-disable-with="{{ l('button_import') }}" />
+  </p>
+</form>
+
+<script>
+$(document).ready(function() {
+  $('#import-form').submit(function(){
+    $('#import-details').show().addClass('ajax-loading');
+    $('#import-progress').progressbar({value: 0, max: {{ import.totalItems ?? 0 }}});
+  });
+});
+</script>
+{% endblock %}

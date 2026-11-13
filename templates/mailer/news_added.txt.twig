@@ -1,0 +1,16 @@
+{% extends 'mailer/layout.txt.twig' %}
+{% block content %}
+{{ news.title }}
+{{ news_url }}
+{{ news.author.name }}
+
+{{ news.description }}
+
+{% set attachments = mail.attachmentsOf('News', news.id) %}
+{% if attachments is not empty %}
+{{ mail.textSeparator(l('label_attachment_plural')) }}
+{% for attachment in attachments %}
+{{ attachment.filename }} ({{ mail.humanSize(attachment.filesize) }})
+{% endfor %}
+{% endif %}
+{% endblock %}

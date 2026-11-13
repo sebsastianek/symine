@@ -1,0 +1,41 @@
+<h2>{{ l('label_revision') }} {{ format_revision(changeset) }}</h2>
+
+<div class="details">
+  <h4>
+    {{ avatar(changeset.user) }}
+    {% if changeset.user %}{{ authoring(changeset.committedOn, changeset.user) }}{% else %}{{ l('label_added_time_by', {author: (changeset.committer|split('<')|first)|trim|e, age: time_tag(changeset.committedOn)})|raw }}{% endif %}
+  </h4>
+  {% if changeset.scmid or changeset.parents|length > 0 or children|length > 0 %}
+  <ul class="revision-info">
+    {% if changeset.scmid %}
+      <li><strong>ID </strong>{{ changeset.scmid }}</li>
+    {% endif %}
+    {% if changeset.parents|length > 0 %}
+      <li><strong>{{ l('label_parent_revision') }}</strong>
+        {% for p in changeset.parents %}{{ link_to_revision(p, repository, {text: format_revision(p)}) }}{% if not loop.last %}, {% endif %}{% endfor %}
+      </li>
+    {% endif %}
+    {% if children|length > 0 %}
+      <li><strong>{{ l('label_child_revision') }}</strong>
+        {% for p in children %}{{ link_to_revision(p, repository, {text: format_revision(p)}) }}{% if not loop.last %}, {% endif %}{% endfor %}
+      </li>
+    {% endif %}
+  </ul>
+  {% endif %}
+</div>
+
+<div class="wiki changeset-comments">
+  {{ format_changeset_comments(changeset) }}
+</div>
+
+{% if related_issues|length > 0 or can_manage_related %}
+  {% include 'repositories/_related_issues.html.twig' %}
+{% endif %}
+
+{% if can_browse %}
+{% set tabs = [{name: 'revision', label: 'label_change_plural', url: repo_url('revision', repository, {rev: changeset_identifier(changeset)})}] %}
+{% if action_name == 'diff' or has_changes %}
+  {% set tabs = tabs|merge([{name: 'diff', label: 'label_view_diff', url: repo_url('diff', repository, {rev: changeset_identifier(changeset)})}]) %}
+{% endif %}
+{% include 'repositories/_tabs.html.twig' with {tabs: tabs, selected_tab: action_name} %}
+{% endif %}

@@ -1,0 +1,26 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2>{{ l('label_confirmation') }}</h2>
+
+<form action="{{ path('group_users_remove', {id: group.id, 'user_ids': users|map(u => u.id)}) }}" accept-charset="UTF-8" method="post">
+  {{ csrf_field() }}
+  <input type="hidden" name="_method" value="delete" autocomplete="off" />
+  <input type="hidden" name="back_url" value="{{ back_url }}" />
+  <div class="warning">
+    <p>{{ l('text_users_remove_from_group_confirmation', {group: '<strong>' ~ group.getName()|e ~ '</strong>'})|raw }}</p>
+
+    {% for user in users %}
+      <p><strong>{{ user.getName() }}</strong> ({{ user.login }})</p>
+    {% endfor %}
+
+    <p>{{ l('text_users_bulk_destroy_confirm', {yes: l('general_text_Yes')}) }}</p>
+    <p><input type="text" name="confirm" id="confirm" /></p>
+
+  </div>
+
+  <p>
+    <input type="submit" name="commit" value="{{ l('button_delete') }}" />
+    <a href="{{ path('users_index') }}">{{ l('button_cancel') }}</a>
+  </p>
+</form>
+{% endblock %}

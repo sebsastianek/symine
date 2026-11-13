@@ -1,0 +1,5 @@
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+{% include 'admin/custom_fields/formats/_regexp.html.twig' %}
+<p>{{ f.check_box('thousands_delimiter', custom_field.getFormatOption('thousands_delimiter') == '1', l('field_thousands_delimiter')) }}</p>
+<p>{{ f.text_field('default_value', custom_field.defaultValue, l('field_default_value')) }}</p>
+<p>{{ f.text_field('url_pattern', custom_field.getFormatOption('url_pattern'), l('label_link_values_to'), 50) }}</p>

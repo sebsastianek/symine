@@ -1,0 +1,25 @@
+{% extends 'base.html.twig' %}
+{% set p = {project_id: project.identifier, id: page.title} %}
+{% block content %}
+{% include 'wiki/_breadcrumb.html.twig' %}
+
+<h2>{{ page.prettyTitle() }}</h2>
+
+<form action="{{ path('wiki_destroy', p) }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="delete" autocomplete="off" />{{ csrf_field() }}
+<div class="box">
+<p><strong>{{ l('text_wiki_page_destroy_question', {descendants: descendants_count}) }}</strong></p>
+<p><label><input type="radio" name="todo" id="todo_nullify" value="nullify" checked="checked" /> {{ l('text_wiki_page_nullify_children') }}</label><br />
+<label><input type="radio" name="todo" id="todo_destroy" value="destroy" /> {{ l('text_wiki_page_destroy_children') }}</label>
+{% if reassignable_options %}
+<br />
+<label><input type="radio" name="todo" id="todo_reassign" value="reassign" /> {{ l('text_wiki_page_reassign_children') }}</label>:
+<label class="hidden-for-sighted" for="reassign_to_id">{{ l('description_wiki_subpages_reassign') }}</label>
+<select name="reassign_to_id" id="reassign_to_id" onclick="$('#todo_reassign').prop('checked', true);">{{ reassignable_options|raw }}</select>
+{% endif %}
+</p>
+</div>
+
+<input type="submit" value="{{ l('button_apply') }}" data-disable-with="{{ l('button_apply') }}" />
+<a href="{{ path('wiki_show', p) }}">{{ l('button_cancel') }}</a>
+</form>
+{% endblock %}

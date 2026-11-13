@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+{% import 'queries/_macros.html.twig' as qm %}
+{% block header_tags %}{{ qm.calendar_headers() }}{% endblock %}
+{% block content %}
+<h2>{{ l('label_spent_time') }}</h2>
+
+<form class="new_time_entry" id="new_time_entry" enctype="multipart/form-data" action="{{ path('time_entries_create') }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+  {% include 'timelog/_form.html.twig' %}
+  <input type="submit" name="commit" value="{{ l('button_create') }}" data-disable-with="{{ l('button_create') }}" />
+  <input type="submit" name="continue" value="{{ l('button_create_and_continue') }}" data-disable-with="{{ l('button_create_and_continue') }}" />
+  <a href="{{ back_url ?: (project ? path('project_time_entries', {project_id: project.identifier}) : path('time_entries_index')) }}">{{ l('button_cancel') }}</a>
+</form>
+{% endblock %}

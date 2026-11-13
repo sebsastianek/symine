@@ -1,0 +1,25 @@
+{% if entry and not entry.isDir() and supports_cat %}
+  {% set download_label = entry.size is not null ? l('button_download') ~ ' (' ~ number_to_human_size(entry.size) ~ ')' : l('button_download') %}
+  <a class="icon icon-download" href="{{ repo_url('raw', repository, {path: path, rev: rev}) }}">{{ sprite_icon('download', download_label) }}</a>
+{% endif %}
+{% if supports_history %}<a class="icon icon-stats" href="{{ repo_url('statistics', repository) }}">{{ sprite_icon('stats', l('label_statistics')) }}</a>{% endif %}
+{% if can_manage %}
+<span class="dropdown" data-controller="dropdown" data-action="clipboard:copied->dropdown#hide"><span class="icon-only icon-actions dropdown-trigger" title="{{ l('button_actions') }}" data-action="click->dropdown#toggle">{{ sprite_icon('3-bullets', l('button_actions')) }}</span><span class="dropdown-content hidden" data-dropdown-target="content"><span class="dropdown-items">
+  <a class="icon icon-settings" href="/projects/{{ project.identifier }}/settings/repositories">{{ sprite_icon('settings', l('label_settings')) }}</a>
+  {% if not autofetch %}<a class="icon icon-reload" data-method="post" rel="nofollow" href="{{ repo_url('fetch_changesets', repository) }}">{{ sprite_icon('reload', l('button_fetch_changesets')) }}</a>{% endif %}
+</span></span></span>
+{% endif %}
+<form id="revision_selector" action="{{ repo_url(action_name == 'show' ? 'show' : action_name, repository, {path: path}) }}" accept-charset="UTF-8" method="get">
+  {% if branches|length > 0 %}
+    | {{ l('label_branch') }}:
+    <select name="branch" id="branch"><option value=""></option>{% for b in branches %}<option value="{{ b.name }}"{% if b.name == rev %} selected="selected"{% endif %}>{{ b.name }}</option>{% endfor %}</select>
+  {% endif %}
+  {% if tags|length > 0 %}
+    | {{ l('label_tag') }}:
+    <select name="tag" id="tag"><option value=""></option>{% for t in tags %}<option value="{{ t }}"{% if t == rev %} selected="selected"{% endif %}>{{ t }}</option>{% endfor %}</select>
+  {% endif %}
+  {% if supports_history %}
+  | {{ l('label_revision') }}:
+  <input type="text" name="rev" id="rev" value="{{ rev }}" size="8" />
+  {% endif %}
+</form>

@@ -1,0 +1,14 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('users_index') }}">{{ l('label_user_plural') }}</a> &#187; {{ l('label_user_new') }}</h2>
+
+<form class="new_user" id="new_user" enctype="multipart/form-data" action="{{ path('user_create') }}" accept-charset="UTF-8" method="post">
+  {{ csrf_field() }}
+  {% include 'admin/users/_form.html.twig' %}
+  <p><label><input type="checkbox" name="send_information" id="send_information" value="1"{% if send_information %} checked="checked"{% endif %} /> {{ l('label_send_information') }}</label></p>
+  <p class="mobile-show">
+    <input type="submit" name="commit" value="{{ l('button_create') }}" />
+    <input type="submit" name="continue" value="{{ l('button_create_and_continue') }}" />
+  </p>
+</form>
+{% endblock %}

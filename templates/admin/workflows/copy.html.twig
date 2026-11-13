@@ -1,0 +1,40 @@
+{% extends 'admin/layout.html.twig' %}
+{% import 'admin/workflows/_macros.html.twig' as h %}
+{% block content %}
+{% if error %}<div class="flash error" id="flash_error">{{ error }}</div>{% endif %}
+<h2><a href="{{ path('workflows_edit') }}">{{ l('label_workflow') }}</a> &#187; {{ l('button_copy') }}</h2>
+
+<form id="workflow_copy_form" action="{{ path('workflows_duplicate') }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+<fieldset class="tabular box">
+<legend>{{ l('label_copy_source') }}</legend>
+<p>
+  <label>{{ l('label_tracker') }}</label>
+  <select name="source_tracker_id" id="source_tracker_id"><option value="">--- {{ l('actionview_instancetag_blank_option') }} ---</option><option value="any">--- {{ l('label_copy_same_as_target') }} ---</option>{% for t in trackers %}<option{% if source_tracker and source_tracker.id == t.id %} selected="selected"{% endif %} value="{{ t.id }}">{{ t.name }}</option>
+{% endfor %}</select>
+</p>
+<p>
+  <label>{{ l('label_role') }}</label>
+  <select name="source_role_id" id="source_role_id"><option value="">--- {{ l('actionview_instancetag_blank_option') }} ---</option><option value="any">--- {{ l('label_copy_same_as_target') }} ---</option>{% for r in roles %}<option{% if source_role and source_role.id == r.id %} selected="selected"{% endif %} value="{{ r.id }}">{{ h.role_name(r) }}</option>
+{% endfor %}</select>
+</p>
+</fieldset>
+
+<fieldset class="tabular box">
+<legend>{{ l('label_copy_target') }}</legend>
+{% set tt_ids = target_trackers ? target_trackers|map(t => t.id) : [] %}
+{% set tr_ids = target_roles ? target_roles|map(r => r.id) : [] %}
+<p>
+  <label>{{ l('label_tracker') }}</label>
+  <select name="target_tracker_ids[]" id="target_tracker_ids" multiple="multiple"><option value="" disabled="disabled">--- {{ l('actionview_instancetag_blank_option') }} ---</option>{% for t in trackers %}<option{% if t.id in tt_ids %} selected="selected"{% endif %} value="{{ t.id }}">{{ t.name }}</option>
+{% endfor %}</select>
+</p>
+<p>
+  <label>{{ l('label_role') }}</label>
+  <select name="target_role_ids[]" id="target_role_ids" multiple="multiple"><option value="" disabled="disabled">--- {{ l('actionview_instancetag_blank_option') }} ---</option>{% for r in roles %}<option{% if r.id in tr_ids %} selected="selected"{% endif %} value="{{ r.id }}">{{ h.role_name(r) }}</option>
+{% endfor %}</select>
+</p>
+</fieldset>
+<input type="submit" name="commit" value="{{ l('button_copy') }}" data-disable-with="{{ l('button_copy') }}" />
+</form>
+{% endblock %}

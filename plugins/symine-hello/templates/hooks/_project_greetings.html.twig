@@ -1,0 +1,7 @@
+<div class="hello box">
+  <h3 class="icon icon-comment">{{ sprite_icon('comment', l('label_hello_greeting_plural')) }}</h3>
+  {% if greetings is empty %}<p class="nodata">{{ l('label_no_data') }}</p>{% else %}
+  <ul>{% for g in greetings %}<li>{{ g.message }}</li>{% endfor %}</ul>
+  {% endif %}
+  <p><a href="{{ path('hello_index', {project_id: project.identifier}) }}">{{ l('label_hello_greeting_plural') }}</a></p>
+</div>

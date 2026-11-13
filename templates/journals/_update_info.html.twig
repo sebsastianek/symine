@@ -1,0 +1,1 @@
+{% if journal.updatedOn and journal.createdOn and journal.updatedOn|date('U') != journal.createdOn|date('U') %}<span class="update-info" title="{{ l('label_time_by_author', {time: format_time(journal.updatedOn), author: journal.updatedBy ? journal.updatedBy.getName() : ''}) }}">· {{ l('label_edited') }}</span>{% endif %}

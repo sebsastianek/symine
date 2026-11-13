@@ -1,0 +1,34 @@
+{#- Port of messages/_form.html.erb. Params: message, param (message|reply), replying, can_sticky, board_options (edit only), board, errors -#}
+{% set param = param ?? 'message' %}
+{% set replying = replying ?? false %}
+{% include 'messages/_errors.html.twig' %}
+
+<div class="box">
+<!--[form:message]-->
+<p><label for="message_subject">{{ l('field_subject') }}</label><br />
+<input size="120" id="message_subject" type="text" value="{{ message.subject }}" name="{{ param }}[subject]" />
+
+{% if not replying %}
+  {% if can_sticky %}
+    <input name="{{ param }}[sticky]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1" name="{{ param }}[sticky]" id="message_sticky"{% if message.isSticky() %} checked="checked"{% endif %} /> <label for="message_sticky">{{ l('label_board_sticky') }}</label>
+    <input name="{{ param }}[locked]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1" name="{{ param }}[locked]" id="message_locked"{% if message.locked %} checked="checked"{% endif %} /> <label for="message_locked">{{ l('label_board_locked') }}</label>
+  {% endif %}
+{% endif %}
+</p>
+
+{% if not replying and message.id and can_sticky and board_options is defined %}
+  <p><label>{{ l('label_board') }}</label><br />
+  <select name="{{ param }}[board_id]" id="message_board_id">
+  {% for o in board_options %}<option value="{{ o.id }}"{% if o.id == message.board.id %} selected="selected"{% endif %}>{{ o.label|raw }}</option>{% endfor %}
+  </select></p>
+{% endif %}
+
+<div class="form-field">
+<label class="hidden-for-sighted" for="message_content">{{ l('description_message_content') }}</label>
+{% include ['issues/_wiki_textarea.html.twig', 'content/_textarea.html.twig'] with {name: param ~ '[content]', id: 'message_content', value: message.content, rows: 15, cols: 80, accesskey: 'e', preview_url: path('message_preview', {board_id: board.id}) ~ (message.id ? '?id=' ~ message.id : '')} %}
+</div>
+<!--[eoform:message]-->
+
+<p>{{ l('label_attachment_plural') }}<br />
+{% include 'content/_attachments_form.html.twig' %}</p>
+</div>

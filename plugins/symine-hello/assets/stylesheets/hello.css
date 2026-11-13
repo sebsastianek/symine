@@ -1,0 +1,5 @@
+/* Symine Hello plugin (served from /plugin_assets/symine_hello/stylesheets/hello.css) */
+ul.hello-greetings { list-style: none; padding-left: 0; }
+ul.hello-greetings li { padding: 4px 0; border-bottom: 1px solid #eee; }
+ul.hello-greetings li .author { color: #888; font-size: 0.9em; }
+div.hello-issue-greeting { color: #3e5b76; }

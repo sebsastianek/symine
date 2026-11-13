@@ -1,0 +1,8 @@
+{% extends 'mailer/layout.html.twig' %}
+{% block content %}
+<h1><a href="{{ news_url }}">{{ news.title }}</a></h1>
+
+<p>{{ l('text_user_wrote', {value: comment.author.name}) }}</p>
+
+{{ mail.textilizable(comment.content, news.project)|raw }}
+{% endblock %}

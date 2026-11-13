@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+{% block main_menu %}{% endblock %}
+{% block content %}
+<h2>{{ l('twofa_label_backup_codes') }}</h2>
+
+<div class="splitcontentleft">
+  <div class="box">
+    <p>{{ l('twofa_text_backup_codes_hint') }}</p>
+    <ul class="twofa_backup_codes">
+    {% for code in backup_codes %}
+      <li><code>{{ code|split('', 4)|join(' ') }}</code></li>
+    {% endfor %}
+    </ul>
+    <p><em class="info">{{ l('twofa_text_backup_codes_created_at', {datetime: format_time(created_at)}) }}</em></p>
+  </div>
+</div>
+{% endblock %}
+{% block sidebar %}{% include 'my/_sidebar.html.twig' %}{% endblock %}

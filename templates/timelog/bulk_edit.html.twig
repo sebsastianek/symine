@@ -1,0 +1,6 @@
+{% extends 'base.html.twig' %}
+{% import 'queries/_macros.html.twig' as qm %}
+{% block header_tags %}{{ qm.calendar_headers() }}{% endblock %}
+{% block content %}
+{% include 'timelog/_bulk_edit_content.html.twig' %}
+{% endblock %}

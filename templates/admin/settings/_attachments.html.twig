@@ -1,0 +1,24 @@
+{% import 'admin/settings/_macros.html.twig' as s %}
+<form action="{{ path('settings_edit', {tab: 'attachments'}) }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+
+<div class="box tabular settings">
+<p>{{ s.text_field(values, 'attachment_max_size', {size: 6}) }} {{ l('number.human.storage_units.units.kb') }}</p>
+
+<p>{{ s.text_field(values, 'bulk_download_max_size', {size: 6}) }} {{ l('number.human.storage_units.units.kb') }}</p>
+
+<p>{{ s.textarea(values, 'attachment_extensions_allowed') }}
+<em class="info">{{ l('text_comma_separated') }} {{ l('label_example') }}: txt, png</em></p>
+
+<p>{{ s.textarea(values, 'attachment_extensions_denied') }}
+<em class="info">{{ l('text_comma_separated') }} {{ l('label_example') }}: js, swf</em></p>
+
+<p>{{ s.text_field(values, 'file_max_size_displayed', {size: 6}) }} {{ l('number.human.storage_units.units.kb') }}</p>
+
+<p>{{ s.text_field(values, 'diff_max_lines_displayed', {size: 6}) }}</p>
+
+<p>{{ s.text_field(values, 'repositories_encodings', {size: 60}) }}
+<em class="info">{{ l('text_comma_separated') }}</em></p>
+</div>
+
+<input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>

@@ -6,6 +6,7 @@
   <div class="wiki">
     {{ textilizable(settings.string('welcome_text')) }}
   </div>
+  {{ call_hook('view_welcome_index_left') }}
 </div>
 <div class="splitcontentright">
   {% if news|length > 0 %}
@@ -15,6 +16,7 @@
     {% if path_exists('news_index') %}<a href="{{ path('news_index') }}">{{ l('label_news_view_all') }}</a>{% endif %}
   </div>
   {% endif %}
+  {{ call_hook('view_welcome_index_right') }}
 </div>
 </div>
 {% endblock %}

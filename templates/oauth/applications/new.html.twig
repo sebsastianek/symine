@@ -1,0 +1,9 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('oauth_applications') }}">{{ l('label_oauth_application_plural') }}</a> &#187; {{ l('doorkeeper.applications.new.title') }}</h2>
+
+<form class="new_doorkeeper_application" id="new_doorkeeper_application" action="{{ path('oauth_applications_create') }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+{% include 'oauth/applications/_form.html.twig' %}
+<input type="submit" name="commit" value="{{ l('button_create') }}" data-disable-with="{{ l('button_create') }}" />
+</form>
+{% endblock %}

@@ -1,0 +1,42 @@
+{#- Project settings tab "Repositories" (port of projects/settings/_repositories.html.erb). Needs only `project`. -#}
+{% if allowed_to('manage_repository', project) and enabled_scms()|length > 0 %}
+  <p><a class="icon icon-add" href="/projects/{{ project.identifier }}/repositories/new">{{ sprite_icon('add', l('label_repository_new')) }}</a></p>
+{% endif %}
+
+{% set repositories = project_repositories(project) %}
+{% if repositories|length > 0 %}
+<div class="autoscroll">
+  <table class="list">
+    <thead>
+      <tr>
+        <th>{{ l('field_identifier') }}</th>
+        <th>{{ l('field_repository_is_default') }}</th>
+        <th>{{ l('label_scm') }}</th>
+        <th>{{ l('label_repository') }}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for repository in repositories %}
+      <tr>
+        <td class="name">
+        {% if repository.identifier %}<a href="{{ repo_url('show', repository) }}">{{ repository.identifier }}</a>{% endif %}
+        </td>
+        <td>{% if repository.isDefault %}<span class="icon-only icon-checked">{{ sprite_icon('checked') }}</span>{% endif %}</td>
+        <td>{{ repository_scm_name(repository) }}</td>
+        <td>{{ repository.url }}</td>
+        <td class="buttons">
+        {% if allowed_to('manage_repository', project) %}
+          <a class="icon icon-user" href="/repositories/{{ repository.id }}/committers">{{ sprite_icon('user', l('label_user_plural')) }}</a>
+          <a class="icon icon-edit" href="/repositories/{{ repository.id }}/edit">{{ sprite_icon('edit', l('button_edit')) }}</a>
+          <a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="/repositories/{{ repository.id }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+        {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}

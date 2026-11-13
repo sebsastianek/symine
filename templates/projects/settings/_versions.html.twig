@@ -1,0 +1,66 @@
+{% import 'versions/_macros.html.twig' as vm %}
+{% set settings_url = path_exists('project_settings') ? path('project_settings', {id: project.identifier, tab: 'versions'}) : '/projects/' ~ project.identifier ~ '/settings/versions' %}
+{% if versions is not empty %}
+  <div class="contextual">
+    <a class="icon icon-locked" rel="nofollow" data-method="put" href="{{ path('versions_close_completed', {project_id: project.identifier}) }}">{{ sprite_icon('lock', l('label_close_versions')) }}</a>
+  </div>
+{% endif %}
+<p>
+  {% if allowed_to('manage_versions', project) %}<a class="icon icon-add" href="{{ path('version_new', {project_id: project.identifier, back_url: ''}) }}">{{ sprite_icon('add', l('label_version_new')) }}</a>{% endif %}
+</p>
+
+<form action="{{ settings_url }}" accept-charset="UTF-8" method="get">
+<fieldset><legend>{{ l('label_filter_plural') }}</legend>
+<label for='status'>{{ l('field_status') }}:</label>
+<select name="version_status" id="version_status" onchange="this.form.submit(); return false;"><option value="">{{ l('label_all') }}</option>
+{% for s in ['open', 'locked', 'closed'] %}<option{% if version_status == s %} selected="selected"{% endif %} value="{{ s }}">{{ l('version_status_' ~ s) }}</option>
+{% endfor %}</select>
+<label for='name'>{{ l('label_version') }}:</label>
+<input type="text" name="version_name" id="version_name" value="{{ version_name }}" size="30" />
+<input type="submit" value="{{ l('button_apply') }}" data-disable-with="{{ l('button_apply') }}" />
+<a class="icon icon-reload" href="{{ settings_url }}">{{ sprite_icon('reload', l('button_clear')) }}</a>
+</fieldset>
+</form>
+&nbsp;
+
+{% if versions is not empty %}
+<table class="list versions">
+  <thead><tr>
+    <th>{{ l('label_version') }}</th>
+    <th>{{ l('field_default_version') }}</th>
+    <th>{{ l('field_effective_date') }}</th>
+    <th>{{ l('field_description') }}</th>
+    <th>{{ l('field_status') }}</th>
+    <th>{{ l('field_sharing') }}</th>
+    <th>{{ l('label_wiki_page') }}</th>
+    <th style="width:15%"></th>
+    </tr></thead>
+  <tbody>
+{% for version in versions %}
+    {% set is_shared = version.project.id != project.id %}
+    <tr class="version {{ version.status }} {{ is_shared ? 'shared' : '' }}">
+    <td class="name">
+      <span class="{{ is_shared ? 'icon' : '' }}">
+        {% if is_shared %}{{ sprite_icon('link') }}{% endif %}
+        {{ vm.link_to_version(version, project, null) }}
+      </span>
+    </td>
+    <td class="tick">{% if project.defaultVersion and version.id == project.defaultVersion.id %}<span class="icon-only icon-checked">{{ sprite_icon('checked') }}</span>{% endif %}</td>
+    <td class="date">{{ format_date(version.effectiveDate) }}</td>
+    <td class="description">{{ version.description }}</td>
+    <td class="status">{{ l('version_status_' ~ version.status) }}</td>
+    <td class="sharing">{{ format_version_sharing(version.sharing) }}</td>
+    <td>{% if version.wikiPageTitle is not empty and version_wiki(version.project) %}{% if allowed_to('view_wiki_pages', version.project) and path_exists('wiki_show') %}<a href="{{ path('wiki_show', {project_id: version.project.identifier, id: wiki_titleize(version.wikiPageTitle)}) }}">{{ version.wikiPageTitle }}</a>{% else %}{{ version.wikiPageTitle }}{% endif %}{% endif %}</td>
+    <td class="buttons">
+      {% if not is_shared and allowed_to('manage_versions', project) %}
+        <a class="icon icon-edit" href="{{ path('version_edit', {id: version.id}) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>
+        <a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('version_destroy', {id: version.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+      {% endif %}
+     </td>
+    </tr>
+{% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}

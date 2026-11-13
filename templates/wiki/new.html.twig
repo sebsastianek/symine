@@ -1,0 +1,9 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_wiki_page_new') }}</h2>
+
+<form action="{{ path('wiki_new', {project_id: project.identifier}) }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+{% include 'wiki/_new_form_fields.html.twig' %}
+  <input type="submit" name="commit" value="{{ l('label_next') }}" data-disable-with="{{ l('label_next') }}" />
+</form>
+{% endblock %}

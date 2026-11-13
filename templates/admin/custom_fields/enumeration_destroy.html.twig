@@ -1,0 +1,15 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('custom_fields_index') }}">{{ l('label_custom_field_plural') }}</a> &#187; <a href="{{ path('custom_fields_index', {tab: type}) }}">{{ l(type_label) }}</a> &#187; {{ custom_field.name }}</h2>
+
+<form action="{{ path('custom_field_enumeration_destroy', {custom_field_id: custom_field.id, id: value.id}) }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="delete" autocomplete="off" />{{ csrf_field() }}
+<div class="box">
+<p><strong>{{ l('text_enumeration_destroy_question', {name: value.name, count: objects_count}) }}</strong></p>
+<p><label for='reassign_to_id'>{{ l('text_enumeration_category_reassign_to') }}</label>
+<select name="reassign_to_id" id="reassign_to_id"><option value="">--- {{ l('actionview_instancetag_blank_option') }} ---</option>{% for e in enumerations %}<option value="{{ e.id }}">{{ e.name }}</option>{% endfor %}</select></p>
+</div>
+
+<input type="submit" name="commit" value="{{ l('button_apply') }}" data-disable-with="{{ l('button_apply') }}" />
+<a href="{{ path('custom_field_enumerations', {custom_field_id: custom_field.id}) }}">{{ l('button_cancel') }}</a>
+</form>
+{% endblock %}

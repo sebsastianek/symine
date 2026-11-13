@@ -1,0 +1,21 @@
+{#- Port of watchers/_watchers.html.erb. Params: watched_type (e.g. wiki_page), watched_id, project, perm_suffix (e.g. wiki_page) -#}
+{% set wtype = watched_type %}
+{% set class_name = {'wiki_page': 'WikiPage', 'message': 'Message', 'board': 'Board', 'news': 'News', 'wiki': 'Wiki'}[wtype] ?? wtype %}
+<div id="watchers">
+{% if allowed_to('add_' ~ wtype ~ '_watchers', project) and route_for_path('/watchers/new') %}
+<div class="contextual">
+  <a data-remote="true" data-method="get" href="/watchers/new?object_type={{ wtype }}&amp;object_id={{ watched_id }}">{{ l('button_add') }}</a>
+</div>
+{% endif %}
+{% set ws = watchers_of(class_name, watched_id) %}
+{% if allowed_to('view_' ~ wtype ~ '_watchers', project) %}
+<h3>{{ l('label_' ~ wtype ~ '_watchers') }} ({{ ws|length }})</h3>
+<ul class="watchers">
+{% for w in ws %}
+  <li class="user-{{ w.id }}">{{ avatar(w, 16) }}{{ link_to_principal(w) }}</li>
+{% endfor %}
+</ul>
+{% else %}
+<h3>{{ l('label_' ~ wtype ~ '_watchers') }}</h3>
+{% endif %}
+</div>

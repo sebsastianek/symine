@@ -1,0 +1,16 @@
+{% extends 'mailer/layout.html.twig' %}
+{% block content %}
+<p>{{ l('mail_body_settings_updated') }}</p>
+
+<ul>
+{% for name in changes %}
+  <li>{{ l('setting_' ~ name) }}</li>
+{% endfor %}
+</ul>
+
+<a href="{{ url }}">{{ url }}</a>
+
+<p>{{ l('field_user') }}: <strong>{{ sender.login }}</strong><br/>
+{{ l('field_remote_ip') }}: <strong>{{ remote_ip }}</strong><br/>
+{{ l('label_date') }}: <strong>{{ format_time(now) }}</strong></p>
+{% endblock %}

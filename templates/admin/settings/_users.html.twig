@@ -1,0 +1,29 @@
+{% import 'admin/settings/_macros.html.twig' as s %}
+<form action="{{ path('settings_edit', {tab: 'users'}) }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+
+  <div class="box tabular settings">
+    <p>{{ s.text_field(values, 'max_additional_emails', {size: 6}) }}</p>
+
+    <p>{{ s.textarea(values, 'email_domains_allowed') }}
+    <em class="info">{{ l('text_comma_separated') }} {{ l('label_example') }}: example.com, example.org</em></p>
+
+    <p>{{ s.textarea(values, 'email_domains_denied') }}
+    <em class="info">{{ l('text_comma_separated') }} {{ l('label_example') }}: .example.com, foo.example.org, example.net</em></p>
+
+    <p>{{ s.check_box(values, 'unsubscribe') }}</p>
+  </div>
+
+  <fieldset class="box">
+    <legend>{{ l('label_default_values_for_new_users') }}</legend>
+
+    <div class="tabular settings">
+      <p>{{ s.check_box(values, 'default_users_hide_mail', {label: 'field_hide_mail'}) }}</p>
+      <p>{{ s.select(values, 'default_notification_option', opts.mail_notification_options) }}</p>
+      <p>{{ s.check_box(values, 'default_users_no_self_notified', {label: 'label_user_mail_no_self_notified'}) }}</p>
+      <p>{{ s.select(values, 'default_users_time_zone', opts.time_zones, {label: 'field_time_zone', blank: 'label_none'}) }}</p>
+      <p>{{ s.multiselect(values, 'default_users_auto_watch_on', opts.auto_watch_on, {label: 'label_auto_watch_on'}) }}</p>
+    </div>
+  </fieldset>
+
+  <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>

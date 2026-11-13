@@ -1,0 +1,8 @@
+{#- Port of WatchersHelper#watcher_link. Params: watched_type (wiki_page|message|board|news|wiki), watched_class (WikiPage...), watched_id -#}
+{% if current_user().isLogged() %}
+{% set url = watch_url(watched_type, watched_id) %}
+{% if url %}
+{% set watching = is_watching(watched_class, watched_id) %}
+<a class="{{ watched_type }}-{{ watched_id }}-watcher icon {{ watching ? 'icon-fav' : 'icon-fav-off' }}" rel="nofollow" data-method="{{ watching ? 'delete' : 'post' }}" data-remote="true" href="{{ url }}">{{ sprite_icon(watching ? 'unwatch' : 'watch', l(watching ? 'button_unwatch' : 'button_watch')) }}</a>
+{% endif %}
+{% endif %}

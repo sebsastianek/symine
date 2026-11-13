@@ -1,6 +1,8 @@
 {% extends 'base.html.twig' %}
 {% block content %}
 {% if error %}<div class="flash error" id="flash_error">{{ error }}</div>{% endif %}
+{{ call_hook('view_account_login_top') }}
+
 <div id="login-form">
   <form action="{{ path('signin') }}" method="post" onsubmit="return keepAnchorOnSignIn(this);">
   <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
@@ -18,4 +20,6 @@
   <input type="submit" name="login" value="{{ l('button_login') }}" tabindex="5" id="login-submit" />
   </form>
 </div>
+
+{{ call_hook('view_account_login_bottom') }}
 {% endblock %}

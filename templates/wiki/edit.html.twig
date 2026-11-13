@@ -1,0 +1,58 @@
+{% extends 'base.html.twig' %}
+{% set p = {project_id: project.identifier, id: page.title} %}
+{% block header_tags %}<meta name="robots" content="noindex,follow,noarchive" />{% endblock %}
+{% block content %}
+{% include 'wiki/_breadcrumb.html.twig' %}
+
+<h2>{{ page.prettyTitle() }}</h2>
+
+<form class="edit_content" id="wiki_form" enctype="multipart/form-data" action="{{ path('wiki_update', p) }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="put" autocomplete="off" />{{ csrf_field() }}
+<input autocomplete="off" type="hidden" value="{{ version }}" name="content[version]" id="content_version" />
+{% if section is not null %}
+<input type="hidden" name="section" id="section" value="{{ section }}" autocomplete="off" />
+<input type="hidden" name="section_hash" id="section_hash" value="{{ section_hash }}" autocomplete="off" />
+{% endif %}
+{% if errors|length > 0 %}
+<div id="errorExplanation"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+{% endif %}
+
+<div class="box tabular">
+{% include ['issues/_wiki_textarea.html.twig', 'content/_textarea.html.twig'] with {name: 'content[text]', id: 'content_text', value: text, rows: 25, cols: 100, accesskey: 'e', preview_url: path('wiki_preview', p)} %}
+
+{% if show_parent %}
+    <p>
+      <label>{{ l('field_parent_title') }}</label>
+      <select name="wiki_page[parent_id]" id="wiki_page_parent_id"><option value=""></option>{{ parent_options|raw }}</select>
+    </p>
+{% endif %}
+
+<p><label>{{ l('field_comments') }}</label><input size="120" maxlength="1024" type="text" name="content[comments]" id="content_comments" value="{{ comments }}" /></p>
+<fieldset>
+<legend>{{ l('label_attachment_plural') }}</legend>
+{% if attachments|length > 0 and attachments_deletable %}
+<div class="contextual"><a href="#" onclick="$('#existing-attachments').toggle(); return false;">{{ l('label_edit_attachments') }}</a></div>
+<div id="existing-attachments" style="display:none;">
+  {% for attachment in attachments %}
+  <span class="existing-attachment">
+    {{ sprite_icon(mime_icon(attachment.contentType, attachment.filename), null, 12) }}
+    <input type="text" value="{{ attachment.filename }}" class="icon icon-attachment filename" disabled="disabled" />
+    <label class='inline'>
+      <input type="checkbox" name="wiki_page[deleted_attachment_ids][]" value="{{ attachment.id }}" class="deleted_attachment" /> {{ l('button_delete') }}
+    </label>
+  </span>
+  {% endfor %}
+  <hr />
+</div>
+{% endif %}
+<div id="new-attachments" style="display:inline-block;">
+  {% include 'content/_attachments_form.html.twig' %}
+</div>
+</fieldset>
+</div>
+
+<p>
+  <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+  <a href="{{ cancel_url }}">{{ l('button_cancel') }}</a>
+ </p>
+</form>
+{% endblock %}

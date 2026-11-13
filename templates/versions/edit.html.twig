@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+{% import 'versions/_macros.html.twig' as vm %}
+{% block header_tags %}{{ vm.calendar_headers() }}{% endblock %}
+{% block content %}
+<h2>{{ l('label_version') }}</h2>
+
+<form class="edit_version" id="edit_version_{{ version.id }}" enctype="multipart/form-data" action="{{ path('version_update', {id: version.id}) }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="patch" autocomplete="off" />{{ csrf_field() }}
+{% include 'versions/_form.html.twig' %}
+<input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>
+{% endblock %}

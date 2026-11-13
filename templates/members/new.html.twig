@@ -1,0 +1,9 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_member_new') }}</h2>
+
+<form class="new_membership" id="new_membership" action="{{ path('member_create', {project_id: project.identifier}) }}" method="post">{{ csrf_field() }}
+  {% include 'members/_new_form.html.twig' %}
+  <p><input type="submit" value="{{ l('button_add') }}" data-disable-with="{{ l('button_add') }}" /></p>
+</form>
+{% endblock %}

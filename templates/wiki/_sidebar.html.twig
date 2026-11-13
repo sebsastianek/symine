@@ -1,0 +1,19 @@
+{% if sidebar_editable %}
+  <div class="contextual">
+    <a class="icon icon-edit" href="{{ path('wiki_edit', {project_id: project.identifier, id: 'sidebar'}) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>
+  </div>
+{% endif %}
+{% if sidebar_page %}
+  <div class="wiki">
+    {{ textilizable(sidebar_page.content.text, project) }}
+  </div>
+{% endif %}
+
+<h3>{{ l('label_wiki') }}</h3>
+<ul>
+  <li><a href="{{ path('wiki_index', {project_id: project.identifier}) }}">{{ l('field_start_page') }}</a></li>
+  <li><a href="{{ path('wiki_index_by_title', {project_id: project.identifier}) }}">{{ l('label_index_by_title') }}</a></li>
+  <li><a href="{{ path('wiki_date_index', {project_id: project.identifier}) }}">{{ l('label_index_by_date') }}</a></li>
+</ul>
+
+{{ call_hook('view_wiki_show_sidebar_bottom', {wiki: wiki ?? null, page: page ?? null}) }}

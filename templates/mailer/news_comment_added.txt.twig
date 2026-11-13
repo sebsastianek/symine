@@ -1,0 +1,9 @@
+{% extends 'mailer/layout.txt.twig' %}
+{% block content %}
+{{ news.title }}
+{{ news_url }}
+
+{{ l('text_user_wrote', {value: comment.author.name}) }}
+
+{{ comment.content }}
+{% endblock %}

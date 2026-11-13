@@ -1,0 +1,5 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ member.principal.getName() }} - {{ member.project.name }}</h2>
+{% include 'members/_edit.html.twig' %}
+{% endblock %}

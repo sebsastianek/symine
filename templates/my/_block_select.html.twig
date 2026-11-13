@@ -1,0 +1,1 @@
+<select name="block" id="block-select" onchange="$('#block-form').submit();"><option></option>{% for o in block_options %}<option{% if o[1] is null %} disabled="disabled"{% else %} value="{{ o[1] }}"{% endif %}>{{ o[0] }}</option>{% endfor %}</select>

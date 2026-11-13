@@ -1,0 +1,14 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('admin_plugins') }}">{{ l('label_plugins') }}</a> &#187; {{ plugin.name }}</h2>
+
+<div id="settings" class="plugin plugin-{{ plugin.id }}">
+<form action="{{ path('plugin_settings', {id: plugin.id}) }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+<div class="box tabular settings">
+{% include partial with {settings: plugin_settings, plugin: plugin} %}
+</div>
+<input type="submit" name="commit" value="{{ l('button_apply') }}" data-disable-with="{{ l('button_apply') }}" />
+</form>
+</div>
+{% endblock %}

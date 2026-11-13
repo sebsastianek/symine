@@ -1,0 +1,113 @@
+{% import 'admin/workflows/_macros.html.twig' as h %}
+{{ h.error_messages(errors) }}
+
+<div class="box tabular">
+  {% if not role.isBuiltin() %}
+    <p><label for="role_name">{{ l('field_name') }}<span class="required"> *</span></label><input type="text" value="{{ role.name }}" name="role[name]" id="role_name" /></p>
+    <p><label for="role_assignable">{{ l('field_assignable') }}</label><input name="role[assignable]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1"{% if role.assignable %} checked="checked"{% endif %} name="role[assignable]" id="role_assignable" /></p>
+  {% endif %}
+
+  {% if role.builtin != 2 %}
+    <p class="view_issues_shown"><label for="role_issues_visibility">{{ l('field_issues_visibility') }}</label><select name="role[issues_visibility]" id="role_issues_visibility">
+    {%- for v, label in constant('App\\Entity\\Role::ISSUES_VISIBILITY_OPTIONS') %}<option{% if role.issuesVisibility == v %} selected="selected"{% endif %} value="{{ v }}">{{ l(label) }}</option>
+{% endfor %}</select></p>
+  {% endif %}
+
+  {% if role.builtin != 2 %}
+    <p class="view_time_entries_shown"><label for="role_time_entries_visibility">{{ l('field_time_entries_visibility') }}</label><select name="role[time_entries_visibility]" id="role_time_entries_visibility">
+    {%- for v, label in constant('App\\Entity\\Role::TIME_ENTRIES_VISIBILITY_OPTIONS') %}<option{% if role.timeEntriesVisibility == v %} selected="selected"{% endif %} value="{{ v }}">{{ l(label) }}</option>
+{% endfor %}</select></p>
+  {% endif %}
+
+  <p><label for="role_users_visibility">{{ l('field_users_visibility') }}</label><select name="role[users_visibility]" id="role_users_visibility">
+  {%- for v, label in constant('App\\Entity\\Role::USERS_VISIBILITY_OPTIONS') %}<option{% if role.usersVisibility == v %} selected="selected"{% endif %} value="{{ v }}">{{ l(label) }}</option>
+{% endfor %}</select></p>
+
+  {% if not role.isBuiltin() %}
+    <p class="manage_members_shown">
+      <label>{{ l('label_member_management') }}</label>
+      <label class="block">
+        <input type="radio" name="role[all_roles_managed]" id="role_all_roles_managed_on" value="1" data-disables=".role_managed_role input"{% if role.allRolesManaged %} checked="checked"{% endif %} />
+        {{ l('label_member_management_all_roles') }}
+      </label>
+      <label class="block">
+        <input type="radio" name="role[all_roles_managed]" id="role_all_roles_managed_off" value="0" data-enables=".role_managed_role input"{% if not role.allRolesManaged %} checked="checked"{% endif %} />
+        {{ l('label_member_management_selected_roles_only') }}:
+      </label>
+      {% for r in givable_roles %}
+        <label class="block role_managed_role" style="padding-left:2em;">
+          <input type="checkbox" name="role[managed_role_ids][]" value="{{ r.id }}"{% if r.id in managed_ids %} checked="checked"{% endif %} />
+          {{ r.name }}
+        </label>
+      {% endfor %}
+      <input type="hidden" name="role[managed_role_ids][]" id="role_managed_role_ids_" value="" autocomplete="off" />
+    </p>
+  {% endif %}
+
+  {% if role.builtin != 2 %}
+    <p><label for="role_default_time_entry_activity_id">{{ l('field_default_time_entry_activity') }}</label><select name="role[default_time_entry_activity_id]" id="role_default_time_entry_activity_id"><option value="">{{ l('label_none') }}</option>
+{% for a in activities %}<option{% if role.defaultTimeEntryActivityId == a.id %} selected="selected"{% endif %} value="{{ a.id }}">{{ a.name }}</option>
+{% endfor %}</select></p>
+  {% endif %}
+
+  {% if role.id is null and roles|length > 0 %}
+    <p><label for="copy_workflow_from">{{ l('label_copy_workflow_from') }}</label>
+    <select name="copy_workflow_from" id="copy_workflow_from"><option></option>{% for r in roles %}<option{% if copy_workflow_from == r.id ~ '' %} selected="selected"{% endif %} value="{{ r.id }}">{{ h.role_name(r) }}</option>
+{% endfor %}</select></p>
+  {% endif %}
+</div>
+
+<h3>{{ l('label_permissions') }}</h3>
+<div class="box tabular" id="permissions">
+{% for group in perms_by_module %}
+    <fieldset id="{{ group.id }}"><legend>{{ h.toggle_checkboxes_link('#' ~ group.id ~ ' input') }}{{ group.label }}</legend>
+    {% for perm in group.permissions %}
+        <label class="floating">
+        <input type="checkbox" name="role[permissions][]" id="role_permissions_{{ perm.name }}" value="{{ perm.name }}" data-shows=".{{ perm.name }}_shown"{% if role.hasPermission(perm.name) %} checked="checked"{% endif %} />
+        {{ perm.label }}
+        </label>
+    {% endfor %}
+    </fieldset>
+{% endfor %}
+<br />{{ h.check_all_links('permissions') }}
+<input type="hidden" name="role[permissions][]" id="role_permissions_" value="" autocomplete="off" />
+</div>
+
+<div id="role-permissions-trackers" class="view_issues_shown">
+<h3>{{ l('label_issue_tracking') }}</h3>
+
+<div class="autoscroll">
+<table class="list">
+  <thead>
+    <tr>
+      <th>{{ l('label_tracker') }}</th>
+      {% for permission in tracker_permissions %}
+      <th class="{{ permission }}_shown">{{ l('permission_' ~ permission) }}</th>
+      {% endfor %}
+  </thead>
+  <tbody>
+    <tr class='permissions-all-trackers'>
+      <td class="name">{{ h.toggle_checkboxes_link('tr.permissions-all-trackers input[type="checkbox"]') }}<b>{{ l('label_tracker_all') }}</b></td>
+      {% for permission in tracker_permissions %}
+      <td class="{{ permission }}_shown">
+        <input type="hidden" name="role[permissions_all_trackers][{{ permission }}]" value="0" autocomplete="off" />
+        <input type="checkbox" name="role[permissions_all_trackers][{{ permission }}]" id="role_permissions_all_trackers_{{ permission }}" value="1" class="{{ permission }}_shown" data-disables=".{{ permission }}_tracker"{% if all_trackers[permission] %} checked="checked"{% endif %} />
+      </td>
+      {% endfor %}
+    </tr>
+    {% for tracker in trackers %}
+    <tr class="permissions-tracker-{{ tracker.id }}">
+      <td class="name">{{ h.toggle_checkboxes_link('tr.permissions-tracker-' ~ tracker.id ~ ' input:enabled') }}{{ tracker.name }}</td>
+      {% for permission in tracker_permissions %}
+      <td class="{{ permission }}_shown"><input type="checkbox" name="role[permissions_tracker_ids][{{ permission }}][]" id="role_permissions_tracker_ids_add_issues_{{ tracker.id }}" value="{{ tracker.id }}" class="{{ permission }}_tracker"{% if tracker.id in tracker_ids[permission] %} checked="checked"{% endif %} /></td>
+      {% endfor %}
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+
+{% for permission in tracker_permissions %}
+  <input type="hidden" name="role[permissions_tracker_ids][{{ permission }}][]" id="role_permissions_tracker_ids_{{ permission }}_" value="" autocomplete="off" />
+{% endfor %}
+</div>

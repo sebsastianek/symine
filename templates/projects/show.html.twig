@@ -1,0 +1,165 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}{% if path_exists('project_activity') %}<link rel="alternate" type="application/atom+xml" title="ATOM" href="{{ path('project_activity', {id: project.identifier, format: 'atom'}|merge(atom_key ? {key: atom_key} : {})) }}" />{% endif %}{% endblock %}
+{% block content %}
+<div class="contextual">
+  {% include 'projects/_bookmark_link.html.twig' %}
+
+  {%- set actions -%}
+  {% if allowed_to('add_subprojects', project) %}
+    <a class="icon icon-add" href="{{ path('project_new', {parent_id: project.identifier}) }}">{{ sprite_icon('add', l('label_subproject_new')) }}</a>
+  {% endif %}
+  {% if allowed_to('close_project', project) %}
+    {% if project.isActive() %}
+      <a data-confirm="{{ l('text_project_close_confirmation', {value: project.name}) }}" class="icon icon-lock" rel="nofollow" data-method="post" href="{{ path('project_close', {id: project.identifier}) }}">{{ sprite_icon('lock', l('button_close')) }}</a>
+    {% else %}
+      <a data-confirm="{{ l('text_project_reopen_confirmation', {value: project.name}) }}" class="icon icon-unlock" rel="nofollow" data-method="post" href="{{ path('project_reopen', {id: project.identifier}) }}">{{ sprite_icon('unlock', l('button_reopen')) }}</a>
+    {% endif %}
+  {% endif %}
+  {% if deletable %}
+    <a class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('project_destroy', {id: project.identifier}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+  {% endif %}
+  {% if allowed_to('edit_project', project) %}
+  <a class="icon icon-settings" href="{{ path('project_settings', {id: project.identifier}) }}">{{ sprite_icon('settings', l('label_settings')) }}</a>
+  {% endif %}
+  {%- endset -%}
+  {% if actions|trim is not empty %}<span class="dropdown" data-controller="dropdown" data-action="clipboard:copied-&gt;dropdown#hide"><span class="icon-only icon-actions dropdown-trigger" title="{{ l('button_actions') }}" data-action="click-&gt;dropdown#toggle">{{ sprite_icon('3-bullets', l('button_actions')) }}</span><span class="dropdown-content hidden" data-dropdown-target="content"><span class="dropdown-items">{{ actions }}</span></span></span>{% endif %}
+</div>
+
+<h2>{{ l('label_overview') }}</h2>
+
+<div class="splitcontent">
+<div class="splitcontentleft">
+  {% if project.description %}
+  <div class="wiki">
+    {{ textilizable(project.description, project) }}
+  </div>
+  {% endif %}
+  {% if project.homepage or custom_field_values|length > 0 %}
+  <ul>
+  {% if project.homepage %}
+    <li><span class="label">{{ l('field_homepage') }}:</span> {% if project.homepage matches '{^(https?|ftp)://}i' %}<a href="{{ project.homepage }}">{{ project.homepage }}</a>{% else %}{{ project.homepage }}{% endif %}</li>
+  {% endif %}
+  {% for cv in custom_field_values %}
+    <li class="{{ cv.field.fieldFormat }}_cf cf_{{ cv.field.id }}"><span class="label">{{ cv.field.name }}:</span> {{ cv.value }}</li>
+  {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if allowed_to('view_issues', project) %}
+  <div class="issues box">
+    <h3 class="icon icon-issue">
+      {{ sprite_icon('issue', l('label_issue_tracking')) }}&nbsp;
+      {% if path_exists('project_issues_report_details') %}<a class="icon-only icon-zoom-in" title="{{ l('label_details') }}" href="{{ path('project_issues_report_details', {id: project.identifier, detail: 'tracker'}) }}">{{ sprite_icon('zoom-in', l('label_details')) }}</a>{% endif %}
+    </h3>
+    {% set issues_url = path_exists('project_issues') ? path('project_issues', {project_id: project.identifier}) : null %}
+    {% if trackers|length > 0 %}
+    <table class="list issue-report">
+      <thead>
+        <tr>
+          <th></th>
+          <th>{{ l('label_open_issues_plural') }}</th>
+          <th>{{ l('label_closed_issues_plural') }}</th>
+          <th>{{ l('label_total') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for tracker in trackers %}
+        {% set o = open_by_tracker[tracker.id] ?? 0 %}{% set t = total_by_tracker[tracker.id] ?? 0 %}
+        <tr>
+          <td class="name">
+            {% if issues_url %}<a{% if tracker.description %} title="{{ tracker.description }}"{% endif %} href="{{ issues_url }}?set_filter=1&amp;tracker_id={{ tracker.id }}">{{ tracker.name }}</a>{% else %}{{ tracker.name }}{% endif %}
+          </td>
+          <td>
+            {% if issues_url %}<a href="{{ issues_url }}?set_filter=1&amp;tracker_id={{ tracker.id }}">{{ o }}</a>{% else %}{{ o }}{% endif %}
+          </td>
+          <td>
+            {% if issues_url %}<a href="{{ issues_url }}?set_filter=1&amp;status_id=c&amp;tracker_id={{ tracker.id }}">{{ t - o }}</a>{% else %}{{ t - o }}{% endif %}
+          </td>
+          <td class="total">
+            {% if issues_url %}<a href="{{ issues_url }}?set_filter=1&amp;status_id=%2A&amp;tracker_id={{ tracker.id }}">{{ t }}</a>{% else %}{{ t }}{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+    <p>
+      {% if issues_url %}<a href="{{ issues_url }}?set_filter=1">{{ l('label_issue_view_all') }}</a>{% endif %}
+      {% if path_exists('project_issues_report') %}| <a href="{{ path('project_issues_report', {id: project.identifier}) }}">{{ l('field_summary') }}</a>{% endif %}
+      {% if allowed_to('view_calendar', project, true) and path_exists('project_calendar') %}
+        | <a href="{{ path('project_calendar', {project_id: project.identifier}) }}">{{ l('label_calendar') }}</a>
+      {% endif %}
+      {% if allowed_to('view_gantt', project, true) and path_exists('project_gantt') %}
+        | <a href="{{ path('project_gantt', {project_id: project.identifier}) }}">{{ l('label_gantt') }}</a>
+      {% endif %}
+    </p>
+  </div>
+  {% endif %}
+
+  {% if allowed_to('view_time_entries', project) %}
+  <div class="spent_time box">
+    <h3 class="icon icon-time">{{ sprite_icon('time', l('label_time_tracking')) }}</h3>
+    <ul>
+      {% if total_estimated_hours is not null %}
+        <li>{{ l('field_estimated_hours') }}: {{ l('label_f_hour_plural', {value: format_hours(total_estimated_hours)}) }}</li>
+      {% endif %}
+      {% if total_hours is not null %}
+        <li>{{ l('label_spent_time') }}: {{ l('label_f_hour_plural', {value: format_hours(total_hours)}) }}</li>
+      {% endif %}
+    </ul>
+    <p>
+    {% if allowed_to('log_time', project) and path_exists('time_entry_new') %}
+      <a href="{{ path('time_entry_new', {project_id: project.identifier}) }}">{{ l('button_log_time') }}</a> |
+    {% endif %}
+    {% if path_exists('project_time_entries') %}<a href="{{ path('project_time_entries', {project_id: project.identifier}) }}">{{ l('label_details') }}</a>{% endif %}
+    {% if path_exists('project_time_entries_report') %}| <a href="{{ path('project_time_entries_report', {project_id: project.identifier}) }}">{{ l('label_report') }}</a>{% endif %}
+    </p>
+  </div>
+  {% endif %}
+  {{ call_hook('view_projects_show_left', {project: project}) }}
+</div>
+
+<div class="splitcontentright">
+  {% if news|length > 0 and allowed_to('view_news', project) %}
+  <div class="news box">
+    <h3 class="icon icon-news">{{ sprite_icon('news', l('label_news_latest')) }}</h3>
+    {% for n in news %}
+    <p>
+{% if path_exists('news_show') %}<a href="{{ path('news_show', {id: n.id}) }}">{{ n.title }}</a>{% else %}{{ n.title }}{% endif %}
+{% if n.commentsCount > 0 %}<span class="comments">({{ l('label_x_comments', {count: n.commentsCount}) }})</span>{% endif %}
+<br />
+{% if n.summary %}<span class="summary">{{ n.summary }}</span><br />{% endif %}
+<span class="author">{{ authoring(n.createdOn, n.author) }}</span></p>
+    {% endfor %}
+    {% if path_exists('project_news') %}<p><a href="{{ path('project_news', {project_id: project.identifier}) }}">{{ l('label_news_view_all') }}</a></p>{% endif %}
+  </div>
+  {% endif %}
+
+  {% if principals_by_role|length > 0 %}
+  <div class="members box">
+    <h3 class="icon icon-group">{{ sprite_icon('group', l('label_member_plural')) }}</h3>
+    {% for row in principals_by_role %}
+      <p><span class="label">{{ row.role.name }}:</span> {% for p in row.principals %}{% if p.isGroup() %}{% if path_exists('group_show') %}<a class="group icon icon-group" href="{{ path('group_show', {id: p.id}) }}">{{ sprite_icon('group') }}{{ p.getName() }}</a>{% else %}{{ p.getName() }}{% endif %}{% else %}{{ link_to_user(p) }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if subprojects|length > 0 %}
+  <div class="projects box">
+    <h3 class="icon icon-projects">{{ sprite_icon('projects', l('label_subproject_plural')) }}</h3>
+    <div>
+      <ul class="subprojects">
+        {% for sp in subprojects %}
+        <li><a class="{{ project_css_classes(sp) }}" href="{{ path('project_show', {id: sp.identifier}) }}">{{ sp.name }}</a></li>
+        {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+
+  {{ call_hook('view_projects_show_right', {project: project}) }}
+</div>
+</div>
+{% endblock %}
+
+{% block sidebar %}{{ call_hook('view_projects_show_sidebar_bottom', {project: project}) }}{% endblock %}

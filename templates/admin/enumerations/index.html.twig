@@ -1,0 +1,40 @@
+{% extends 'admin/layout.html.twig' %}
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+{% block content %}
+<h2>{{ l('label_enumerations') }}</h2>
+
+{% for section in sections %}
+<h3>{{ l(section.option_name) }}</h3>
+
+
+<p><a class="icon icon-add" href="{{ path('enumeration_new', {type: section.type}) }}">{{ sprite_icon('add', l('label_enumeration_new')) }}</a></p>
+
+{% if section.enumerations|length > 0 %}
+<table class="list enumerations"><thead>
+<tr>
+    <th>{{ l('field_name') }}</th>
+    <th>{{ l('field_is_default') }}</th>
+    <th>{{ l('field_active') }}</th>
+    <th></th>
+</tr></thead>
+{% for enumeration in section.enumerations %}
+<tr>
+    <td class="name"><a href="{{ path('enumeration_edit', {id: enumeration.id}) }}">{{ enumeration.name }}</a></td>
+    <td class="tick">{{ f.checked_image(enumeration.isDefault) }}</td>
+    <td class="tick">{{ f.checked_image(enumeration.active) }}</td>
+    <td class="buttons">
+      <span class="icon-only icon-sort-handle sort-handle" data-reorder-url="{{ path('enumeration_update', {id: enumeration.id}) }}" data-reorder-param="enumeration" title="{{ l('button_sort') }}">{{ sprite_icon('reorder', '') }}</span>
+      <a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('enumeration_destroy', {id: enumeration.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+    </td>
+</tr>
+{% endfor %}
+</table>
+{% else %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}
+{% endfor %}
+
+<script>
+  $(function() { $("table.enumerations tbody").positionedItems(); });
+</script>
+{% endblock %}

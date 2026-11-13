@@ -1,0 +1,54 @@
+{% extends 'admin/layout.html.twig' %}
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+{% block content %}
+{{ f.title(custom_field, type, type_label) }}
+
+{% if custom_field.enumerations|length > 0 %}
+<form action="{{ path('custom_field_enumerations_update_each', {custom_field_id: custom_field.id}) }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="put" autocomplete="off" />{{ csrf_field() }}
+<div class="box">
+  <ul id="custom_field_enumerations" class="flat">
+  {% for value in custom_field.enumerations %}
+    <li>
+      <span class="icon-only icon-sort-handle sort-handle" title="{{ l('button_move') }}">{{ sprite_icon('reorder', '') }}</span>
+      <input type="hidden" name="custom_field_enumerations[{{ value.id }}][position]" id="custom_field_enumerations_{{ value.id }}_position" value="{{ loop.index0 }}" class="position" autocomplete="off" />
+      <input type="text" name="custom_field_enumerations[{{ value.id }}][name]" id="custom_field_enumerations_{{ value.id }}_name" value="{{ value.name }}" size="40" maxlength="255" />
+      <input type="hidden" name="custom_field_enumerations[{{ value.id }}][active]" id="custom_field_enumerations_{{ value.id }}_active" value="0" autocomplete="off" />
+      <label>
+        <input type="checkbox" name="custom_field_enumerations[{{ value.id }}][active]" id="custom_field_enumerations_{{ value.id }}_active" value="1"{% if value.active %} checked="checked"{% endif %} />
+        {{ l('field_active') }}
+      </label>
+      <a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('custom_field_enumeration_destroy', {custom_field_id: custom_field.id, id: value.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+    </li>
+  {% endfor %}
+  </ul>
+</div>
+<p>
+  <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" /> |
+  <a href="{{ path('custom_field_edit', {id: custom_field.id}) }}">{{ l('button_back') }}</a>
+</p>
+</form>
+{% endif %}
+
+<form id="add-element" action="{{ path('custom_field_enumerations_create', {custom_field_id: custom_field.id}) }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+  {{ f.errors(errors) }}
+  <p>{{ l('label_enumeration_new') }}</p>
+
+  <p><input type="text" name="custom_field_enumeration[name]" id="custom_field_enumeration_name" value="" size="40" maxlength="255" />
+  <input type="submit" name="commit" value="{{ l('button_add') }}" data-disable-with="{{ l('button_add') }}" /></p>
+</form>
+
+<script>
+//<![CDATA[
+$(function() {
+  $("#custom_field_enumerations").sortable({
+    handle: ".sort-handle",
+    update: function(event, ui) {
+      $("#custom_field_enumerations li").each(function(){
+        $(this).find("input.position").val($(this).index()+1);
+      });
+    }
+  });
+});
+//]]>
+</script>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% if 'watcher_user_ids' in safe %}
+  <input type="hidden" name="issue[watcher_user_ids][]" value="" autocomplete="off" />
+  <p id="watchers_form"><label>{{ l('label_issue_watchers') }}</label>
+  <span id="watchers_inputs">
+    {% for u in watcher_candidates %}<label id="issue_watcher_user_ids_{{ u.id }}" class="floating"><input type="checkbox" name="issue[watcher_user_ids][]" value="{{ u.id }}"{% if u.id in watcher_checked %} checked="checked"{% endif %} /> {{ u.getName() }}</label>{% endfor %}
+  </span>
+  <span class="search_for_watchers">
+  <a class="icon icon-add-bullet" data-remote="true" data-method="get" href="{{ path('watchers_new', {project_id: issue.project.identifier}) }}">{{ sprite_icon('add', l('label_search_for_watchers'), 12) }}</a>
+  </span>
+  </p>
+{% endif %}

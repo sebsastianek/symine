@@ -1,0 +1,2 @@
+{#- BoardsHelper#board_breadcrumb. Params: board, include_board (true for messages), project -#}
+<p class="breadcrumb"><a href="{{ path('boards_index', {project_id: project.identifier}) }}">{{ l('label_board_plural') }}</a> &#187; {% for a in ancestors ?? [] %}<a href="{{ path('board_show', {project_id: project.identifier, id: a.id}) }}">{{ a.name }}</a> &#187; {% endfor %}{% if include_board ?? false %}<a href="{{ path('board_show', {project_id: project.identifier, id: board.id}) }}">{{ board.name }}</a> &#187; {% endif %}</p>

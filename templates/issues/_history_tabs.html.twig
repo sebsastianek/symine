@@ -1,0 +1,27 @@
+{% if tabs|length > 0 %}
+{% set default_action = null %}
+<div class="tabs">
+  <ul>
+  {% for tab in tabs %}
+    <li><a id="tab-{{ tab.name }}"{% if tab.name == selected_tab %} class="selected"{% endif %} onclick="{{ tab.onclick }}; return false;" href="{{ path('issue_show', {id: issue.id, tab: tab.name}) }}">{{ l(tab.label) }}</a></li>
+    {% if tab.name == selected_tab %}{% set default_action = tab.onclick %}{% endif %}
+  {% endfor %}
+  </ul>
+  <div class="tabs-buttons" style="display:none;">
+    <button class="tab-left icon-only" type="button" onclick="moveTabLeft(this);">{{ sprite_icon('angle-left') }}</button>
+    <button class="tab-right icon-only" type="button" onclick="moveTabRight(this);">{{ sprite_icon('angle-right') }}</button>
+  </div>
+</div>
+{% for tab in tabs %}
+  {% if tab.name == 'history' %}
+  <div id="tab-content-history" class="tab-content"{% if tab.name != selected_tab and selected_tab not in ['notes', 'properties'] %} style="display:none"{% endif %}>
+    {% include 'issues/tabs/_history.html.twig' %}
+  </div>
+  {% elseif tab.remote ?? false %}
+  <div id="tab-content-{{ tab.name }}" class="tab-content"{% if tab.name != selected_tab %} style="display:none"{% endif %}>{% if tab.name == selected_tab %}{% if tab.name == 'time_entries' %}{% include 'issues/tabs/_time_entries.html.twig' %}{% else %}{% include 'issues/tabs/_changesets.html.twig' %}{% endif %}{% endif %}</div>
+  {% endif %}
+{% endfor %}
+{% if default_action and default_action starts with 'showIssueHistory' %}<script>{{ default_action|raw }}</script>{% endif %}
+{% else %}
+<p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}

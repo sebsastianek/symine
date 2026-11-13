@@ -1,0 +1,75 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<p class="breadcrumb"><a href="{{ path('project_news', {project_id: project.identifier}) }}">{{ l('label_news_plural') }}</a> &#187; </p>
+<div class="contextual">
+{% include 'content/_watch_link.html.twig' with {watched_type: 'news', watched_class: 'News', watched_id: news.id} %}
+{% if allowed_to('manage_news', project) %}
+<a class="icon icon-edit" accesskey="e" onclick="$(&quot;#edit-news&quot;).show(); return false;" href="{{ path('news_edit', {id: news.id}) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>
+<a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('news_destroy', {id: news.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+{% endif %}
+</div>
+
+<h2>{{ avatar(news.author) }} {{ news.title }}</h2>
+
+{% if allowed_to('manage_news', project) %}
+<div id="edit-news" style="display:none;">
+<form class="edit_news" id="news-form" enctype="multipart/form-data" action="{{ path('news_update', {id: news.id}) }}" accept-charset="UTF-8" method="post">
+<input type="hidden" name="_method" value="put" autocomplete="off" />
+{{ csrf_field() }}
+{% include 'news/_form.html.twig' with {form_project: project} %}
+<input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+<a onclick="$(&quot;#edit-news&quot;).hide(); return false;" href="#">{{ l('button_cancel') }}</a>
+</form>
+</div>
+{% endif %}
+
+<div class="news">
+  <div class="reaction">
+    {{ reaction_button(news) }}
+  </div>
+  <p>{% if news.summary is not empty %}<em>{{ news.summary }}</em><br />{% endif %}
+  <span class="author">{{ authoring(news.createdOn, news.author) }}</span></p>
+  <div class="wiki">
+  {{ textilizable(news.description, project) }}
+  </div>
+  {% include 'content/_attachments_links.html.twig' with {attachments: attachments, deletable: allowed_to('manage_news', project), author: true} %}
+</div>
+<br />
+
+<div id="comments" class="journals">
+<h3 class="comments">{{ l('label_comment_plural') }}</h3>
+{% if commentable and comments|length >= 3 %}
+  <p><a onclick="$('#add_comment_form').toggle(); $('#comment_comments:visible').focus(); $('html, body').animate({scrollTop: $('#comment_comments').offset().top}, 100); return false;" href="#">{{ l('label_comment_add') }}</a></p>
+{% endif %}
+{{ preload_reactions(comments) }}{% for comment in comments %}
+    <div class="message reply journal" id="message-{{ comment.id }}">
+      <h4 class="reply-header journal-header">
+        <span class="journal-info">
+          {{ avatar(comment.author) }}
+          {{ authoring(comment.createdOn, comment.author) }}
+        </span>
+        <span class="journal-meta">
+          {{ reaction_button(comment) }}
+          {% if allowed_to('manage_news', project) %}
+          <a data-confirm="{{ l('text_are_you_sure') }}" title="{{ l('button_delete') }}" class="icon-only icon-del" rel="nofollow" data-method="delete" href="{{ path('news_comment_destroy', {id: news.id, comment_id: comment.id}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+          {% endif %}
+        </span>
+      </h4>
+      <div class="wiki journal-content">
+        {{ textilizable(comment.content, project) }}
+      </div>
+    </div>
+{% endfor %}
+</div>
+
+{% if commentable %}
+<p><a onclick="$('#add_comment_form').toggle(); $('#comment_comments:visible').focus(); return false;" href="#">{{ l('label_comment_add') }}</a></p>
+<form id="add_comment_form" style="display:none;" action="{{ path('news_comment_create', {id: news.id}) }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+<div class="box">
+    {% include ['issues/_wiki_textarea.html.twig', 'content/_textarea.html.twig'] with {name: 'comment[comments]', id: 'comment_comments', value: '', rows: 15, cols: 80} %}
+</div>
+<p><input type="submit" name="commit" value="{{ l('button_add') }}" data-disable-with="{{ l('button_add') }}" /></p>
+</form>
+{% endif %}
+{% endblock %}

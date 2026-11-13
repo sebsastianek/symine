@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+{% include 'boards/_breadcrumb.html.twig' with {board: message.board, include_board: true} %}
+
+<h2>{{ avatar(topic.author) }}{{ topic.subject }}</h2>
+
+<form class="edit_message" id="message-form" enctype="multipart/form-data" action="{{ path('message_edit', {board_id: board.id, id: message.id}) }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+  {% include 'messages/_form.html.twig' with {param: 'message'} %}
+  <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>
+{% endblock %}

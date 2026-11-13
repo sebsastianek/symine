@@ -1,0 +1,134 @@
+{% extends 'base.html.twig' %}
+{% import 'my/_macros.html.twig' as m %}
+{% block content %}
+<div class="contextual">
+{% if settings.int('max_additional_emails') > 0 %}<a class="icon icon-email-add" data-remote="true" href="{{ path('my_email_addresses', {user_id: user.id}) }}">{{ sprite_icon('email', l('label_email_address_plural')) }}</a>{% endif %}
+{% if change_password_allowed %}<a class="icon icon-passwd" href="{{ path('my_password') }}">{{ sprite_icon('key', l('button_change_password')) }}</a>{% endif %}
+{% if settings.restApiEnabled() and path_exists('oauth_authorized_applications') %}<a class="icon icon-applications" href="{{ path('oauth_authorized_applications') }}">{{ sprite_icon('apps', l('label_oauth_authorized_application_plural')) }}</a>{% endif %}
+{{ call_hook('view_my_account_contextual', {user: user}) }}
+</div>
+
+<h2>
+  {{ l('label_my_account') }}
+</h2>
+
+{{ m.errors(errors) }}
+
+<form class="edit_user" id="my_account_form" enctype="multipart/form-data" action="{{ path('my_account') }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="put" autocomplete="off" />{{ csrf_field() }}
+<div class="splitcontent">
+<div class="splitcontentleft">
+<fieldset class="box tabular">
+  <legend>{{ l('label_information_plural') }}</legend>
+  {% set fn %}<p><label for="user_firstname">{{ l('field_firstname') }}<span class="required"> *</span></label><input type="text" value="{{ user.firstname }}" name="user[firstname]" id="user_firstname" /></p>{% endset %}
+  {% set ln %}<p><label for="user_lastname">{{ l('field_lastname') }}<span class="required"> *</span></label><input type="text" value="{{ user.lastname }}" name="user[lastname]" id="user_lastname" /></p>{% endset %}
+  {% if settings.string('user_format') starts with 'lastname' %}{{ ln }}{{ fn }}{% else %}{{ fn }}{{ ln }}{% endif %}
+  <p><label for="user_mail">{{ l('field_mail') }}<span class="required"> *</span></label><input type="text" value="{{ user.getMail() }}" name="user[mail]" id="user_mail" /></p>
+  {% if not settings.bool('force_default_language_for_loggedin') %}
+  <p><label for="user_language">{{ l('field_language') }}</label><select name="user[language]" id="user_language"><option value=""{% if not user.language %} selected="selected"{% endif %}>(auto)</option>
+{% for code, name in languages %}<option value="{{ code }}"{% if code == user.language %} selected="selected"{% endif %}>{{ name }}</option>
+{% endfor %}</select></p>
+  {% endif %}
+  {% if twofa_enabled() %}
+  <p>
+    <label>{{ l('setting_twofa') }}</label>
+    {% if twofa_active(user) %}
+      {{ l('twofa_currently_active', {twofa_scheme_name: l('twofa__' ~ user.twofaScheme ~ '__name')}) }}<br/>
+      <a rel="nofollow" data-method="post" href="{{ path('twofa_deactivate_init', {scheme: user.twofaScheme}) }}">{{ l('button_disable') }}</a><br/>
+      <a{% if twofa_has_backup_codes(user) %} data-confirm="{{ l('twofa_text_generate_backup_codes_confirmation') }}"{% endif %} rel="nofollow" data-method="post" href="{{ path('twofa_backup_codes_init') }}">{{ l('twofa_generate_backup_codes') }}</a>
+    {% else %}
+      {% for s in twofa_schemes() %}
+        <a rel="nofollow" data-method="post" href="{{ path('twofa_activate_init', {scheme: s}) }}">{{ l('twofa__' ~ s ~ '__label_activate') }}</a><br/>
+      {% endfor %}
+    {% endif %}
+  </p>
+  {% endif %}
+
+  {% for field in custom_fields %}
+    <p>{{ m.cf_label('user', field) }}{{ m.cf_tag('user', field, custom_values[field.id] ?? null, cf_options(field)) }}</p>
+  {% endfor %}
+  {{ call_hook('view_my_account', {user: user, form: null}) }}
+</fieldset>
+
+<p class="mobile-hide"><input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" /></p>
+</div>
+
+<div class="splitcontentright">
+<fieldset class="box">
+  <legend>{{ l('field_mail_notification') }}</legend>
+  <p>
+<label class="hidden-for-sighted" for="user_mail_notification">{{ l('description_user_mail_notification') }}</label>
+<select name="user[mail_notification]" id="user_mail_notification" onchange="if (this.value == &quot;selected&quot;) {$(&quot;#notified-projects&quot;).show();} else {$(&quot;#notified-projects&quot;).hide();}">{% for o in mail_notification_options %}<option{% if o[0] == user.mailNotification %} selected="selected"{% endif %} value="{{ o[0] }}">{{ o[1] }}</option>
+{% endfor %}</select>
+</p>
+<fieldset id="notified-projects" style="{{ user.mailNotification == 'selected' ? '' : 'display:none;' }}">
+  <legend><a href="#" onclick="toggleCheckboxesBySelector('#notified-projects input[type=checkbox]'); return false;" title="{{ l('button_check_all') }} / {{ l('button_uncheck_all') }}" class="icon icon-checked">{{ sprite_icon('checked', '') }}</a>{{ l('label_project_plural') }}</legend>
+  {% if member_projects is not empty %}
+  <ul class="projects root">
+  {% for project in member_projects %}
+    <li class="root"><div class="root"><label><input type="checkbox" name="user[notified_project_ids][]" value="{{ project.id }}"{% if project.id in notified_project_ids %} checked="checked"{% endif %} /> {{ project.name }}</label></div></li>
+  {% endfor %}
+  </ul>
+  {% endif %}
+  <input type="hidden" name="user[notified_project_ids][]" id="user_notified_project_ids_" value="" autocomplete="off" />
+  <p><em class="info">{{ l('text_user_mail_option') }}</em></p>
+</fieldset>
+{% if high_priority %}
+<p>
+  <input name="pref[notify_about_high_priority_issues]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1"{% if pref.get('notify_about_high_priority_issues') in ['1', true] %} checked="checked"{% endif %} name="pref[notify_about_high_priority_issues]" id="pref_notify_about_high_priority_issues" />
+  <label for="pref_notify_about_high_priority_issues">{{ l('label_user_mail_notify_about_high_priority_issues_html', {prio: high_priority.name|lower})|raw }}</label>
+</p>
+{% endif %}
+<p>
+  <input name="pref[no_self_notified]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1"{% if pref.noSelfNotified() %} checked="checked"{% endif %} name="pref[no_self_notified]" id="pref_no_self_notified" />
+  <label for="pref_no_self_notified">{{ l('label_user_mail_no_self_notified') }}</label>
+</p>
+</fieldset>
+
+<fieldset class="box">
+  <legend>{{ l('label_auto_watch_on') }}</legend>
+  <input type="hidden" name="pref[auto_watch_on][]" value="" autocomplete="off" />
+  {% for o in auto_watch_on_options %}
+    <p><input type="checkbox" value="{{ o }}"{% if o in auto_watch_on %} checked="checked"{% endif %} name="pref[auto_watch_on][]" id="pref_auto_watch_on_{{ o }}" /> <label for="pref_auto_watch_on_{{ o }}">{{ l('label_auto_watch_on_' ~ o) }}</label></p>
+  {% endfor %}
+</fieldset>
+
+<fieldset class="box tabular">
+  <legend>{{ l('label_preferences') }}</legend>
+<p><label for="pref_hide_mail">{{ l('field_hide_mail') }}</label><input name="pref[hide_mail]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1"{% if pref.hideMail %} checked="checked"{% endif %} name="pref[hide_mail]" id="pref_hide_mail" /></p>
+<p><label for="pref_time_zone">{{ l('field_time_zone') }}</label><select name="pref[time_zone]" id="pref_time_zone"><option value="" label=" "></option>
+{% for tz in time_zone_options() %}<option value="{{ tz[0] }}"{% if tz[0] == pref.timeZone %} selected="selected"{% endif %}>{{ tz[1] }}</option>
+{% endfor %}</select></p>
+{% set cs = pref.get('comments_sorting') %}
+<p><label for="pref_comments_sorting">{{ l('field_comments_sorting') }}</label><select name="pref[comments_sorting]" id="pref_comments_sorting"><option value="asc"{% if cs == 'asc' %} selected="selected"{% endif %}>{{ l('label_chronological_order') }}</option>
+<option value="desc"{% if cs == 'desc' %} selected="selected"{% endif %}>{{ l('label_reverse_chronological_order') }}</option></select></p>
+<p><label for="pref_warn_on_leaving_unsaved">{{ l('field_warn_on_leaving_unsaved') }}</label><input name="pref[warn_on_leaving_unsaved]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1"{% if (pref.get('warn_on_leaving_unsaved') ?? '1') in ['1', true] %} checked="checked"{% endif %} name="pref[warn_on_leaving_unsaved]" id="pref_warn_on_leaving_unsaved" /></p>
+{% set font = pref.get('textarea_font') ?? '' %}
+<p><label for="pref_textarea_font">{{ l('field_textarea_font') }}</label><select name="pref[textarea_font]" id="pref_textarea_font"><option{% if font == '' %} selected="selected"{% endif %} value="">{{ l('label_font_default') }}</option>
+{% for o in textarea_font_options %}<option{% if font == o %} selected="selected"{% endif %} value="{{ o }}">{{ l('label_font_' ~ o) }}</option>
+{% endfor %}</select></p>
+<p><label for="pref_recently_used_projects">{{ l('field_recently_used_projects') }}</label><input size="2" type="text" value="{{ pref.get('recently_used_projects') ?? 3 }}" name="pref[recently_used_projects]" id="pref_recently_used_projects" /></p>
+{% set tab = pref.get('history_default_tab') ?? '' %}
+<p><label for="pref_history_default_tab">{{ l('field_history_default_tab') }}</label><select name="pref[history_default_tab]" id="pref_history_default_tab">{% for o in [['label_issue_history_notes', 'notes'], ['label_history', 'history'], ['label_issue_history_properties', 'properties'], ['label_time_entry_plural', 'time_entries'], ['label_associated_revisions', 'changesets'], ['label_last_tab_visited', 'last_tab_visited']] %}<option{% if tab == o[1] %} selected="selected"{% endif %} value="{{ o[1] }}">{{ l(o[0]) }}</option>
+{% endfor %}</select></p>
+<p><label for="pref_toolbar_language_options">{{ l('field_toolbar_language_options') }}</label><textarea rows="4" name="pref[toolbar_language_options]" id="pref_toolbar_language_options">
+{{ toolbar_language_options }}</textarea></p>
+{% set diq = (pref.get('default_issue_query') ?? '') ~ '' %}
+<p><label for="pref_default_issue_query">{{ l('field_default_issue_query') }}</label><select name="pref[default_issue_query]" id="pref_default_issue_query"><option value="">{{ l('label_none') }}</option>
+{% if issue_queries.public is not empty %}<optgroup label="{{ l('label_default_queries.for_all_users') }}">{% for q in issue_queries.public %}<option value="{{ q.id }}"{% if diq == (q.id ~ '') %} selected="selected"{% endif %}>{{ q.name }}</option>{% endfor %}</optgroup>{% endif %}
+{% if issue_queries.mine is not empty %}<optgroup label="{{ l('label_my_queries') }}">{% for q in issue_queries.mine %}<option value="{{ q.id }}"{% if diq == (q.id ~ '') %} selected="selected"{% endif %}>{{ q.name }}</option>{% endfor %}</optgroup>{% endif %}</select></p>
+{% set dpq = (pref.get('default_project_query') ?? '') ~ '' %}
+<p><label for="pref_default_project_query">{{ l('field_default_project_query') }}</label><select name="pref[default_project_query]" id="pref_default_project_query"><option value="">{{ l('label_none') }}</option>
+{% if project_queries.public is not empty %}<optgroup label="{{ l('label_default_queries.for_all_users') }}">{% for q in project_queries.public %}<option value="{{ q.id }}"{% if dpq == (q.id ~ '') %} selected="selected"{% endif %}>{{ q.name }}</option>{% endfor %}</optgroup>{% endif %}
+{% if project_queries.mine is not empty %}<optgroup label="{{ l('label_my_queries') }}">{% for q in project_queries.mine %}<option value="{{ q.id }}"{% if dpq == (q.id ~ '') %} selected="selected"{% endif %}>{{ q.name }}</option>{% endfor %}</optgroup>{% endif %}</select></p>
+{{ call_hook('view_my_account_preferences', {user: user, form: null}) }}
+</fieldset>
+
+<p class="mobile-show"><input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" /></p>
+</div>
+</div>
+</form>
+{% endblock %}
+
+{% block sidebar %}
+{% include 'my/_sidebar.html.twig' %}
+{% endblock %}

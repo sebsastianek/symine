@@ -1,0 +1,17 @@
+{% extends layout %}
+{% block content %}
+<h2>{{ import_title }}</h2>
+
+<form action="{{ path('imports') }}" accept-charset="UTF-8" enctype="multipart/form-data" method="post">
+  {{ csrf_field() }}
+  <input type="hidden" name="type" id="type" value="{{ import.type }}" autocomplete="off" />
+  <input type="hidden" name="project_id" id="project_id" value="{{ project_id }}" autocomplete="off" />
+  <fieldset class="box">
+    <legend>{{ l('label_select_file_to_import') }} (CSV)</legend>
+    <p>
+      <input type="file" name="file" id="file" />
+    </p>
+  </fieldset>
+  <p><input type="submit" value="{{ l('label_next') }} &#187;" data-disable-with="{{ l('label_next') }} &#187;" /></p>
+</form>
+{% endblock %}

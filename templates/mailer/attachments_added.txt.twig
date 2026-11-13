@@ -1,0 +1,9 @@
+{% extends 'mailer/layout.txt.twig' %}
+{% block content %}
+{{ added_to }}{% for attachment in attachments %}
+
+- {{ attachment.filename }}{% endfor %}
+
+
+{{ added_to_url }}
+{% endblock %}

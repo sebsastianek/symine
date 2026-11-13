@@ -1,0 +1,49 @@
+{% import 'admin/settings/_macros.html.twig' as s %}
+<form action="{{ path('settings_edit', {tab: 'authentication'}) }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+
+<div class="box tabular settings">
+<p>{{ s.select(values, 'login_required', [[l('label_login_required_yes'), '1'], [l('label_login_required_no'), '0']]) }}
+  <em class="info">{{ l('text_login_required_html', {anonymous_role_path: '/roles/' ~ opts.anonymous_role_id ~ '/edit'})|raw }}</em>
+</p>
+
+<p>{{ s.select(values, 'autologin', opts.autologin) }}</p>
+
+<p>{{ s.select(values, 'self_registration', opts.self_registration, {attrs: 'onchange="if (this.value != \'0\') { $(\'#settings_show_custom_fields_on_registration\').removeAttr(\'disabled\'); } else { $(\'#settings_show_custom_fields_on_registration\').attr(\'disabled\', true); }"'}) }}</p>
+
+<p>{{ s.check_box(values, 'show_custom_fields_on_registration', (values.self_registration ~ '') == '0' ? {attrs: 'disabled="disabled"'} : {}) }}</p>
+
+<p>{{ s.text_field(values, 'password_min_length', {size: 6}) }}</p>
+
+<p>{{ s.multiselect(values, 'password_required_char_classes', opts.password_char_classes, {inline: true}) }}</p>
+
+<p>
+  {{ s.select(values, 'password_max_age', opts.password_max_age) }}
+</p>
+
+<p>{{ s.check_box(values, 'lost_password') }}</p>
+
+<p>
+  {{ s.select(values, 'twofa', opts.twofa) }}
+  <em class="info">
+    {{ l('twofa_hint_disabled_html', {label: l('label_disabled')})|raw }}<br/>
+    {{ l('twofa_hint_optional_html', {label: l('label_optional')})|raw }}<br/>
+    {{ l('twofa_hint_required_administrators_html', {label: l('label_required_administrators')})|raw }}<br/>
+    {{ l('twofa_hint_required_html', {label: l('label_required_lower')})|raw }}
+  </em>
+</p>
+
+</div>
+
+<fieldset class="box">
+  <legend>{{ l('label_session_expiration') }}</legend>
+
+  <div class="tabular settings">
+    <p>{{ s.select(values, 'session_lifetime', opts.session_lifetime) }}</p>
+    <p>{{ s.select(values, 'session_timeout', opts.session_timeout) }}</p>
+  </div>
+
+  <p><em class="info">{{ l('text_session_expiration_settings') }}</em></p>
+</fieldset>
+
+<input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>

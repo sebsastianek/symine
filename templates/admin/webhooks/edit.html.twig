@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_webhook_edit') }}</h2>
+
+<form class="edit_webhook" id="edit_webhook_{{ webhook.id }}" action="{{ path('webhook_update', {id: webhook.id}) }}" method="post">
+  {{ csrf_field() }}
+  <input type="hidden" name="_method" value="patch" />
+  {% include 'admin/webhooks/_form.html.twig' %}
+  {% if back_url %}<input type="hidden" name="back_url" value="{{ back_url }}" />{% endif %}
+  <input type="submit" name="commit" value="{{ l('button_save') }}" />
+  <a href="{{ back_url ?: path('webhooks_index') }}">{{ l('button_cancel') }}</a>
+</form>
+{% endblock %}

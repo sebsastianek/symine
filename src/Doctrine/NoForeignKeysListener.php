@@ -20,7 +20,7 @@ final class NoForeignKeysListener
     {
         foreach ($args->getSchema()->getTables() as $table) {
             foreach ($table->getForeignKeys() as $fk) {
-                $table->removeForeignKey($fk->getName());
+                $table->dropForeignKey($fk->getName());
             }
         }
     }

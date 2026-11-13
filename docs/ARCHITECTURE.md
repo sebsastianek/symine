@@ -63,6 +63,7 @@ Twig helpers (src/Twig/AppExtension.php): `l()`, `current_user()`, `setting()`, 
 | `Service\TextFormatter` | textilizable (CommonMark/Textile + Redmine links + macros) |
 | `Api\ApiRenderer` | JSON/XML API rendering |
 | `Menu\MenuBuilder` | top/account/application/project/admin menus (items appear when their route exists) |
+| `Plugin\PluginRegistry`, `Plugin\Hook\Hooks`, `Menu\MenuRegistry`, `Security\AccessControlRegistry` | plugin API (Redmine::Plugin, hooks, menus, permissions) - see docs/PLUGINS.md |
 
 ## Route names (contract)
 home, signin, signout, register, lost_password, account_activate,
@@ -86,6 +87,36 @@ admin_plugins, admin_info, attachment_show, attachment_download
 - Seeded dev DB: `cp tests/fixtures/symine-seeded.db var/data.db` (migrated from the reference Redmine; users
   admin/admin, jsmith|dlopper|rhill|anna / password123).
 - Run a server on your own port with your own DB/cache to avoid clashes:
-  `APP_CACHE_DIR=var/cache-X DATABASE_URL="sqlite:///$PWD/var/X.db" php -S 127.0.0.1:81XX -t public`
+  `APP_CACHE_DIR=var/cache-X DATABASE_URL="sqlite:///$PWD/var/X.db" php -d variables_order=EGPCS -S 127.0.0.1:81XX -t public`
 - Tests: `TEST_TOKEN=X APP_CACHE_DIR=var/cache-X php bin/phpunit tests/...` (integration tests copy tests/fixtures/symine-seeded.db to var/testX.db).
 - Parity data: tests/fixtures/redmine-expectations.json (regenerate with tests/fixtures/redmine_expectations.rb).
+
+## Testing
+Test pyramid (bottom to top):
+- **PHPUnit unit/integration** (`tests/`, `php bin/phpunit`): services, queries, controllers via `WebTestCase`
+  (functional, in-process kernel); integration tests copy `tests/fixtures/symine-seeded.db`.
+- **Parity tests against the reference** (`tests/Integration/RedmineParityTest.php`, `tests/Query/IssueQueryParityTest.php`):
+  compare Symine output with expectations recorded from the real Redmine on the same data
+  (`tests/fixtures/redmine-expectations.json`).
+- **Playwright e2e** (`e2e/`, `bin/test-e2e`): real Chrome against a PHP built-in server on a fresh copy of the seeded
+  DB (`var/e2e.db`, restored before each spec file, e-mails captured by an SMTP sink). Covers user-visible flows with
+  Redmine's real JS (attachments, context menus, query forms, modals, autocomplete). `@parity` specs also run against the
+  reference Redmine (`E2E_BASE_URL=http://localhost:3300`). Conventions: `e2e/README.md`.
+
+## Notifications, webhooks, incoming mail
+- `Mailer\NotificationSubscriber` / `Webhook\WebhookDispatcher` subscribe to `IssueEvent` and `ContentEvent`; e-mails
+  and webhook calls are delivered after the response (`Mailer\DeferredTasks`, immediately in CLI/tests).
+- ContentEvent contract: `news/created` (News), `news_comment/created` (Comment), `message/created` (Message),
+  `wiki_page/created|updated` (WikiPage, context `content` when a new version was saved; `previous_text` optional),
+  `document/created` (Document), `attachment/created` (subject = Attachment with context `container` (Project|Version|Document)
+  and `attachments` list), `time_entry|version|news|wiki_page/*` (webhooks), `user/created` with context
+  `account_information: true, password` (account information mail). Context `notify: false` disables e-mails.
+- `Mailer\NotificationMailer` is the Mailer API (deliverIssueAdd, deliverSecurityNotification, deliverPasswordUpdated,
+  deliverSettingsUpdated, deliverLostPassword, deliverRegister, deliverAccountActivated, deliverAccountInformation,
+  deliverAccountActivationRequest, deliverTestEmail, reminders). `NotificationSubscriber::suppress($issueId)` = Issue#notify=false.
+- Incoming e-mail: `MailHandler\MailHandler::receive($raw, $options)`; `bin/console symine:receive-email|symine:receive-imap|symine:receive-pop3`,
+  `POST /mail_handler` (rdm-mailhandler.rb). Reminders: `bin/console symine:send-reminders --days=7`.
+- Version / issue deletions dispatch their webhook event *before* the deletion (payload built from the loaded object).
+- Real services (LDAP, IMAP/POP3, SMTP, webhooks): `bin/test-real-services [--e2e]` starts the containers of
+  `tests/Integration/RealServices/compose.yaml`, runs `tests/Integration/RealServices` (skipped without the
+  `SYMINE_TEST_*` env vars) and the Playwright specs of `e2e/tests/real-services`, then tears everything down.

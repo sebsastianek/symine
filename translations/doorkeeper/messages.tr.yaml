@@ -1,0 +1,88 @@
+# Doorkeeper translations (doorkeeper-i18n 5.2.9 / doorkeeper 5.8.2, MIT), used by the OAuth2 provider.
+# Generated - merged into the "messages" domain.
+activerecord.attributes.doorkeeper/application.name: Ad
+activerecord.attributes.doorkeeper/application.redirect_uri: 'Yönlendirme URL'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.forbidden_uri: 'Sunucu tarafından yasaklanmıştır'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.fragment_present: 'Yönlendirme URL için fragment kullanılamaz'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.invalid_uri: 'Geçerli bir URI olmalıdır'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.relative_uri: 'Mutlak URI olmalıdır'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.secured_uri: 'HTTPS/SSL URI olmalıdır'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.unspecified_scheme: 'Şema belirtilmelidir'
+activerecord.errors.models.doorkeeper/application.attributes.scopes.not_match_configured: 'Sunucu tarafında yapılandırılmış olan ile eşleşmiyor'
+doorkeeper.applications.buttons.authorize: Yetkilendir
+doorkeeper.applications.buttons.cancel: İptal
+doorkeeper.applications.buttons.destroy: Sil
+doorkeeper.applications.buttons.edit: Düzenle
+doorkeeper.applications.buttons.submit: Gönder
+doorkeeper.applications.confirmations.destroy: 'Silmek istediğinizden emin misiniz?'
+doorkeeper.applications.edit.title: 'Uygulamayı düzenle'
+doorkeeper.applications.form.error: 'Hata! Formunuzda hata olabilir'
+doorkeeper.applications.help.blank_redirect_uri: "Eğer uygulama için Client Credentials, Resource Owner Password Credentials veya başka bir yetki türü kullanılıyorsa, yönlendirme URI'lerini boş bırakın."
+doorkeeper.applications.help.confidential: 'Gizli olarak kullanılacak bir uygulama olarak işaretlenir. Mobil uygulamalar veya tek sayfalık uygulamalar gibi.'
+doorkeeper.applications.help.redirect_uri: 'Her URI için bir satır kullanın'
+doorkeeper.applications.help.scopes: 'Yetkileri aralarında boşluk bırakarak ayırın'
+doorkeeper.applications.index.actions: Eylemler
+doorkeeper.applications.index.callback_url: 'Yönlendirme URL'
+doorkeeper.applications.index.confidential: 'Gizli?'
+doorkeeper.applications.index.confidentiality.no: Hayır
+doorkeeper.applications.index.confidentiality.yes: Evet
+doorkeeper.applications.index.name: Ad
+doorkeeper.applications.index.new: 'Yeni Uygulama'
+doorkeeper.applications.index.title: Uygulamalarınız
+doorkeeper.applications.new.title: 'Yeni Uygulama'
+doorkeeper.applications.show.actions: Eylemler
+doorkeeper.applications.show.application_id: 'UID:'
+doorkeeper.applications.show.callback_urls: 'Yönlendirme URLleri:'
+doorkeeper.applications.show.confidential: 'Gizli:'
+doorkeeper.applications.show.not_defined: Belirtilmemiş
+doorkeeper.applications.show.scopes: 'Yetkiler:'
+doorkeeper.applications.show.secret: 'Gizli:'
+doorkeeper.applications.show.secret_hashed: 'Gizli karma'
+doorkeeper.applications.show.title: 'Uygulama: %{name}'
+doorkeeper.authorizations.buttons.authorize: Yetkilendir
+doorkeeper.authorizations.buttons.deny: Reddet
+doorkeeper.authorizations.error.title: 'Bir hata oluştu'
+doorkeeper.authorizations.form_post.title: 'Bu formu gönderin'
+doorkeeper.authorizations.new.able_to: 'Bu uygulama şunu yapabilir:'
+doorkeeper.authorizations.new.prompt: '%{client_name} kullanıcı hesabınıza yetkilendirmek istiyor musunuz?'
+doorkeeper.authorizations.new.title: 'Oturum zorunlu '
+doorkeeper.authorizations.show.title: 'Yetkilendirme kodu:'
+doorkeeper.authorized_applications.buttons.revoke: 'İptal et'
+doorkeeper.authorized_applications.confirmations.revoke: 'Emin misiniz?'
+doorkeeper.authorized_applications.index.application: Uygulama
+doorkeeper.authorized_applications.index.created_at: 'Oluşturulma tarihi'
+doorkeeper.authorized_applications.index.date_format: '%Y-%m-%d %H:%M:%S'
+doorkeeper.authorized_applications.index.title: 'Yetkilendirilmiş uygulamalar'
+doorkeeper.errors.messages.access_denied: 'Kaynak sahibi veya yetkilendirme sunucusu, isteği reddetti.'
+doorkeeper.errors.messages.admin_authenticator_not_configured: 'Doorkeeper.configure.admin_authenticator yapılandırılmamış olduğundan yönetici paneline erişim yasaktır.'
+doorkeeper.errors.messages.credential_flow_not_configured: 'Doorkeeper.configure.resource_owner_from_credentials yapılandırılmadığından Kaynak Sahibi Parolası Kimlik Bilgileri akışı başarısız oldu.'
+doorkeeper.errors.messages.forbidden_token.missing_scope: 'Bu kaynağa erişim için, %{oauth_scopes} yetkileri gerekli.'
+doorkeeper.errors.messages.invalid_client: 'Bilinmeyen istemci, istemci kimlik doğrulamasının dahil edilmemesi veya desteklenmeyen kimlik doğrulama yöntemi nedeniyle istemci kimlik doğrulaması başarısız oldu.'
+doorkeeper.errors.messages.invalid_code_challenge_method: 'Kod sorgulama yöntemi düz veya S256 olmalıdır.'
+doorkeeper.errors.messages.invalid_grant: "Sağlanan yetkilendirme yetkisi geçersiz, süresi doldu, iptal edildi, yetkilendirme talebinde kullanılan yeniden yönlendirme URI'si ile eşleşmiyor veya başka bir istemciye verildi."
+doorkeeper.errors.messages.invalid_redirect_uri: "İstenen yönlendirme URI'si hatalı biçimlendirilmiş veya istemci yönlendirme URI'si ile eşleşmiyor."
+doorkeeper.errors.messages.invalid_request.missing_param: '%{value} parametresi eksik'
+doorkeeper.errors.messages.invalid_request.request_not_authorized: 'Talebin yetkilendirilmesi gerekiyor. Yetkilendirme isteği için gerekli parametre eksik veya geçersiz.'
+doorkeeper.errors.messages.invalid_request.unknown: 'İstekte gerekli bir parametre eksik, desteklenmeyen bir parametre değeri içeriyor veya başka bir şekilde hatalı biçimlendirilmiş.'
+doorkeeper.errors.messages.invalid_scope: 'İstenen kapsam geçersiz, bilinmiyor veya hatalı biçimlendirilmiş.'
+doorkeeper.errors.messages.invalid_token.expired: 'Erişim jetonu zaman aşımına uğradı ve kullanılmaya devam edemez.'
+doorkeeper.errors.messages.invalid_token.revoked: 'Erişim jetonu geri alındı.'
+doorkeeper.errors.messages.invalid_token.unknown: 'Erişim jetonu geçersiz.'
+doorkeeper.errors.messages.resource_owner_authenticator_not_configured: 'Doorkeeper.configure.resource_owner_authenticator yapılandırılmadığından Kaynak Sahibi bulma başarısız oldu.'
+doorkeeper.errors.messages.revoke.unauthorized: 'Bu erişim jetonu için yetkilendirme yapılamadı.'
+doorkeeper.errors.messages.server_error: 'Yetkilendirme sunucusu, isteği yerine getirmesini engelleyen beklenmeyen bir koşulla karşılaştı.'
+doorkeeper.errors.messages.temporarily_unavailable: 'Yetkilendirme sunucusu, sunucunun geçici olarak aşırı yüklenmesi veya bakımı nedeniyle şu anda isteği işleyemiyor.'
+doorkeeper.errors.messages.unauthorized_client: 'İstemci, bu yöntemi kullanarak bu isteği gerçekleştirme yetkisine sahip değil.'
+doorkeeper.errors.messages.unsupported_grant_type: 'Yetki verme türü, yetkilendirme sunucusu tarafından desteklenmiyor.'
+doorkeeper.errors.messages.unsupported_response_mode: 'Yetkilendirme sunucusu bu yanıt modunu desteklemiyor.'
+doorkeeper.errors.messages.unsupported_response_type: 'Yetkilendirme sunucusu bu yanıt türünü desteklemiyor.'
+doorkeeper.flash.applications.create.notice: 'Uygulama oluşturuldu'
+doorkeeper.flash.applications.destroy.notice: 'Uygulama silindi'
+doorkeeper.flash.applications.update.notice: 'Uygulama güncellendi'
+doorkeeper.flash.authorized_applications.destroy.notice: 'Yetkilendirilmiş uygulama silindi'
+doorkeeper.layouts.admin.nav.applications: Uygulamalar
+doorkeeper.layouts.admin.nav.home: Anasayfa
+doorkeeper.layouts.admin.nav.oauth2_provider: 'OAuth2 Sağlayıcı'
+doorkeeper.layouts.admin.title: Doorkeeper
+doorkeeper.layouts.application.title: 'OAuth yetkilendirmesi zorunlu'
+doorkeeper.pre_authorization.status: 'Yetkilendirme durumu'

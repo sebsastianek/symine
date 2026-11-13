@@ -1,0 +1,5 @@
+{% extends 'mailer/layout.txt.twig' %}
+{% block content %}
+{{ l('mail_body_account_activation_request', {value: new_user.login}) }}
+{{ url }}
+{% endblock %}

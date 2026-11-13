@@ -17,3 +17,10 @@
 # Reference Redmine clone (git clone --depth 1 https://github.com/redmine/redmine reference/redmine)
 /reference/redmine/
 /var/
+
+# Generated plugin assets (symine:plugins:assets)
+/public/plugin_assets/
+
+# SQLite journal files
+*.db-shm
+*.db-wal

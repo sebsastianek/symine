@@ -1,0 +1,46 @@
+{#- context_menus/issues.html.erb (links are built by ContextMenusController) -#}
+<ul>
+  {{ call_hook('view_issues_context_menu_start', {issues: issues ?? [], can: can ?? {}, back: back ?? null}) }}
+{% for item in items %}
+    <li>{{ item.link|raw }}</li>
+{% endfor %}
+{% for folder in folders %}
+  <li class="folder{{ folder.css ?? '' }}">
+    <a href="#" class="submenu">{{ folder.name }}</a>
+    <span class="icon-only">{{ angle|raw }}</span>
+    <ul>
+    {% for link in folder.links %}
+    {% if folder.status ?? false %}
+        <li>
+          {{ link|raw }}
+        </li>
+    {% else %}
+        <li>{{ link|raw }}</li>
+    {% endif %}
+    {% endfor %}
+    </ul>
+  </li>
+{% endfor %}
+{% for t in tail %}
+  {% if t.folder is defined %}
+  <li class="folder">
+    <a href="#" class="submenu">{{ t.folder.name }}</a>
+    <span class="icon-only">{{ angle|raw }}</span>
+    <ul>
+    {% for link in t.folder.links %}
+      <li>{{ link|raw }}</li>
+    {% endfor %}
+    </ul>
+  </li>
+  {% else %}
+  <li>{{ t.link|raw }}</li>
+  {% endif %}
+{% endfor %}
+{% for a in actions %}
+  <li>{{ a|raw }}</li>
+{% endfor %}
+{% if delete %}
+    <li>{{ delete|raw }}</li>
+{% endif %}
+  {{ call_hook('view_issues_context_menu_end', {issues: issues ?? [], can: can ?? {}, back: back ?? null}) }}
+</ul>

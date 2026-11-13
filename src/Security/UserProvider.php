@@ -66,7 +66,8 @@ final class UserProvider implements UserProviderInterface, PasswordUpgraderInter
             throw new UnsupportedUserException();
         }
         $fresh = $this->em->find(User::class, $user->id);
-        if (!$fresh instanceof User || $fresh instanceof AnonymousUser) {
+        // find_current_user: User.active.find(session[:user_id]) - locked/unactivated users lose their session
+        if (!$fresh instanceof User || $fresh instanceof AnonymousUser || !$fresh->isActive()) {
             throw new UserNotFoundException();
         }
 

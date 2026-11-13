@@ -1,0 +1,26 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2>{{ l('label_information_plural') }}</h2>
+
+<p><strong>{{ versioned_name }}</strong></p>
+
+<table class="list">
+{% for item in checklist %}
+  <tr>
+    <td class="name">{{ l(item[0]) }}</td>
+    <td class="tick">
+      <span class="icon-only icon-{{ item[1] ? 'ok' : 'error' }}">
+        {{ item[1] ? sprite_icon('checked') : sprite_icon('warning') }}
+      </span>
+    </td>
+  </tr>
+{% endfor %}
+</table>
+<br />
+<h3>{{ l('label_environment') }}</h3>
+<div class="box autoscroll">
+<pre>Environment:
+{% for k, v in environment %}  {{ '%-28s'|format(k) }}{{ v }}
+{% endfor %}{{ scm_environment() }}</pre>
+</div>
+{% endblock %}

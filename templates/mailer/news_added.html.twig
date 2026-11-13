@@ -1,0 +1,16 @@
+{% extends 'mailer/layout.html.twig' %}
+{% block content %}
+<h1><a href="{{ news_url }}">{{ news.title }}</a></h1>
+<em>{{ news.author.name }}</em>
+
+{{ mail.textilizable(news.description, news.project)|raw }}
+
+{% set attachments = mail.attachmentsOf('News', news.id) %}
+{% if attachments is not empty %}
+<fieldset class="attachments"><legend>{{ l('label_attachment_plural') }}</legend>
+{% for attachment in attachments %}
+  {{ mail.linkToAttachment(attachment)|raw }} ({{ mail.humanSize(attachment.filesize) }})<br />
+{% endfor %}
+</fieldset>
+{% endif %}
+{% endblock %}

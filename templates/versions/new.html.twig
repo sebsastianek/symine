@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+{% import 'versions/_macros.html.twig' as vm %}
+{% block header_tags %}{{ vm.calendar_headers() }}{% endblock %}
+{% block content %}
+<h2>{{ l('label_version_new') }}</h2>
+
+<form class="new_version" id="new_version" enctype="multipart/form-data" action="{{ path('version_create', {project_id: project.identifier}) }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+{% include 'versions/_form.html.twig' %}
+<input type="submit" name="commit" value="{{ l('button_create') }}" data-disable-with="{{ l('button_create') }}" />
+</form>
+{% endblock %}

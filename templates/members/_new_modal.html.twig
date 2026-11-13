@@ -1,0 +1,9 @@
+<h3 class="title">{{ l('label_member_new') }}</h3>
+
+<form class="new_membership" id="new_membership" action="{{ path('member_create', {project_id: project.identifier}) }}" data-remote="true" method="post">{{ csrf_field() }}
+  {% include 'members/_new_form.html.twig' %}
+  <p class="buttons">
+    <input type="submit" name="commit" value="{{ l('button_add') }}" id="member-add-submit" data-disable-with="{{ l('button_add') }}" />
+    <a href="#" onclick="hideModal(this); return false;">{{ l('button_cancel') }}</a>
+  </p>
+</form>

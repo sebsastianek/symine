@@ -1,0 +1,7 @@
+{% if settings.string('emails_header') is not empty %}{{ settings.string('emails_header') }}
+{% endif %}{% block content %}{% endblock %}
+
+{% if settings.string('emails_footer') is not empty %}
+-- 
+{{ settings.string('emails_footer') }}
+{% endif %}

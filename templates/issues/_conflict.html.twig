@@ -1,0 +1,30 @@
+<div class="conflict">
+  {{ sprite_icon('warning', null, 18, false, 'notice-icon') }}
+  {{ l('notice_issue_update_conflict') }}
+  {% if conflict_journals|length > 0 %}
+    <div class="conflict-details">
+    {% for journal in conflict_journals %}
+      <div class="conflict-journal">
+      <p>{{ authoring(journal.createdOn, journal.user, 'label_updated_time_by') }}</p>
+      {% set strs = issue_details_to_strings(journal) %}
+      {% if strs|length > 0 %}
+      <ul class="details">
+        {% for s in strs %}<li>{{ s|raw }}</li>{% endfor %}
+      </ul>
+      {% endif %}
+      <div class="wiki">
+        {% if journal.hasNotes() %}{{ textilizable(journal.notes, issue.project) }}{% endif %}
+      </div>
+      </div>
+    {% endfor %}
+    </div>
+  {% endif %}
+</div>
+<p>
+  <label><input type="radio" name="conflict_resolution" id="conflict_resolution_overwrite" value="overwrite" /> {{ l('text_issue_conflict_resolution_overwrite') }}</label><br />
+  {% if notes is not empty %}
+  <label><input type="radio" name="conflict_resolution" id="conflict_resolution_add_notes" value="add_notes" /> {{ l('text_issue_conflict_resolution_add_notes') }}</label><br />
+  {% endif %}
+  <label><input type="radio" name="conflict_resolution" id="conflict_resolution_cancel" value="cancel" /> {{ l('text_issue_conflict_resolution_cancel', {link: link_to_issue(issue, {subject: false})})|raw }}</label>
+</p>
+<p><input type="submit" name="commit" value="{{ l('button_submit') }}" /></p>

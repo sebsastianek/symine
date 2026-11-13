@@ -1,0 +1,88 @@
+# Doorkeeper translations (doorkeeper-i18n 5.2.9 / doorkeeper 5.8.2, MIT), used by the OAuth2 provider.
+# Generated - merged into the "messages" domain.
+activerecord.attributes.doorkeeper/application.name: Name
+activerecord.attributes.doorkeeper/application.redirect_uri: Weiterleitungs-URI
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.forbidden_uri: 'ist vom Server verboten.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.fragment_present: 'darf kein Fragment enthalten.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.invalid_uri: 'muss eine gültige URI sein.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.relative_uri: 'muss eine absolute URI sein.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.secured_uri: 'muss eine HTTPS/SSL URI sein.'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.unspecified_scheme: 'muss ein Schema angeben.'
+activerecord.errors.models.doorkeeper/application.attributes.scopes.not_match_configured: 'stimmen nicht mit den serverseitig hinterlegten Werten überein.'
+doorkeeper.applications.buttons.authorize: Autorisieren
+doorkeeper.applications.buttons.cancel: Abbrechen
+doorkeeper.applications.buttons.destroy: Löschen
+doorkeeper.applications.buttons.edit: Bearbeiten
+doorkeeper.applications.buttons.submit: Absenden
+doorkeeper.applications.confirmations.destroy: 'Bist du sicher?'
+doorkeeper.applications.edit.title: 'Applikation bearbeiten'
+doorkeeper.applications.form.error: 'Oops! Bitte überprüfe das Formular auf Fehler.'
+doorkeeper.applications.help.blank_redirect_uri: 'Frei lassen, wenn Ihr Provider für Client Credentials, Resource Owner Password Credentials oder andere Grant-Typen konfiguriert ist, die keine Weiterleitungs-URI benötigen.'
+doorkeeper.applications.help.confidential: 'Die Anwendung wird in einem Umfeld genutzt, in dem das Client-Geheimnis vertraulich bleibt. Native Mobile-Apps und Single Page Apps gelten als nicht vertraulich.'
+doorkeeper.applications.help.redirect_uri: 'Eine Zeile pro URI verwenden.'
+doorkeeper.applications.help.scopes: 'Scopes mit Leerzeichen trennen. Für Standardwerte frei lassen.'
+doorkeeper.applications.index.actions: Aktionen
+doorkeeper.applications.index.callback_url: Callback-URL
+doorkeeper.applications.index.confidential: 'Vertraulich?'
+doorkeeper.applications.index.confidentiality.no: Nein
+doorkeeper.applications.index.confidentiality.yes: Ja
+doorkeeper.applications.index.name: Name
+doorkeeper.applications.index.new: 'Neue Applikation'
+doorkeeper.applications.index.title: 'Deine Applikationen'
+doorkeeper.applications.new.title: 'Neue Applikation'
+doorkeeper.applications.show.actions: Aktionen
+doorkeeper.applications.show.application_id: 'Applikations-ID:'
+doorkeeper.applications.show.callback_urls: 'Callback-URLs:'
+doorkeeper.applications.show.confidential: 'Vertraulich:'
+doorkeeper.applications.show.not_defined: 'Nicht definiert'
+doorkeeper.applications.show.scopes: 'Scopes:'
+doorkeeper.applications.show.secret: 'Geheimnis:'
+doorkeeper.applications.show.secret_hashed: 'Geheimnis verschlüsselt'
+doorkeeper.applications.show.title: 'Applikation: %{name}'
+doorkeeper.authorizations.buttons.authorize: Autorisieren
+doorkeeper.authorizations.buttons.deny: Ablehnen
+doorkeeper.authorizations.error.title: 'Ein Fehler ist aufgetreten'
+doorkeeper.authorizations.form_post.title: 'Dieses Formular absenden'
+doorkeeper.authorizations.new.able_to: 'Diese Anwendung erhält folgende Berechtigungen:'
+doorkeeper.authorizations.new.prompt: 'Soll %{client_name} zur Nutzung dieses Kontos autorisiert werden?'
+doorkeeper.authorizations.new.title: 'Autorisierung erforderlich'
+doorkeeper.authorizations.show.title: 'Autorisierungscode:'
+doorkeeper.authorized_applications.buttons.revoke: Widerrufen
+doorkeeper.authorized_applications.confirmations.revoke: 'Bist du sicher?'
+doorkeeper.authorized_applications.index.application: Applikation
+doorkeeper.authorized_applications.index.created_at: 'Erstellt am'
+doorkeeper.authorized_applications.index.date_format: '%Y-%m-%d %H:%M:%S'
+doorkeeper.authorized_applications.index.title: 'Deine autorisierten Applikationen'
+doorkeeper.errors.messages.access_denied: 'Der Ressourcenbesitzer oder der Autorisierungsserver hat die Anfrage abgelehnt.'
+doorkeeper.errors.messages.admin_authenticator_not_configured: 'Der Zugriff auf das Admin-Panel ist verboten, da Doorkeeper.configure.admin_authenticator nicht konfiguriert ist.'
+doorkeeper.errors.messages.credential_flow_not_configured: 'Der Vorgang "Resource Owner Password Credentials" ist fehlgeschlagen: Doorkeeper.configure.resource_owner_from_credentials ist nicht konfiguriert.'
+doorkeeper.errors.messages.forbidden_token.missing_scope: 'Der Zugriff auf diese Ressource erfordert den Scope "%{oauth_scopes}".'
+doorkeeper.errors.messages.invalid_client: 'Client-Authentifizierung ist fehlgeschlagen: Unbekannter Client, keine Authentifizierung bereitgestellt oder Authentifizierungsmethode nicht unterstützt.'
+doorkeeper.errors.messages.invalid_code_challenge_method: "Die Code-Herausforderungsmethode muss 'plain' oder 'S256' sein."
+doorkeeper.errors.messages.invalid_grant: 'Die bereitgestellte Autorisierung ist ungültig, abgelaufen, widerrufen, mit einem anderen Client verknüpft oder der Weiterleitungs-URI stimmt nicht mit der Autorisierungsanfrage überein.'
+doorkeeper.errors.messages.invalid_redirect_uri: 'Der Weiterleitungs-URI in der Anfrage ist ungültig.'
+doorkeeper.errors.messages.invalid_request.missing_param: 'Fehlender erforderlicher Parameter: %{value}.'
+doorkeeper.errors.messages.invalid_request.request_not_authorized: 'Die Anfrage muss autorisiert sein. Erforderlicher Parameter zur Autorisierung fehlt oder ist ungültig.'
+doorkeeper.errors.messages.invalid_request.unknown: 'Die Anfrage enthält nicht unterstützte Parameter, es fehlen Parameter oder sie ist anderweitig fehlerhaft.'
+doorkeeper.errors.messages.invalid_scope: 'Der angeforderte Scope ist ungültig, unbekannt oder fehlerhaft.'
+doorkeeper.errors.messages.invalid_token.expired: 'Das Zugriffstoken ist abgelaufen.'
+doorkeeper.errors.messages.invalid_token.revoked: 'Das Zugriffstoken wurde widerrufen.'
+doorkeeper.errors.messages.invalid_token.unknown: 'Das Zugriffstoken ist ungültig oder nicht korrekt.'
+doorkeeper.errors.messages.resource_owner_authenticator_not_configured: 'Der Vorgang "Resource Owner Finden" ist fehlgeschlagen: Doorkeeper.configure.resource_owner_authenticator ist nicht konfiguriert.'
+doorkeeper.errors.messages.revoke.unauthorized: 'Sie sind nicht berechtigt, dieses Token zu widerrufen.'
+doorkeeper.errors.messages.server_error: 'Der Autorisierungsserver hat ein unerwartetes Problem festgestellt und konnte die Anfrage nicht bearbeiten.'
+doorkeeper.errors.messages.temporarily_unavailable: 'Der Autorisierungsserver kann die Anfrage aufgrund temporärer Überlastung oder Wartungsarbeiten momentan nicht bearbeiten.'
+doorkeeper.errors.messages.unauthorized_client: 'Der Client ist nicht berechtigt, diese Anfrage mit dieser Methode auszuführen.'
+doorkeeper.errors.messages.unsupported_grant_type: 'Der Autorisierungsserver unterstützt diesen Gewährungstyp nicht.'
+doorkeeper.errors.messages.unsupported_response_mode: 'Der Autorisierungsserver unterstützt diesen Antwortmodus nicht.'
+doorkeeper.errors.messages.unsupported_response_type: 'Der Autorisierungsserver unterstützt diesen Antworttyp nicht.'
+doorkeeper.flash.applications.create.notice: 'Applikation wurde erstellt.'
+doorkeeper.flash.applications.destroy.notice: 'Applikation wurde gelöscht.'
+doorkeeper.flash.applications.update.notice: 'Applikation wurde aktualisiert.'
+doorkeeper.flash.authorized_applications.destroy.notice: 'Berechtigung für die Applikation wurde widerrufen.'
+doorkeeper.layouts.admin.nav.applications: Applikationen
+doorkeeper.layouts.admin.nav.home: Startseite
+doorkeeper.layouts.admin.nav.oauth2_provider: 'OAuth2 Anbieter'
+doorkeeper.layouts.admin.title: Doorkeeper
+doorkeeper.layouts.application.title: 'OAuth Autorisierung benötigt'
+doorkeeper.pre_authorization.status: Vorab-Autorisierung

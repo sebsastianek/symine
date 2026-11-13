@@ -1,0 +1,39 @@
+<form action="{{ repo_url('diff', repository, {path: path}) }}" accept-charset="UTF-8" method="get">
+{% set show_diff = revisions|length > 1 and can_browse %}
+{% if show_diff %}
+<p><input type="submit" value="{{ l('label_view_diff') }}" /></p>
+{% endif %}
+<div class="autoscroll">
+{% set show_revision_graph = supports_revision_graph and (path ?? '') == '' %}
+{% set graph = show_revision_graph and revisions|length > 0 ? index_commits(revisions, repository) : null %}
+{% if graph %}
+{% include 'repositories/_revision_graph.html.twig' with {commits: graph[0], space: graph[1]} %}
+{% endif %}
+<table class="list changesets">
+<thead><tr>
+<th>#</th>
+<th></th>
+<th></th>
+<th>{{ l('label_date') }}</th>
+<th>{{ l('field_author') }}</th>
+<th>{{ l('field_comments') }}</th>
+</tr></thead>
+<tbody>
+{% for changeset in revisions %}
+{% set line_num = loop.index %}
+<tr class="changeset">
+<td class="id"{% if graph %} style="padding-left:{{ (graph[1] + 1) * 20 }}px"{% endif %}>{{ link_to_revision(changeset, repository) }}</td>
+<td class="checkbox">{% if show_diff and line_num < revisions|length %}<input type="radio" name="rev" id="cb-{{ line_num }}" value="{{ changeset_identifier(changeset) }}"{% if line_num == 1 %} checked="checked"{% endif %} onclick="$('#cbto-{{ line_num + 1 }}').prop('checked',true);" />{% endif %}</td>
+<td class="checkbox">{% if show_diff and line_num > 1 %}<input type="radio" name="rev_to" id="cbto-{{ line_num }}" value="{{ changeset_identifier(changeset) }}"{% if line_num == 2 %} checked="checked"{% endif %} onclick="if ($('#cb-{{ line_num }}').prop('checked')) {$('#cb-{{ line_num - 1 }}').prop('checked',true);}" />{% endif %}</td>
+<td class="committed_on">{{ format_time(changeset.committedOn) }}</td>
+<td class="author">{% if changeset.user %}{{ link_to_user(changeset.user) }}{% else %}{{ (changeset.committer|split('<')|first)|truncate(30) }}{% endif %}</td>
+<td class="comments">{{ format_changeset_comments(changeset, false, truncate_at_line_break(changeset.comments)) }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% if show_diff %}
+<p><input type="submit" value="{{ l('label_view_diff') }}" /></p>
+{% endif %}
+</form>

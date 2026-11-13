@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('board_show', {project_id: project.identifier, id: board.id}) }}">{{ board.name }}</a> &#187; {{ l('label_message_new') }}</h2>
+
+<form class="new_message" id="message-form" enctype="multipart/form-data" action="{{ path('message_new', {board_id: board.id}) }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+  {% include 'messages/_form.html.twig' with {param: 'message', replying: false} %}
+  <input type="submit" name="commit" value="{{ l('button_create') }}" data-disable-with="{{ l('button_create') }}" />
+</form>
+{% endblock %}

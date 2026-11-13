@@ -1,0 +1,5 @@
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+{% set ri = custom_field.id ? custom_field.getFormatOption('ratio_interval') : settings.int('issue_done_ratio_interval') %}
+<p>
+  {{ f.select('ratio_interval', [['5 %', '5'], ['10 %', '10']], ri, l('field_ratio_interval')) }}
+</p>

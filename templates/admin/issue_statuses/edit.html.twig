@@ -1,0 +1,10 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('issue_statuses_index') }}">{{ l('label_issue_status_plural') }}</a> &#187; {{ issue_status.name }}</h2>
+
+<form class="edit_issue_status" id="edit_issue_status_{{ issue_status.id }}" action="{{ path('issue_status_update', {id: issue_status.id}) }}" accept-charset="UTF-8" method="post"><input type="hidden" name="_method" value="patch" autocomplete="off" />
+{{ csrf_field() }}
+  {% include 'admin/issue_statuses/_form.html.twig' %}
+  <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>
+{% endblock %}

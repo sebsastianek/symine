@@ -1,0 +1,24 @@
+<table id="saved-items" class="list">
+  <thead>
+  <tr>
+    <th>{{ l('field_login') }}</th>
+    <th>{{ l('field_firstname') }}</th>
+    <th>{{ l('field_lastname') }}</th>
+    <th>{{ l('field_mail') }}</th>
+    <th>{{ l('field_admin') }}</th>
+    <th>{{ l('field_status') }}</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for user in saved_objects %}
+  <tr>
+    <td>{{ avatar(user, 13) }} {% if path_exists('user_edit') %}<a href="{{ path('user_edit', {id: user.id}) }}">{{ user.login }}</a>{% else %}{{ user.login }}{% endif %}</td>
+    <td>{{ user.firstname }}</td>
+    <td>{{ user.lastname }}</td>
+    <td>{% if user.mail %}<a href="mailto:{{ user.mail }}">{{ user.mail }}</a>{% endif %}</td>
+    <td>{% if user.admin %}{{ sprite_icon('checked') }}{% endif %}</td>
+    <td>{{ l('status_' ~ {0: 'anon', 1: 'active', 2: 'registered', 3: 'locked'}[user.status]) }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\Setting;
+use App\Plugin\PluginRegistry;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -18,27 +19,62 @@ final class Settings
     /** @var array<string, mixed>|null */
     private ?array $values = null;
 
+    private bool $pluginSettingsDefined = false;
+
     public function __construct(
         private readonly EntityManagerInterface $em,
         string $projectDir,
+        private readonly ?PluginRegistry $plugins = null,
     ) {
         $this->definitions = require $projectDir.'/config/redmine/settings.php';
     }
 
+    /**
+     * Defines a setting at runtime (Setting.define_setting), e.g. "plugin_<id>" settings of plugins.
+     *
+     * @param array{default?: mixed, serialized?: bool, security_notifications?: bool} $definition
+     */
+    public function define(string $name, array $definition): void
+    {
+        $this->definePluginSettings();
+        $this->definitions[$name] = ['default' => $definition['default'] ?? null, 'serialized' => $definition['serialized'] ?? false, 'security_notifications' => $definition['security_notifications'] ?? false];
+    }
+
     public function has(string $name): bool
     {
+        $this->definePluginSettings();
+
         return isset($this->definitions[$name]);
     }
 
     /** @return array<string, array{default: mixed, serialized: bool, security_notifications: bool}> */
     public function definitions(): array
     {
+        $this->definePluginSettings();
+
         return $this->definitions;
+    }
+
+    /** Setting.define_plugin_setting: "plugin_<id>" (serialized hash) for every plugin declaring settings */
+    private function definePluginSettings(): void
+    {
+        if ($this->pluginSettingsDefined || null === $this->plugins) {
+            return;
+        }
+        $this->pluginSettingsDefined = true;
+        foreach ($this->plugins->all() as $plugin) {
+            if (null !== $plugin->settings) {
+                $this->definitions[$plugin->settingName()] = ['default' => $plugin->defaultSettings(), 'serialized' => true, 'security_notifications' => false];
+            }
+        }
     }
 
     public function get(string $name): mixed
     {
         $this->load();
+        if (str_starts_with($name, 'plugin_')) {
+            $this->definePluginSettings();
+        }
         if (\array_key_exists($name, $this->values)) {
             $v = $this->values[$name];
             if (($this->definitions[$name]['serialized'] ?? false) && !\is_array($v)) {

@@ -1,0 +1,16 @@
+{% extends 'admin/layout.html.twig' %}
+{% block content %}
+{% if webhooks_enabled %}
+<div class="contextual">
+  <a href="{{ path('webhook_new', {back_url: path('admin_webhooks')}) }}" class="icon icon-add">{{ sprite_icon('add', l('label_webhook_new')) }}</a>
+</div>
+{% endif %}
+
+<h2>{{ l("label_webhook_plural") }}</h2>
+
+{% if not webhooks_enabled %}
+  <p class="warning">{{ l('webhook_disabled_info_html', {link: '<a href="' ~ path('settings_index', {tab: 'integrations'}) ~ '">' ~ l('label_integrations') ~ '</a>'})|raw }}</p>
+{% endif %}
+
+{% include 'admin/webhooks/_list.html.twig' with {webhooks: webhooks, show_author: true, back_url: path('admin_webhooks')} %}
+{% endblock %}

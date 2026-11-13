@@ -1,0 +1,8 @@
+{% extends 'mailer/layout.txt.twig' %}
+{% block content %}
+{{ l('text_issue_added', {id: '#' ~ issue.id, author: issue.author.name}) }}
+
+----------------------------------------
+{% include 'mailer/_issue.txt.twig' %}
+
+{% endblock %}

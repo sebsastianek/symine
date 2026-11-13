@@ -27,6 +27,7 @@ final class CustomFieldService
         private readonly EntityManagerInterface $em,
         private readonly Authorization $auth,
         private readonly Localizer $i18n,
+        private readonly ?\App\Plugin\FieldFormat\FieldFormatRegistry $pluginFormats = null,
     ) {
     }
 
@@ -249,8 +250,15 @@ final class CustomFieldService
 
             return $errors;
         }
+        $pluginFormat = $this->pluginFormats?->get((string) $field->fieldFormat);
         foreach ($values as $v) {
             $v = (string) $v;
+            if (null !== $pluginFormat) {
+                if (null !== ($error = $pluginFormat->validateValue($field, $v))) {
+                    $errors[] = $label.' '.$this->i18n->l($error);
+                }
+                continue;
+            }
             $ok = match ($field->fieldFormat) {
                 'int' => (bool) preg_match('/^[+-]?\d+$/', $v),
                 'float' => is_numeric($v),
@@ -264,7 +272,14 @@ final class CustomFieldService
                 default => true,
             };
             if (!$ok) {
-                $errors[] = $label.' '.$this->i18n->l('activerecord.errors.messages.invalid');
+                // ListFormat / RecordList#validate_custom_value: "is not included in the list";
+                // IntFormat (and ProgressbarFormat for non-digits): "is not a number"
+                $message = match (true) {
+                    \in_array($field->fieldFormat, ['list', 'enumeration', 'user', 'version'], true) => 'activerecord.errors.messages.inclusion',
+                    'int' === $field->fieldFormat, 'progressbar' === $field->fieldFormat && !ctype_digit($v) => 'activerecord.errors.messages.not_a_number',
+                    default => 'activerecord.errors.messages.invalid',
+                };
+                $errors[] = $label.' '.$this->i18n->l($message);
                 continue;
             }
             if (\in_array($field->fieldFormat, ['string', 'text', 'link'], true)) {
@@ -288,6 +303,9 @@ final class CustomFieldService
     {
         $values = array_values(array_filter((array) $value, static fn ($v) => null !== $v && '' !== (string) $v));
         $out = [];
+        if (null !== ($pluginFormat = $this->pluginFormats?->get((string) $field->fieldFormat))) {
+            return implode(', ', array_map(static fn ($v) => $pluginFormat->formatValue($field, (string) $v), $values));
+        }
         foreach ($values as $v) {
             $out[] = match ($field->fieldFormat) {
                 'bool' => '1' === (string) $v ? $this->i18n->l('general_text_Yes') : $this->i18n->l('general_text_No'),
@@ -303,7 +321,8 @@ final class CustomFieldService
 
                     return (string) $v;
                 })(),
-                'float' => (string) (float) $v,
+                // format_object(Float): sprintf('%.2f')
+                'float' => sprintf('%.2f', (float) $v),
                 'progressbar' => $v.'%',
                 default => (string) $v,
             };

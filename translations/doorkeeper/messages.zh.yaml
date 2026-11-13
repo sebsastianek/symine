@@ -1,0 +1,88 @@
+# Doorkeeper translations (doorkeeper-i18n 5.2.9 / doorkeeper 5.8.2, MIT), used by the OAuth2 provider.
+# Generated - merged into the "messages" domain.
+activerecord.attributes.doorkeeper/application.name: 应用名称
+activerecord.attributes.doorkeeper/application.redirect_uri: '重定向 URI'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.forbidden_uri: 被服务器禁止。
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.fragment_present: '不能包含网址片段（#）'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.invalid_uri: '必须是有效的 URI 格式'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.relative_uri: '必须是绝对的 URI 地址'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.secured_uri: '必须是 HTTPS/SSL 的 URI 地址'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.unspecified_scheme: 'must specify a scheme.'
+activerecord.errors.models.doorkeeper/application.attributes.scopes.not_match_configured: 不匹配服务器上的配置。
+doorkeeper.applications.buttons.authorize: 授权
+doorkeeper.applications.buttons.cancel: 取消
+doorkeeper.applications.buttons.destroy: 删除
+doorkeeper.applications.buttons.edit: 编辑
+doorkeeper.applications.buttons.submit: 提交
+doorkeeper.applications.confirmations.destroy: 确定要删除应用吗？
+doorkeeper.applications.edit.title: 修改应用
+doorkeeper.applications.form.error: '抱歉! 提交信息的时候遇到了下面的错误'
+doorkeeper.applications.help.blank_redirect_uri: "Leave it blank if you configured your provider to use Client Credentials, Resource Owner Password Credentials or any other grant type that doesn't require redirect URI."
+doorkeeper.applications.help.confidential: '应用程序的client secret可以保密，但原生移动应用和单页应用将无法保护client secret。'
+doorkeeper.applications.help.redirect_uri: '每行只能有一个 URI'
+doorkeeper.applications.help.scopes: 用空格分割权限范围，留空则使用默认设置
+doorkeeper.applications.index.actions: 动作
+doorkeeper.applications.index.callback_url: '回调 URL'
+doorkeeper.applications.index.confidential: 'Confidential?'
+doorkeeper.applications.index.confidentiality.no: 沒有
+doorkeeper.applications.index.confidentiality.yes: 是
+doorkeeper.applications.index.name: 名称
+doorkeeper.applications.index.new: 创建新应用
+doorkeeper.applications.index.title: 你的应用
+doorkeeper.applications.new.title: 创建新应用
+doorkeeper.applications.show.actions: 操作
+doorkeeper.applications.show.application_id: '应用 UID:'
+doorkeeper.applications.show.callback_urls: '回调 URL:'
+doorkeeper.applications.show.confidential: 'Confidential:'
+doorkeeper.applications.show.not_defined: 'Not defined'
+doorkeeper.applications.show.scopes: '权限范围:'
+doorkeeper.applications.show.secret: '应用密钥:'
+doorkeeper.applications.show.secret_hashed: 'Secret hashed'
+doorkeeper.applications.show.title: '应用：%{name}'
+doorkeeper.authorizations.buttons.authorize: 同意授权
+doorkeeper.authorizations.buttons.deny: 拒绝授权
+doorkeeper.authorizations.error.title: 发生错误
+doorkeeper.authorizations.form_post.title: 'Submit this form'
+doorkeeper.authorizations.new.able_to: '此应用将能够:'
+doorkeeper.authorizations.new.prompt: '授权 %{client_name} 使用你的帐户？'
+doorkeeper.authorizations.new.title: 需要授权
+doorkeeper.authorizations.show.title: '授权代码:'
+doorkeeper.authorized_applications.buttons.revoke: 撤销授权
+doorkeeper.authorized_applications.confirmations.revoke: 确定要撤销对此应用的授权吗？
+doorkeeper.authorized_applications.index.application: 应用
+doorkeeper.authorized_applications.index.created_at: 授权时间
+doorkeeper.authorized_applications.index.date_format: '%Y-%m-%d %H:%M:%S'
+doorkeeper.authorized_applications.index.title: 已授权的应用
+doorkeeper.errors.messages.access_denied: 资源所有者或服务器拒绝了请求。
+doorkeeper.errors.messages.admin_authenticator_not_configured: '由于 Doorkeeper.configure.admin_authenticator 尚未配置，禁止访问管理员面板。'
+doorkeeper.errors.messages.credential_flow_not_configured: '由于 Doorkeeper.configure.resource_owner_from_credentials 尚未配置，应用验证授权流程失败。'
+doorkeeper.errors.messages.forbidden_token.missing_scope: 'Access to this resource requires scope "%{oauth_scopes}".'
+doorkeeper.errors.messages.invalid_client: 由于应用信息未知、未提交认证信息或使用了不支持的认证方式，认证失败。
+doorkeeper.errors.messages.invalid_code_challenge_method: 'The code challenge method must be plain or S256.'
+doorkeeper.errors.messages.invalid_grant: 授权方式无效、过期或已被撤销、与授权请求中的回调地址不一致，或使用了其他应用的回调地址。
+doorkeeper.errors.messages.invalid_redirect_uri: 无效的登录回调地址。
+doorkeeper.errors.messages.invalid_request.missing_param: 'Missing required parameter: %{value}.'
+doorkeeper.errors.messages.invalid_request.request_not_authorized: 'Request need to be authorized. Required parameter for authorizing request is missing or invalid.'
+doorkeeper.errors.messages.invalid_request.unknown: 请求缺少必要的参数，或者参数值、格式不正确。
+doorkeeper.errors.messages.invalid_scope: 请求的权限范围无效、未知或格式不正确。
+doorkeeper.errors.messages.invalid_token.expired: 访问令牌已过期
+doorkeeper.errors.messages.invalid_token.revoked: 访问令牌已被吊销
+doorkeeper.errors.messages.invalid_token.unknown: 访问令牌无效
+doorkeeper.errors.messages.resource_owner_authenticator_not_configured: '由于 Doorkeeper.configure.resource_owner_authenticator 尚未配置，查找资源所有者失败。'
+doorkeeper.errors.messages.revoke.unauthorized: 'You are not authorized to revoke this token'
+doorkeeper.errors.messages.server_error: 服务器异常，无法处理请求。
+doorkeeper.errors.messages.temporarily_unavailable: 服务器维护中或负载过高，暂时无法处理请求。
+doorkeeper.errors.messages.unauthorized_client: 未授权的应用，请求无法执行。
+doorkeeper.errors.messages.unsupported_grant_type: 服务器不支持此类型的授权方式。
+doorkeeper.errors.messages.unsupported_response_mode: 'The authorization server does not support this response mode.'
+doorkeeper.errors.messages.unsupported_response_type: 服务器不支持这种响应类型。
+doorkeeper.flash.applications.create.notice: 应用创建成功。
+doorkeeper.flash.applications.destroy.notice: 应用删除成功。
+doorkeeper.flash.applications.update.notice: 应用修改成功。
+doorkeeper.flash.authorized_applications.destroy.notice: 已成功撤销对此应用的授权。
+doorkeeper.layouts.admin.nav.applications: 应用
+doorkeeper.layouts.admin.nav.home: 首页
+doorkeeper.layouts.admin.nav.oauth2_provider: 'OAuth2 提供商'
+doorkeeper.layouts.admin.title: Doorkeeper
+doorkeeper.layouts.application.title: '需要 OAuth 认证'
+doorkeeper.pre_authorization.status: 预授权

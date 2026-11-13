@@ -1,0 +1,83 @@
+{% import 'imports/_macros.html.twig' as m %}
+<p>
+  <label for="import_mapping_project_id">{{ l('label_project') }}</label>
+  {{ m.project_select(project_options, selected_project_id) }}
+</p>
+<p>
+  <label for="import_mapping_tracker">{{ l('field_tracker') }}</label>
+  {{ m.mapping_select(columns, mapping, 'tracker', {required: true, values: trackers}) }}
+</p>
+<p>
+  <label for="import_mapping_status">{{ l('field_status') }}</label>
+  {{ m.mapping_select(columns, mapping, 'status') }}
+</p>
+
+<div class="splitcontent">
+<div class="splitcontentleft">
+<p>
+  <label for="import_mapping_subject">{{ l('field_subject') }}</label>
+  {{ m.mapping_select(columns, mapping, 'subject', {required: true}) }}
+</p>
+<p>
+  <label for="import_mapping_description">{{ l('field_description') }}</label>
+  {{ m.mapping_select(columns, mapping, 'description') }}
+</p>
+<p>
+  <label for="import_mapping_priority">{{ l('field_priority') }}</label>
+  {{ m.mapping_select(columns, mapping, 'priority') }}
+</p>
+<p>
+  <label for="import_mapping_category">{{ l('field_category') }}</label>
+  {{ m.mapping_select(columns, mapping, 'category') }}
+  {% if can_manage_categories %}
+    <label class="block">
+      <input type="checkbox" name="import_settings[mapping][create_categories]" id="import_settings_mapping_create_categories" value="1"{% if create_categories %} checked="checked"{% endif %} />
+      {{ l('label_create_missing_values') }}
+    </label>
+  {% endif %}
+</p>
+<p>
+  <label for="import_mapping_assigned_to">{{ l('field_assigned_to') }}</label>
+  {{ m.mapping_select(columns, mapping, 'assigned_to') }}
+</p>
+<p>
+  <label for="import_mapping_fixed_version">{{ l('field_fixed_version') }}</label>
+  {{ m.mapping_select(columns, mapping, 'fixed_version') }}
+  {% if can_manage_versions %}
+    <label class="block">
+      <input type="checkbox" name="import_settings[mapping][create_versions]" id="import_settings_mapping_create_versions" value="1"{% if create_versions %} checked="checked"{% endif %} />
+      {{ l('label_create_missing_values') }}
+    </label>
+  {% endif %}
+</p>
+</div>
+
+<div class="splitcontentright">
+<p>
+  <label for="import_mapping_is_private">{{ l('field_is_private') }}</label>
+  {{ m.mapping_select(columns, mapping, 'is_private') }}
+</p>
+<p>
+  <label for="import_mapping_start_date">{{ l('field_start_date') }}</label>
+  {{ m.mapping_select(columns, mapping, 'start_date') }}
+</p>
+<p>
+  <label for="import_mapping_due_date">{{ l('field_due_date') }}</label>
+  {{ m.mapping_select(columns, mapping, 'due_date') }}
+</p>
+<p>
+  <label for="import_mapping_estimated_hours">{{ l('field_estimated_hours') }}</label>
+  {{ m.mapping_select(columns, mapping, 'estimated_hours') }}
+</p>
+<p>
+  <label for="import_mapping_done_ratio">{{ l('field_done_ratio') }}</label>
+  {{ m.mapping_select(columns, mapping, 'done_ratio') }}
+</p>
+{% for field in custom_fields %}
+  <p>
+    <label for="import_mapping_cf_{{ field.id }}">{{ field.name }}</label>
+    {{ m.mapping_select(columns, mapping, 'cf_' ~ field.id) }}
+  </p>
+{% endfor %}
+</div>
+</div>

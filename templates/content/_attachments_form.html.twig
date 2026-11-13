@@ -1,0 +1,5 @@
+{#- Attachments field of the content forms (wiki, news, documents, files, forum messages): same attachments.js widget as
+    Redmine's attachments/_form.html.erb (ajax uploads to /uploads.js, multiple files, drag & drop); the submitted
+    attachments[N][token] entries are handled by AttachmentService::fromRequest. Params: attachment_param, description -#}
+<script>if (typeof addInputFiles === 'undefined') { document.write('<script src="/assets/attachments.js"><\/script>'); }</script>
+{% include 'attachments/_form.html.twig' %}

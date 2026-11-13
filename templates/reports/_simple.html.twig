@@ -1,0 +1,32 @@
+{#- reports/_simple.html.erb ; params: data, field_name, rows -#}
+{% import 'reports/_macros.html.twig' as rm %}
+{% if statuses is empty or rows is empty %}
+    <p><i>{{ l('label_no_data') }}</i></p>
+{% else %}
+<table class="list issue-report">
+<thead><tr>
+<th></th>
+<th>{{ l('label_open_issues_plural') }}</th>
+<th>{{ l('label_closed_issues_plural') }}</th>
+<th>{{ l('label_total') }}</th>
+</tr></thead>
+<tbody>
+{% for row in rows %}
+<tr>
+  <td class="name"><a href="{{ rm.aggregate_path(project, field_name, row) }}">{{ row.name }}</a></td>
+  <td>{{ rm.aggregate_link(aggregate(data, {(field_name): row.id, closed: false}), rm.aggregate_path(project, field_name, row, {status_id: 'o'})) }}</td>
+  <td>{{ rm.aggregate_link(aggregate(data, {(field_name): row.id, closed: true}), rm.aggregate_path(project, field_name, row, {status_id: 'c'})) }}</td>
+  <td>{{ rm.aggregate_link(aggregate(data, {(field_name): row.id}), rm.aggregate_path(project, field_name, row, {status_id: '*'})) }}</td>
+</tr>
+{% endfor %}
+<tfoot>
+<tr class="total">
+  <td>{{ l('label_total') }}</td>
+  <td>{{ aggregate(data, {closed: false}) }}</td>
+  <td>{{ aggregate(data, {closed: true}) }}</td>
+  <td>{{ aggregate(data, {}) }}</td>
+</tr>
+</tfoot>
+</tbody>
+</table>
+{% endif %}

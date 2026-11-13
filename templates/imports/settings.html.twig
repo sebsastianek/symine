@@ -1,0 +1,44 @@
+{% extends layout %}
+{% block content %}
+<h2>{{ import_title }}</h2>
+{% set s = importer.settingsOf(import) %}
+<form id="import-form" action="{{ path('import_settings', {id: import.filename}) }}" accept-charset="UTF-8" method="post">
+  {{ csrf_field() }}
+  <fieldset class="box tabular">
+    <legend>{{ l('label_options') }}</legend>
+    <p>
+      <label for="import_settings_separator">{{ l('label_fields_separator') }}</label>
+      <select name="import_settings[separator]" id="import_settings_separator">
+        <option value=","{% if (s.separator ?? '') == ',' %} selected="selected"{% endif %}>{{ l('label_comma_char') }}</option>
+        <option value=";"{% if (s.separator ?? '') == ';' %} selected="selected"{% endif %}>{{ l('label_semi_colon_char') }}</option>
+      </select>
+    </p>
+    <p>
+      <label for="import_settings_wrapper">{{ l('label_fields_wrapper') }}</label>
+      <select name="import_settings[wrapper]" id="import_settings_wrapper">
+        <option value="'"{% if (s.wrapper ?? '') == "'" %} selected="selected"{% endif %}>{{ l('label_quote_char') }}</option>
+        <option value="&quot;"{% if (s.wrapper ?? '') == '"' %} selected="selected"{% endif %}>{{ l('label_double_quote_char') }}</option>
+      </select>
+    </p>
+    <p>
+      <label for="import_settings_encoding">{{ l('label_encoding') }}</label>
+      <select name="import_settings[encoding]" id="import_settings_encoding">
+        {%- for e in encodings %}<option value="{{ e }}"{% if (s.encoding ?? '') == e %} selected="selected"{% endif %}>{{ e }}</option>{% endfor -%}
+      </select>
+    </p>
+    <p>
+      <label for="import_settings_date_format">{{ l('setting_date_format') }}</label>
+      <select name="import_settings[date_format]" id="import_settings_date_format">
+        {%- for f in date_formats %}<option value="{{ f[1] }}"{% if (s.date_format ?? '') == f[1] %} selected="selected"{% endif %}>{{ f[0] }}</option>{% endfor -%}
+      </select>
+    </p>
+    <br>
+    <p>
+      <label for="import_settings_notifications">{{ l('label_import_notifications') }}</label>
+      <input type="hidden" name="import_settings[notifications]" value="0" autocomplete="off" />
+      <input type="checkbox" name="import_settings[notifications]" id="import_settings_notifications" value="1"{% if (s.notifications ?? '0') ~ '' == '1' %} checked="checked"{% endif %} />
+    </p>
+  </fieldset>
+  <p><input type="submit" value="{{ l('label_next') }} &#187;" data-disable-with="{{ l('label_next') }} &#187;" /></p>
+</form>
+{% endblock %}

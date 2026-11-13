@@ -1,0 +1,45 @@
+# Symine production-like stack: PHP 8.5 FPM + Caddy + PostgreSQL 16
+#   SYMINE_HTTP_PORT=8080 SYMINE_APP_SECRET=$(openssl rand -hex 16) docker compose -f docker-compose.yml up -d --build
+#   docker compose -f docker-compose.yml exec symine bin/console symine:install
+# (see README.md, "Deployment"). Variables are prefixed with SYMINE_ because docker compose also reads the
+# project's .env file (the development defaults of the Symfony app) for ${...} interpolation.
+services:
+  symine:
+    build: { context: ., dockerfile: docker/Dockerfile }
+    environment:
+      APP_ENV: prod
+      APP_SECRET: ${SYMINE_APP_SECRET:-change-me}
+      DATABASE_URL: ${SYMINE_DATABASE_URL:-postgresql://symine:symine@db:5432/symine?serverVersion=16&charset=utf8}
+      DEFAULT_URI: ${SYMINE_DEFAULT_URI:-http://localhost:8080}
+      MAILER_DSN: ${SYMINE_MAILER_DSN:-null://null}
+      SYMINE_FILES_PATH: /srv/symine/var/files
+      # Source for `bin/console symine:migrate-from-redmine`
+      REDMINE_DATABASE_URL: ${SYMINE_REDMINE_DATABASE_URL:-}
+      # Allowed repository paths per SCM (required to enable an SCM, like Redmine 7's scm_*_path_regexp)
+      SYMINE_SCM_GIT_PATH_REGEXP: ${SYMINE_SCM_GIT_PATH_REGEXP:-/srv/repositories/.+}
+    volumes:
+      - files:/srv/symine/var/files
+    depends_on:
+      db: { condition: service_healthy }
+    restart: unless-stopped
+  web:
+    image: caddy:2
+    ports: ["${SYMINE_HTTP_PORT:-8080}:80"]
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./public:/srv/symine/public:ro
+    depends_on: [symine]
+    restart: unless-stopped
+  db:
+    image: postgres:16
+    environment: { POSTGRES_USER: symine, POSTGRES_PASSWORD: symine, POSTGRES_DB: symine }
+    volumes: [db:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "symine", "-d", "symine"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+volumes:
+  files:
+  db:

@@ -1,0 +1,10 @@
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+<p>
+  <label for="custom_field_min_length">{{ l('label_min_max_length') }}</label>
+  <input size="5" type="text" value="{{ custom_field.minLength }}" name="custom_field[min_length]" id="custom_field_min_length" /> - 
+  <input size="5" type="text" value="{{ custom_field.maxLength }}" name="custom_field[max_length]" id="custom_field_max_length" />
+</p>
+<p>
+  {{ f.text_field('regexp', custom_field.regexp, l('field_regexp'), 50) }}
+  <em class="info">{{ l('text_regexp_info') }}</em>
+</p>

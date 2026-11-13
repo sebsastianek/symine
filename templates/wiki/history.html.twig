@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+{% set p = {project_id: project.identifier, id: page.title} %}
+{% block content %}
+{% include 'wiki/_breadcrumb.html.twig' %}
+
+<h2><a href="{{ path('wiki_show', p) }}">{{ page.prettyTitle() }}</a> &#187; {{ l('label_history') }}</h2>
+
+<form action="{{ path('wiki_diff', p) }}" accept-charset="UTF-8" method="get">
+{% set show_diff = versions|length > 1 %}
+{% if show_diff %}
+  <p><input type="submit" value="{{ l('label_view_diff') }}" data-disable-with="{{ l('label_view_diff') }}" /></p>
+{% endif %}
+<table class="list wiki-page-versions">
+<thead><tr>
+    <th>#</th>
+    <th></th>
+    <th></th>
+    <th>{{ l('field_updated_on') }}</th>
+    <th>{{ l('field_author') }}</th>
+    <th>{{ l('field_comments') }}</th>
+    <th></th>
+</tr></thead>
+<tbody>
+{% for ver in versions %}
+{% set line_num = loop.index %}
+<tr class="wiki-page-version">
+    <td class="id"><a href="{{ path('wiki_show_version', p|merge({version: ver.version})) }}">{{ ver.version }}</a></td>
+    <td class="checkbox">{% if show_diff and line_num < versions|length %}<input type="radio" name="version" id="cb-{{ line_num }}" value="{{ ver.version }}" onclick="$('#cbto-{{ line_num + 1 }}').prop('checked', true);"{% if line_num == 1 %} checked="checked"{% endif %} />{% endif %}</td>
+    <td class="checkbox">{% if show_diff and line_num > 1 %}<input type="radio" name="version_from" id="cbto-{{ line_num }}" value="{{ ver.version }}"{% if line_num == 2 %} checked="checked"{% endif %} />{% endif %}</td>
+    <td class="updated_on">{{ format_time(ver.updatedOn) }}</td>
+    <td class="author">{{ link_to_user(ver.author) }}</td>
+    <td class="comments">{{ ver.comments }}</td>
+    <td class="buttons">
+      <a href="{{ path('wiki_annotate', p|merge({version: ver.version})) }}">{{ l('button_annotate') }}</a>
+      {% if allowed_to('delete_wiki_pages', project) and version_count > 1 %}
+      <a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" rel="nofollow" data-method="delete" href="{{ path('wiki_destroy_version', p|merge({version: ver.version})) }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+      {% endif %}
+    </td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+{% if show_diff %}
+  <p><input type="submit" value="{{ l('label_view_diff') }}" data-disable-with="{{ l('label_view_diff') }}" /></p>
+{% endif %}
+{% include 'common/_pagination.html.twig' %}
+</form>
+{% endblock %}

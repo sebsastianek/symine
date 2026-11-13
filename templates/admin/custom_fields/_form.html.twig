@@ -1,0 +1,104 @@
+{% import 'admin/custom_fields/_macros.html.twig' as f %}
+{{ f.errors(errors) }}
+{% set cf = custom_field %}
+<div class="splitcontent">
+<div class="splitcontentleft">
+<div class="box tabular">
+<p>{{ f.select('field_format', format_options, cf.fieldFormat, l('field_field_format'), false, cf.id ? 'disabled="disabled"' : '') }}</p>
+<p>{{ f.text_field('name', cf.name, l('field_name'), 50, true) }}</p>
+<p>{{ f.label('description', l('field_description')) }}<textarea rows="7" name="custom_field[description]" id="custom_field_description">
+{{ cf.description }}</textarea></p>
+
+{% if format.multiple %}
+<p>
+  {{ f.check_box('multiple', cf.multiple, l('field_multiple')) }}
+  {% if cf.id and cf.multiple %}
+  <em class="info">{{ l('text_turning_multiple_off') }}</em>
+  {% endif %}
+</p>
+{% endif %}
+
+{% include 'admin/custom_fields/formats/_' ~ format.partial ~ '.html.twig' %}
+
+{{ call_hook('view_custom_fields_form_upper_box', {custom_field: cf, form: null}) }}
+</div>
+<p class="mobile-hide">
+  {% if cf.id is null %}
+    <input type="submit" name="commit" value="{{ l('button_create') }}" data-disable-with="{{ l('button_create') }}" />
+    <input type="submit" name="continue" value="{{ l('button_create_and_continue') }}" data-disable-with="{{ l('button_create_and_continue') }}" />
+  {% else %}
+    <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+  {% endif %}
+</p>
+</div>
+
+<div class="splitcontentright">
+  <div class="box tabular">
+    <p>{{ f.check_box('is_required', cf.isRequired, l('field_is_required')) }}</p>
+
+    {% if type == 'UserCustomField' %}
+      <p>{{ f.check_box('visible', cf.visible, l('field_visible')) }}</p>
+      <p>{{ f.check_box('editable', cf.editable, l('field_editable')) }}</p>
+    {% endif %}
+
+    {% if type in ['IssueCustomField', 'UserCustomField', 'ProjectCustomField', 'VersionCustomField', 'GroupCustomField', 'TimeEntryCustomField'] and format.filter %}
+      <p>{{ f.check_box('is_filter', cf.isFilter, l('field_is_filter')) }}</p>
+    {% endif %}
+
+    {% if type in ['IssueCustomField', 'ProjectCustomField'] and format.searchable %}
+      <p>{{ f.check_box('searchable', cf.searchable, l('field_searchable')) }}</p>
+    {% endif %}
+    {{ call_hook('view_custom_fields_form_' ~ (type|u.snake), {custom_field: cf, form: null}) }}
+  </div>
+
+  {% if type in ['IssueCustomField', 'TimeEntryCustomField', 'ProjectCustomField', 'VersionCustomField'] %}
+    <fieldset class="box tabular"><legend>{{ l('field_visible') }}</legend>
+      <label class="block">
+        <input type="radio" name="custom_field[visible]" id="custom_field_visible_on" value="1" data-disables=".custom_field_role input"{% if cf.visible %} checked="checked"{% endif %} />
+        {{ l('label_visibility_public') }}
+      </label>
+      <label class="block">
+        <input type="radio" name="custom_field[visible]" id="custom_field_visible_off" value="0" data-enables=".custom_field_role input"{% if not cf.visible %} checked="checked"{% endif %} />
+        {{ l('label_visibility_roles') }}:
+      </label>
+      {% for role in givable_roles %}
+        <label class="block custom_field_role" style="padding-left:2em;">
+          <input type="checkbox" name="custom_field[role_ids][]" value="{{ role.id }}"{% if role.id in role_ids %} checked="checked"{% endif %} />
+          {{ role.name }}
+        </label>
+      {% endfor %}
+      <input type="hidden" name="custom_field[role_ids][]" id="custom_field_role_ids_" value="" autocomplete="off" />
+    </fieldset>
+  {% endif %}
+
+  {% if type == 'IssueCustomField' %}
+    <fieldset class="box" id="custom_field_tracker_ids"><legend>{{ f.toggle_checkboxes_link('#custom_field_tracker_ids input[type=checkbox]') }}{{ l('label_tracker_plural') }}</legend>
+      {% for tracker in trackers %}
+        <input type="checkbox" name="custom_field[tracker_ids][]" id="custom_field_tracker_ids_{{ tracker.id }}" value="{{ tracker.id }}"{% if tracker.id in tracker_ids %} checked="checked"{% endif %} />
+        <label class="no-css" for="custom_field_tracker_ids_{{ tracker.id }}">
+          {{ tracker.name }}
+        </label>
+      {% endfor %}
+      <input type="hidden" name="custom_field[tracker_ids][]" id="custom_field_tracker_ids_" value="" autocomplete="off" />
+    </fieldset>
+
+    <fieldset class="box"><legend>{{ f.toggle_checkboxes_link('#custom_field_project_ids input[type=checkbox]:enabled') }}{{ l('label_project_plural') }}</legend>
+      <p>{{ f.check_box('is_for_all', cf.isForAll, l('field_is_for_all'), '1', '0', 'data-disables="#custom_field_project_ids input"') }}</p>
+
+      <div id="custom_field_project_ids">
+        {{ project_nested_list|raw }}
+        <input type="hidden" name="custom_field[project_ids][]" value="" autocomplete="off" />
+      </div>
+    </fieldset>
+  {% endif %}
+</div>
+</div>
+
+<p class="mobile-show">
+  {% if cf.id is null %}
+    <input type="submit" name="commit" value="{{ l('button_create') }}" data-disable-with="{{ l('button_create') }}" />
+    <input type="submit" name="continue" value="{{ l('button_create_and_continue') }}" data-disable-with="{{ l('button_create_and_continue') }}" />
+  {% else %}
+    <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+  {% endif %}
+</p>

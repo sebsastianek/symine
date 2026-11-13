@@ -1,0 +1,4 @@
+<form class="edit_project" id="edit_project_{{ project.id }}" enctype="multipart/form-data" action="{{ path('project_update', {id: project.identifier}) }}" method="post"><input type="hidden" name="_method" value="patch" autocomplete="off" />{{ csrf_field() }}
+{% include 'projects/_form.html.twig' with {form_project: project} %}
+<input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+</form>

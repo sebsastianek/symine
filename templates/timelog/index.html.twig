@@ -1,0 +1,32 @@
+{% extends 'base.html.twig' %}
+{% import 'queries/_macros.html.twig' as qm %}
+{% block header_tags %}{{ qm.context_menu_tags() }}{{ qm.calendar_headers() }}
+<link rel="alternate" type="application/atom+xml" title="{{ l('label_spent_time') }}" href="{{ path(project ? 'project_time_entries_format' : 'time_entries_index_format', route_params|merge({_format: 'atom', key: atom_key})) }}" />{% endblock %}
+{% block content %}
+<div class="contextual">
+{% if allowed_to('log_time', project, true) %}
+<a class="icon icon-time-add" href="{{ project ? path('time_entry_new', {project_id: project.identifier}|merge(query.filteredIssueId() ? {time_entry: {issue_id: query.filteredIssueId()}} : {})) : (query.filteredIssueId() ? path('issue_time_entry_new', {issue_id: query.filteredIssueId()}) : path('time_entry_new_global')) }}">{{ sprite_icon('time-add', l('button_log_time')) }}</a>
+{% endif %}
+{% set can_import = path_exists('new_time_entries_import') and allowed_to('import_time_entries', project, true) and allowed_to('log_time', project, true) %}
+{% set can_settings = project and allowed_to('manage_project_activities', project) %}
+{% if can_import or can_settings %}
+<span class="drdn"><span class="drdn-trigger"><span class="icon-only icon-actions" title="{{ l('button_actions') }}">{{ sprite_icon('3-bullets', l('button_actions')) }}</span></span><div class="drdn-content"><div class="drdn-items">
+  {% if can_import %}<a class="icon icon-import" href="{{ path('new_time_entries_import', project ? {project_id: project.identifier} : {}) }}">{{ sprite_icon('import', l('button_import')) }}</a>{% endif %}
+  {% if can_settings %}<a class="icon icon-settings" href="{{ path('project_settings', {id: project.identifier, tab: 'activities'}) }}">{{ sprite_icon('settings', l('label_settings')) }}</a>{% endif %}
+</div></div></span>
+{% endif %}
+</div>
+
+<h2>{{ query.isNew() ? l('label_spent_time') : query.name() }}</h2>
+{% if not query.isNew() and query.record.description %}<p class="subtitle">{{ query.record.description }}</p>{% endif %}
+
+<form id="query_form" action="{{ path(project ? 'project_time_entries' : 'time_entries_index', route_params) }}" accept-charset="UTF-8" method="get">
+{% include 'timelog/_date_range.html.twig' with {active_tab: 'details'} %}
+</form>
+
+<div id="time-entries-results">
+{% include 'timelog/_index_results.html.twig' %}
+</div>
+{% endblock %}
+
+{% block sidebar %}{% include 'timelog/_sidebar.html.twig' %}{% endblock %}

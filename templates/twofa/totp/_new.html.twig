@@ -1,0 +1,8 @@
+<p>
+  <label>&nbsp;</label>
+  <img src="data:image/svg+xml;base64,{{ qr_code_base64 }}" id="twofa_code" />
+</p>
+<p>
+  <label>{{ l('twofa__totp__label_plain_text_key') }}</label>
+  <code>{{ totp_key|split('', 4)|join(' ') }}</code>
+</p>

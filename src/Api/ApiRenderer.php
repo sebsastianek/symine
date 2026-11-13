@@ -17,22 +17,41 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class ApiRenderer
 {
-    /** @param array<string, mixed> $data */
-    public function render(Request $request, array $data, int $status = 200): Response
+    /**
+     * @param array<string, mixed>        $data
+     * @param array<string, list<string>> $xmlAttributes nested element name => keys rendered as XML attributes
+     *                                                   (e.g. ['custom_field' => ['id', 'name', 'multiple']])
+     */
+    public function render(Request $request, array $data, int $status = 200, array $xmlAttributes = []): Response
     {
         $format = self::format($request);
+        // ApplicationController#api_meta: no paging metadata with the "nometa" param or X-Redmine-Nometa header
+        if (($request->query->has('nometa') && '' !== (string) $request->query->get('nometa')) || $request->headers->has('X-Redmine-Nometa')) {
+            $data = array_diff_key($data, ['total_count' => 1, 'offset' => 1, 'limit' => 1]);
+        }
         if ('xml' === $format) {
-            return new Response($this->toXml($data), $status, ['Content-Type' => 'application/xml; charset=utf-8']);
+            $this->xmlAttributes = $xmlAttributes;
+            try {
+                return new Response($this->toXml($data), $status, ['Content-Type' => 'application/xml; charset=utf-8']);
+            } finally {
+                $this->xmlAttributes = [];
+            }
         }
         $json = json_encode($data, \JSON_UNESCAPED_UNICODE | \JSON_UNESCAPED_SLASHES | \JSON_PRESERVE_ZERO_FRACTION);
-        $response = new JsonResponse($json, $status, [], true);
-        if ($cb = $request->query->get('callback')) {
-            if (preg_match('/^[\w.]+$/', (string) $cb)) {
-                $response->setCallback((string) $cb);
+        // Redmine::Views::Builders::Json: JSONP only when Setting.jsonp_enabled?, callback stripped to [a-zA-Z0-9_.]
+        $callback = $request->query->get('callback') ?? $request->query->get('jsonp');
+        if (null !== $callback && true === $this->settings?->bool('jsonp_enabled')) {
+            $callback = (string) preg_replace('/[^a-zA-Z0-9_.]/', '', (string) $callback);
+            if ('' !== $callback) {
+                return new Response($callback.'('.$json.')', $status, ['Content-Type' => 'application/javascript; charset=utf-8']);
             }
         }
 
-        return $response;
+        return new JsonResponse($json, $status, [], true);
+    }
+
+    public function __construct(private readonly ?\App\Service\Settings $settings = null)
+    {
     }
 
     public function noContent(): Response
@@ -135,8 +154,15 @@ final class ApiRenderer
         return $xml.$this->element($root, $value);
     }
 
-    private function element(string $name, mixed $value): string
+    /** @var array<string, list<string>> */
+    private array $xmlAttributes = [];
+
+    private function element(string $name, mixed $value, int $depth = 0): string
     {
+        if (\is_float($value)) {
+            // Ruby Float#to_s: 8.0 => "8.0"
+            $value = (floor($value) === $value && abs($value) < 1e15) ? number_format($value, 1, '.', '') : (string) $value;
+        }
         if (null === $value) {
             return '<'.$name.'/>';
         }
@@ -149,13 +175,14 @@ final class ApiRenderer
         if (array_is_list($value)) {
             $s = '<'.$name.' type="array">';
             foreach ($value as $item) {
-                $s .= $this->element(self::singular($name), $item);
+                $s .= $this->element(self::singular($name), $item, $depth + 1);
             }
 
             return $s.'</'.$name.'>';
         }
         // scalar values of "id"/"name" pairs are rendered as attributes, like Redmine (<status id="1" name="New"/>)
-        $isRef = [] !== $value && [] === array_diff(array_keys($value), ['id', 'name', 'is_closed']) && !\is_array($value['id'] ?? null);
+        // (nested only: top level collection items are rendered with child elements, e.g. <role><id>3</id>..)
+        $isRef = $depth > 0 && [] !== $value && [] === array_diff(array_keys($value), ['id', 'name', 'is_closed', 'inherited']) && !\is_array($value['id'] ?? null);
         if ($isRef) {
             $attrs = '';
             foreach ($value as $k => $v) {
@@ -164,9 +191,30 @@ final class ApiRenderer
 
             return '<'.$name.$attrs.'/>';
         }
-        $s = '<'.$name.'>';
+        $attrKeys = $depth > 0 ? ($this->xmlAttributes[$name] ?? []) : [];
+        // Redmine renders custom field values nested in an object as <custom_field id=".." name=".."><value>..</value></custom_field>
+        // (top level /custom_fields.xml lists use child elements, hence depth > 1)
+        if ([] === $attrKeys && 'custom_field' === $name && $depth > 1 && \array_key_exists('value', $value)) {
+            $attrKeys = ['id', 'name', 'multiple'];
+        }
+        if ([] !== $attrKeys) {
+            $attrs = '';
+            foreach ($attrKeys as $k) {
+                if (\array_key_exists($k, $value)) {
+                    $v = $value[$k];
+                    $attrs .= ' '.$k.'="'.htmlspecialchars(\is_bool($v) ? ($v ? 'true' : 'false') : (string) $v, \ENT_XML1 | \ENT_QUOTES).'"';
+                    unset($value[$k]);
+                }
+            }
+            if ([] === $value) {
+                return '<'.$name.$attrs.'/>';
+            }
+            $s = '<'.$name.$attrs.'>';
+        } else {
+            $s = '<'.$name.'>';
+        }
         foreach ($value as $k => $v) {
-            $s .= $this->element((string) $k, $v);
+            $s .= $this->element((string) $k, $v, $depth + 1);
         }
 
         return $s.'</'.$name.'>';
@@ -179,8 +227,11 @@ final class ApiRenderer
             'statuses' === $plural, 'issue_statuses' === $plural => substr($plural, 0, -2),
             'news' === $plural => 'news',
             'children' === $plural => 'issue',
+            'watchers' === $plural => 'user',
+            'allowed_statuses' === $plural => 'status',
             'changesets' === $plural => 'changeset',
             'possible_values' === $plural => 'possible_value',
+            'enabled_standard_fields' === $plural => 'field',
             str_ends_with($plural, 'ies') => substr($plural, 0, -3).'y',
             str_ends_with($plural, 's') => substr($plural, 0, -1),
             default => $plural,

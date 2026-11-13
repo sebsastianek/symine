@@ -22,7 +22,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  */
 final class RequestContextSubscriber implements EventSubscriberInterface
 {
-    private const array PUBLIC_ROUTES = ['signin', 'signout', 'register', 'lost_password', 'account_activate', 'account_activation_email', 'mail_handler', 'my_password', 'twofa_login', 'twofa_confirm', '_wdt', '_profiler'];
+    private const array PUBLIC_ROUTES = ['signin', 'signout', 'register', 'lost_password', 'account_activate', 'account_activation_email', 'mail_handler', 'my_password', 'twofa_login', 'twofa_confirm', 'twofa_resend', 'oauth_token', 'oauth_revoke', 'oauth_token_info', 'sys_projects', 'sys_create_project_repository', 'sys_fetch_changesets', 'robots', 'rails_health_check', '_wdt', '_profiler'];
 
     public function __construct(
         private readonly CurrentUser $currentUser,
@@ -67,7 +67,7 @@ final class RequestContextSubscriber implements EventSubscriberInterface
         }
         if (!$user->isLogged() && $this->settings->loginRequired()) {
             $event->setResponse(ApiRequestMatcher::isApiRequest($request)
-                ? new JsonResponse(null, 401, ['WWW-Authenticate' => 'Basic realm="Redmine API"'])
+                ? \App\Security\LoginEntryPoint::apiUnauthorized($request, $this->settings->restApiEnabled())
                 : new RedirectResponse($this->urls->generate('signin', ['back_url' => $request->getUri()])));
 
             return;

@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_news_new') }}</h2>
+
+<form class="new_news" id="news-form" enctype="multipart/form-data" action="{{ form_project ? path('project_news_create', {project_id: form_project.identifier}) : path('news_create_global') }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+  {% include 'news/_form.html.twig' %}
+  <input type="submit" name="commit" value="{{ l('button_create') }}" data-disable-with="{{ l('button_create') }}" />
+</form>
+{% endblock %}

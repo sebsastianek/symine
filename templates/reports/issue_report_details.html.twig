@@ -1,0 +1,10 @@
+{#- reports/issue_report_details.html.erb -#}
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2><a href="{{ path('issues_report', {id: project.identifier}) }}">{{ l('label_report_plural') }}</a> &raquo;</h2>
+
+<h3>{{ report_title }}</h3>
+{% include 'reports/_details.html.twig' with {data: data, field_name: field, rows: rows} %}
+<br />
+<a href="{{ path('issues_report', {id: project.identifier}) }}">{{ l('button_back') }}</a>
+{% endblock %}

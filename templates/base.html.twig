@@ -32,12 +32,31 @@
 //<![CDATA[
 $(window).on('load', function(){ warnLeavingUnsaved({{ l('text_warn_on_leaving_unsaved')|json_encode|raw }}); });
 rm = window.rm || {};rm.I18n = Object.freeze({buttonCopy: {{ l('button_copy')|json_encode|raw }}});
-rm.AutoComplete = {dataSources: {{ {issues: (path_exists('issues_auto_complete') ? path('issues_auto_complete') ~ '?q=' : ''), wiki_pages: ''}|json_encode|raw }}};
+{%- set _ac_params = project ? {project_id: project.identifier, q: ''} : {q: ''} %}
+var datepickerOptions={dateFormat: 'yy-mm-dd', firstDay: {{ i18n.startOfWeek() % 7 }}, showOn: 'button', buttonImageOnly: true, buttonImage: '/assets/calendar.png', showButtonPanel: true, showWeek: true, showOtherMonths: true, selectOtherMonths: true, changeMonth: true, changeYear: true, beforeShow: beforeShowDatePicker};
+rm.AutoComplete = {dataSources: {{ {issues: (path_exists('issues_auto_complete') ? path('issues_auto_complete', _ac_params) : ''), wiki_pages: (path_exists('wiki_pages_auto_complete') ? path('wiki_pages_auto_complete', _ac_params) : '')}|json_encode|raw }}};
 //]]>
 </script>
 {% block header_tags %}{% endblock %}
+{{ call_hook('view_layouts_base_html_head') }}
 </head>
-<body class="{% block body_class %}{% if project %}project-{{ project.identifier }} {% endif %}{{ body_css ?? '' }}{% endblock %}" data-text-formatting="{{ settings.textFormatting() }}">
+{#- rendered before <body>: Redmine adds the has-main-menu body class (header height) when the main menu is shown -#}
+{%- set main_menu_html -%}
+    {% block main_menu %}
+    {% set menu_items = project ? project_menu(project, main_menu_selected ?? null) : (admin_menu_selected is defined ? [] : application_menu(main_menu_selected ?? null)) %}
+    {% if menu_items|length > 0 %}
+    <div id="main-menu" class="tabs">
+        {% include 'common/_menu.html.twig' with {items: menu_items} %}
+        <div class="tabs-buttons" style="display:none;">
+            <button class="tab-left icon-only" onclick="moveTabLeft(this); return false;">{{ sprite_icon('angle-left') }}</button>
+            <button class="tab-right icon-only" onclick="moveTabRight(this); return false;">{{ sprite_icon('angle-right') }}</button>
+        </div>
+    </div>
+    {% endif %}
+    {% endblock %}
+{%- endset -%}
+<body class="{% block body_class %}{% if project %}project-{{ project.identifier }} {% endif %}{% if main_menu_html|trim is not empty %}has-main-menu {% endif %}{{ body_css ?? '' }}{% endblock %}" data-text-formatting="{{ settings.textFormatting() }}">
+{{ call_hook('view_layouts_base_body_top') }}
 <div id="wrapper">
 
 <div class="flyout-menu js-flyout-menu">
@@ -102,7 +121,7 @@ rm.AutoComplete = {dataSources: {{ {issues: (path_exists('issues_auto_complete')
     <a href="#" class="mobile-toggle-button js-flyout-menu-toggle-button"></a>
     {% if user.isLogged() or not settings.loginRequired() %}
     <div id="quick-search">
-        <form action="{{ path_exists('search') ? path('search', project ? {id: project.identifier} : {}) : '#' }}" method="get">
+        <form action="{{ path_exists('search') ? (project and path_exists('project_search') ? path('project_search', {id: project.identifier}) : path('search')) : '#' }}" method="get">
         <input type="hidden" name="scope" value="{{ project ? 'subprojects' : '' }}" />
         {% if search_scope is defined and search_scope %}<input type="hidden" name="{{ search_scope }}" value="1" />{% endif %}
         <label for="q"><a accesskey="4" href="{{ path_exists('search') ? path('search') : '#' }}">{{ l('label_search') }}</a>:</label>
@@ -114,21 +133,10 @@ rm.AutoComplete = {dataSources: {{ {issues: (path_exists('issues_auto_complete')
 
     <h1>{% block page_header %}{% if project %}{% for a in project.getAncestors() %}{{ link_to_project(a) }} &raquo; {% endfor %}<span class="current-project">{{ project.name }}</span>{% elseif admin_menu_selected is defined %}{{ l('label_administration') }}{% else %}{{ settings.appTitle() }}{% endif %}{% endblock %}</h1>
 
-    {% block main_menu %}
-    {% set menu_items = project ? project_menu(project, main_menu_selected ?? null) : (admin_menu_selected is defined ? [] : application_menu(main_menu_selected ?? null)) %}
-    {% if menu_items|length > 0 %}
-    <div id="main-menu" class="tabs">
-        {% include 'common/_menu.html.twig' with {items: menu_items} %}
-        <div class="tabs-buttons" style="display:none;">
-            <button class="tab-left icon-only" onclick="moveTabLeft(this); return false;">{{ sprite_icon('angle-left') }}</button>
-            <button class="tab-right icon-only" onclick="moveTabRight(this); return false;">{{ sprite_icon('angle-right') }}</button>
-        </div>
-    </div>
-    {% endif %}
-    {% endblock %}
+    {{ main_menu_html }}
 </div>
 
-{% set sidebar_html %}{% block sidebar %}{% endblock %}{% endset %}
+{% set sidebar_html %}{% block sidebar %}{% endblock %}{{ call_hook('view_layouts_base_sidebar') }}{% endset %}
 <div id="main" class="{{ sidebar_html|trim is empty ? 'nosidebar' : 'collapsiblesidebar' }}">
     {% if sidebar_html|trim is not empty %}<script>$('#main.collapsiblesidebar').collapsibleSidebar();</script>{% endif %}
     <div id="sidebar">
@@ -149,6 +157,7 @@ rm.AutoComplete = {dataSources: {{ {issues: (path_exists('issues_auto_complete')
           <p class="warning"><span class="icon icon-lock">{{ sprite_icon('lock', l('text_project_closed')) }}</span></p>
         {% endif %}
         {% block content %}{% endblock %}
+        {{ call_hook('view_layouts_base_content') }}
         <div style="clear:both;"></div>
     </div>
 </div>
@@ -162,5 +171,6 @@ rm.AutoComplete = {dataSources: {{ {issues: (path_exists('issues_auto_complete')
 <div id="ajax-modal" style="display:none;"></div>
 <div id="icon-copy-source" style="display: none;">{{ sprite_icon('') }}</div>
 </div>
+{{ call_hook('view_layouts_base_body_bottom') }}
 </body>
 </html>

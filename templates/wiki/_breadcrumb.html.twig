@@ -1,0 +1,2 @@
+{#- wiki_page_breadcrumb(page): requires `ancestors`, `project` -#}
+{% if ancestors|default([])|length > 0 %}<p class="breadcrumb">{% for a in ancestors %}<a href="{{ path('wiki_show', {project_id: a.wiki.project.identifier, id: a.title}) }}">{{ a.prettyTitle() }}</a> » {% endfor %}</p>{% endif %}

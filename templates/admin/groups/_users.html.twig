@@ -1,0 +1,31 @@
+<p><a class="icon icon-add" href="{{ path('group_users_new', {id: group.id, users_page: app.request.query.get('users_page')}) }}">{{ sprite_icon('add', l('label_user_new')) }}</a></p>
+
+{% if users_pager.count > 0 %}
+  <div class="autoscroll">
+  <table class="list users">
+    <thead><tr>
+      <th>{{ l('label_user') }}</th>
+      <th style="width:15%"></th>
+    </tr></thead>
+    <tbody>
+    {% for user in group_users %}
+      <tr id="user-{{ user.id }}">
+        <td class="name">{{ link_to_user(user) }}</td>
+        <td class="buttons">
+          <a class="icon icon-link-break" rel="nofollow" data-method="delete" href="{{ path('group_users_remove', {id: group.id, user_id: user.id, users_page: app.request.query.get('users_page')}) }}">{{ sprite_icon('link-break', l('button_remove')) }}</a>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% if users_pager.pages > 1 %}
+  <span class="pagination"><ul class="pages">
+  {% for p in 1..users_pager.pages %}
+    {% if p == users_pager.page %}<li class="current"><span>{{ p }}</span></li>{% else %}<li><a href="{{ path('group_edit', app.request.query.all|merge({id: group.id, tab: 'users', users_page: p})) }}">{{ p }}</a></li>{% endif %}
+  {% endfor %}
+  </ul><span><span class="items">({{ users_pager.offset + 1 }}-{{ min(users_pager.offset + users_pager.limit, users_pager.count) }}/{{ users_pager.count }})</span></span></span>
+  {% endif %}
+{% else %}
+  <p class="nodata">{{ l('label_no_data') }}</p>
+{% endif %}

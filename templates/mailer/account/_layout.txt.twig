@@ -1,0 +1,6 @@
+{% if emails_header %}{{ emails_header }}
+
+{% endif %}{% block body %}{% endblock %}
+{% if emails_footer %}
+--
+{{ emails_footer }}{% endif %}

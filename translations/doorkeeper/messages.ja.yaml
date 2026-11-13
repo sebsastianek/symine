@@ -1,0 +1,88 @@
+# Doorkeeper translations (doorkeeper-i18n 5.2.9 / doorkeeper 5.8.2, MIT), used by the OAuth2 provider.
+# Generated - merged into the "messages" domain.
+activerecord.attributes.doorkeeper/application.name: 名前
+activerecord.attributes.doorkeeper/application.redirect_uri: リダイレクトURI
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.forbidden_uri: はサーバーによって禁止されています。
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.fragment_present: はURLフラグメントを含めることはできません。
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.invalid_uri: は有効なURIではありません。
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.relative_uri: は絶対URIでなければなりません。
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.secured_uri: 'はHTTPS/SSL URIでなければなりません。'
+activerecord.errors.models.doorkeeper/application.attributes.redirect_uri.unspecified_scheme: スキームを指定する必要があります。
+activerecord.errors.models.doorkeeper/application.attributes.scopes.not_match_configured: はサーバーの設定と一致しません。
+doorkeeper.applications.buttons.authorize: 認証
+doorkeeper.applications.buttons.cancel: キャンセル
+doorkeeper.applications.buttons.destroy: 削除
+doorkeeper.applications.buttons.edit: 編集
+doorkeeper.applications.buttons.submit: 登録
+doorkeeper.applications.confirmations.destroy: 本当に削除しますか？
+doorkeeper.applications.edit.title: アプリケーションの編集
+doorkeeper.applications.form.error: おっと！フォームにエラーがないか確認してください
+doorkeeper.applications.help.blank_redirect_uri: リダイレクトURIを必要としないクライアントクレデンシャル、リソースオーナークレデンシャル、その他のグラントタイプの場合は空白のままにします。
+doorkeeper.applications.help.confidential: クライアントシークレットの機密を保持できるアプリケーションで使われます。
+doorkeeper.applications.help.redirect_uri: URIごとに1行で入力してください
+doorkeeper.applications.help.scopes: 各スコープをスペースで区切ってください。初期設定のスコープを使用する場合は、空白のままにしてください。
+doorkeeper.applications.index.actions: 行動
+doorkeeper.applications.index.callback_url: コールバックURL
+doorkeeper.applications.index.confidential: 機密？
+doorkeeper.applications.index.confidentiality.no: いいえ
+doorkeeper.applications.index.confidentiality.yes: はい
+doorkeeper.applications.index.name: 名称
+doorkeeper.applications.index.new: 新しいアプリケーション
+doorkeeper.applications.index.title: アプリケーション
+doorkeeper.applications.new.title: アプリケーションの作成
+doorkeeper.applications.show.actions: アクション
+doorkeeper.applications.show.application_id: 'アプリケーションID:'
+doorkeeper.applications.show.callback_urls: 'コールバックURL:'
+doorkeeper.applications.show.confidential: '機密:'
+doorkeeper.applications.show.not_defined: 'Not defined'
+doorkeeper.applications.show.scopes: 'スコープ:'
+doorkeeper.applications.show.secret: 'シークレット:'
+doorkeeper.applications.show.secret_hashed: 'Secret hashed'
+doorkeeper.applications.show.title: 'アプリケーション: %{name}'
+doorkeeper.authorizations.buttons.authorize: 承認
+doorkeeper.authorizations.buttons.deny: 否認
+doorkeeper.authorizations.error.title: エラーが発生しました
+doorkeeper.authorizations.form_post.title: 'Submit this form'
+doorkeeper.authorizations.new.able_to: 'このアプリケーションは次のことが可能です:'
+doorkeeper.authorizations.new.prompt: 'あなたのアカウントで %{client_name} を承認しますか？'
+doorkeeper.authorizations.new.title: 承認が必要です
+doorkeeper.authorizations.show.title: '認可コード:'
+doorkeeper.authorized_applications.buttons.revoke: 取消
+doorkeeper.authorized_applications.confirmations.revoke: 本当に取消しますか？
+doorkeeper.authorized_applications.index.application: アプリケーション
+doorkeeper.authorized_applications.index.created_at: 作成日時
+doorkeeper.authorized_applications.index.date_format: '%Y年%m月%d日 %H:%M:%S'
+doorkeeper.authorized_applications.index.title: あなたの認証されたアプリケーション
+doorkeeper.errors.messages.access_denied: リソースオーナーもしくは認可サーバがリクエストを拒否しました。
+doorkeeper.errors.messages.admin_authenticator_not_configured: 'Doorkeeper.configure.admin_authenticator が設定されていないため、管理者パネルへのアクセスが禁止されています。'
+doorkeeper.errors.messages.credential_flow_not_configured: 'Doorkeeper.configure.resource_owner_from_credentials が設定されていないため、リソースオーナーパスワードクレデンシャルフローは失敗しました。'
+doorkeeper.errors.messages.forbidden_token.missing_scope: 'このリソースにアクセスするには次のスコープが必要です。%{oauth_scopes}'
+doorkeeper.errors.messages.invalid_client: クライアントが不明か、クライアント認証が含まれていないか、もしくは認証メソッドがサポートされていないため、クライアント認証は失敗しました。
+doorkeeper.errors.messages.invalid_code_challenge_method: コードチャレンジメソッドはplainかS256でなければなりません。
+doorkeeper.errors.messages.invalid_grant: 指定された認可グラントは無効か、有効期限切れか、リダイレクトURIが異なるか、もしくは別のクライアントに適用されています。
+doorkeeper.errors.messages.invalid_redirect_uri: 含まれるリダイレクトURIが正しくありません。
+doorkeeper.errors.messages.invalid_request.missing_param: '必須パラメーターが不足しています: %{value}'
+doorkeeper.errors.messages.invalid_request.request_not_authorized: リクエストは認可が必要です。リクエストを認可するための必須パラメータが不足しているか無効です。
+doorkeeper.errors.messages.invalid_request.unknown: 必須パラメータが不足しているか、サポートされていないパラメータが含まれているか、もしくはパラメータが無効であるため、リクエストを処理できませんでした。
+doorkeeper.errors.messages.invalid_scope: 指定されたスコープが無効か、不明か、もしくは正しくありません。
+doorkeeper.errors.messages.invalid_token.expired: アクセストークンの有効期限が切れました
+doorkeeper.errors.messages.invalid_token.revoked: アクセストークンが取り消されました
+doorkeeper.errors.messages.invalid_token.unknown: アクセストークンが無効です
+doorkeeper.errors.messages.resource_owner_authenticator_not_configured: 'Doorkeeper.configure.resource_owner_authenticator が設定されていないため、リソースオーナーの取得に失敗しました。'
+doorkeeper.errors.messages.revoke.unauthorized: このトークンを無効化する権限がありません
+doorkeeper.errors.messages.server_error: 予期せぬ事態が発生したため、認可サーバはリクエストを処理できませんでした。
+doorkeeper.errors.messages.temporarily_unavailable: 認可サーバが一時的に高負荷な状態にあるか、もしくはメンテナンス中であるため、リクエストを処理できません。
+doorkeeper.errors.messages.unauthorized_client: クライアントはこのメソッドを用いたリクエストを実行する権限がありません。
+doorkeeper.errors.messages.unsupported_grant_type: この認可グラントのタイプは認可サーバではサポートされていません。
+doorkeeper.errors.messages.unsupported_response_mode: 'The authorization server does not support this response mode.'
+doorkeeper.errors.messages.unsupported_response_type: 認可サーバは指定されたレスポンスタイプをサポートしていません。
+doorkeeper.flash.applications.create.notice: アプリケーションが作成されました。
+doorkeeper.flash.applications.destroy.notice: アプリケーションが削除されました。
+doorkeeper.flash.applications.update.notice: アプリケーションが更新されました。
+doorkeeper.flash.authorized_applications.destroy.notice: アプリケーションが取消されました。
+doorkeeper.layouts.admin.nav.applications: アプリケーション
+doorkeeper.layouts.admin.nav.home: ホーム
+doorkeeper.layouts.admin.nav.oauth2_provider: 'OAuth2 プロバイダー'
+doorkeeper.layouts.admin.title: Doorkeeper
+doorkeeper.layouts.application.title: OAuth認証が必要です
+doorkeeper.pre_authorization.status: Pre-authorization

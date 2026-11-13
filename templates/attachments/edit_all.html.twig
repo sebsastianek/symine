@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>
+  {% if container_link %}{{ container_link|raw }} &#187; {% endif %}{{ l('label_edit_attachments') }}
+</h2>
+
+{% include 'issues/_errors.html.twig' %}
+
+<form action="{{ path('attachments_update_all', {object_type: object_type, object_id: object_id}) }}" accept-charset="UTF-8" method="post">
+  <input type="hidden" name="_method" value="patch" autocomplete="off" />{{ csrf_field() }}
+  {% if back_url %}<input type="hidden" name="back_url" value="{{ back_url }}" autocomplete="off" />{% endif %}
+  <div class="box attachments">
+  <table>
+  {% for attachment in attachments %}
+    <tr>
+      <td colspan="2">
+        <span class="icon icon-attachment">{{ sprite_icon('file', null, 16) }}{{ attachment.filename }}</span>
+        <span class="size">({{ number_to_human_size(attachment.filesize) }})</span>
+        <span class="author">{{ attachment.author.getName() }}, {{ format_time(attachment.createdOn) }}</span>
+      </td>
+    </tr>
+    <tr id="attachment-{{ attachment.id }}">
+      <td><input type="text" name="attachments[{{ attachment.id }}][filename]" id="attachments_{{ attachment.id }}_filename" value="{{ attachment.filename }}" size="40" /></td>
+      <td>
+        <input type="text" name="attachments[{{ attachment.id }}][description]" id="attachments_{{ attachment.id }}_description" value="{{ attachment.description }}" size="80" placeholder="{{ l('label_optional_description') }}" />
+      </td>
+    </tr>
+  {% endfor %}
+  </table>
+  </div>
+  <p>
+    <input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" />
+    {% if back_url %}<a href="{{ back_url }}">{{ l('button_cancel') }}</a>{% endif %}
+  </p>
+</form>
+{% endblock %}

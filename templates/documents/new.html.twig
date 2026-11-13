@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_document_new') }}</h2>
+
+<form class="new_document" id="new_document" enctype="multipart/form-data" action="{{ path('document_create', {project_id: project.identifier}) }}" accept-charset="UTF-8" method="post">
+{{ csrf_field() }}
+  {% include 'documents/_form.html.twig' %}
+  <p><input type="submit" name="commit" value="{{ l('button_create') }}" data-disable-with="{{ l('button_create') }}" /></p>
+</form>
+{% endblock %}

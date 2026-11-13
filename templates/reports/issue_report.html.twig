@@ -1,0 +1,43 @@
+{#- reports/issue_report.html.erb -#}
+{% extends 'base.html.twig' %}
+{% macro section_title(project, label, detail) -%}
+<h3>
+  {{ l(label) }}&nbsp;
+  <a class="icon-only icon-zoom-in" title="{{ l('label_details') }}" href="{{ path('issues_report_details', {id: project.identifier, detail: detail}) }}">{{ sprite_icon('zoom-in', l('label_details')) }}</a>
+</h3>
+{%- endmacro %}
+{% block content %}
+{% import _self as m %}
+<h2>{{ l('label_report_plural') }}</h2>
+
+<div class="splitcontent">
+<div class="splitcontentleft">
+{{ m.section_title(project, 'field_tracker', 'tracker') }}
+{% include 'reports/_simple.html.twig' with {data: sections.tracker.data, field_name: 'tracker_id', rows: sections.tracker.rows} %}
+<br />
+{{ m.section_title(project, 'field_priority', 'priority') }}
+{% include 'reports/_simple.html.twig' with {data: sections.priority.data, field_name: 'priority_id', rows: sections.priority.rows} %}
+<br />
+{{ m.section_title(project, 'field_assigned_to', 'assigned_to') }}
+{% include 'reports/_simple.html.twig' with {data: sections.assigned_to.data, field_name: 'assigned_to_id', rows: sections.assigned_to.rows} %}
+<br />
+{{ m.section_title(project, 'field_author', 'author') }}
+{% include 'reports/_simple.html.twig' with {data: sections.author.data, field_name: 'author_id', rows: sections.author.rows} %}
+<br />
+</div>
+
+<div class="splitcontentright">
+{{ m.section_title(project, 'field_version', 'version') }}
+{% include 'reports/_simple.html.twig' with {data: sections.version.data, field_name: 'fixed_version_id', rows: sections.version.rows} %}
+<br />
+{% if has_children %}
+{{ m.section_title(project, 'field_subproject', 'subproject') }}
+{% include 'reports/_simple.html.twig' with {data: sections.subproject.data, field_name: 'project_id', rows: sections.subproject.rows} %}
+<br />
+{% endif %}
+{{ m.section_title(project, 'field_category', 'category') }}
+{% include 'reports/_simple.html.twig' with {data: sections.category.data, field_name: 'category_id', rows: sections.category.rows} %}
+<br />
+</div>
+</div>
+{% endblock %}

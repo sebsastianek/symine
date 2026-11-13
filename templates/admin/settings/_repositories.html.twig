@@ -1,0 +1,126 @@
+{% import 'admin/settings/_macros.html.twig' as s %}
+<form action="{{ path('settings_edit', {tab: 'repositories'}) }}" accept-charset="UTF-8" method="post">{{ csrf_field() }}
+
+<fieldset class="box settings enabled_scm">
+<legend>{{ l('setting_enabled_scm') }}</legend>
+<input type="hidden" name="settings[enabled_scm][]" id="settings_enabled_scm_" value="" autocomplete="off" />
+{% set enabled_scm = values.enabled_scm is iterable ? values.enabled_scm : [] %}
+<table>
+  <tr>
+    <th></th>
+    <th>{{ l('text_scm_command') }}</th>
+    <th>{{ l('text_scm_command_version') }}</th>
+    <th>{{ l('field_path_to_repository') }}</th>
+  </tr>
+  {% for row in scm_settings_rows(enabled_scm) %}
+    <tr>
+      <td class="scm_name">
+        <label>
+          <input type="checkbox" name="settings[enabled_scm][]" value="{{ row.name }}"{% if row.enabled %} checked="checked"{% endif %}{% if not row.available %} disabled="disabled"{% endif %} />
+          {{ row.name }}
+        </label>
+      </td>
+      <td>
+        <span class="icon icon-{{ row.client_available ? 'ok' : 'warning' }}">
+          {{ sprite_icon(row.client_available ? 'checked' : 'warning', row.command) }}
+        </span>
+      </td>
+      <td>
+        {% if row.client_available %}{{ row.version }}{% endif %}
+      </td>
+      <td>
+        {% if row.path_regexp %}<code>{{ row.path_regexp }}</code>{% else %}{{ l('label_disabled') }}{% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+</table>
+<p><em class="info">{{ l('text_scm_config') }}</em></p>
+</fieldset>
+
+<div class="box tabular settings">
+<p>{{ s.check_box(values, 'autofetch_changesets') }}</p>
+
+<p>{{ s.check_box(values, 'sys_api_enabled', {attrs: 'onclick="if (this.checked) { $(\'#settings_sys_api_key\').removeAttr(\'disabled\'); } else { $(\'#settings_sys_api_key\').attr(\'disabled\', true); }"'}) }}</p>
+
+<p>{{ s.text_field(values, 'sys_api_key', {size: 30, attrs: (values.sys_api_enabled ~ '') in ['1', 'true'] ? '' : 'disabled="disabled"'}) }}
+  <a href="#" onclick="if (!$('#settings_sys_api_key').attr('disabled')) { $('#settings_sys_api_key').val(randomKey(20)) }; return false;">{{ l('label_generate_key') }}</a>
+</p>
+
+<p>{{ s.text_field(values, 'repository_log_display_limit', {size: 6}) }}</p>
+
+<p>{{ s.check_box(values, 'commit_logs_formatting') }}</p>
+</div>
+
+<fieldset class="box tabular settings">
+<legend>{{ l('text_issues_ref_in_commit_messages') }}</legend>
+<p>{{ s.text_field(values, 'commit_ref_keywords', {size: 30}) }}
+<em class="info">{{ l('text_comma_separated') }}</em></p>
+
+<p>{{ s.check_box(values, 'commit_cross_project_ref') }}</p>
+
+<p>{{ s.check_box(values, 'commit_logtime_enabled', {attrs: 'onclick="if (this.checked) { $(\'#settings_commit_logtime_activity_id\').removeAttr(\'disabled\'); } else { $(\'#settings_commit_logtime_activity_id\').attr(\'disabled\', true); }"'}) }}</p>
+
+<p>{{ s.select(values, 'commit_logtime_activity_id', opts.activities, (values.commit_logtime_enabled ~ '') in ['1', 'true'] ? {} : {attrs: 'disabled="disabled"'}) }}</p>
+</fieldset>
+
+{% set rules = values.commit_update_keywords is iterable and values.commit_update_keywords|length > 0 and values.commit_update_keywords|first is iterable ? values.commit_update_keywords : [{}] %}
+<table class="list" id="commit-keywords">
+  <thead>
+    <tr>
+      <th>{{ l('label_tracker') }}</th>
+      <th>{{ l('setting_commit_fix_keywords') }}</th>
+      <th>{{ l('label_applied_status') }}</th>
+      <th>{{ l('field_done_ratio') }}</th>
+      <th class="buttons"></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for rule in rules %}
+    <tr class="commit-keywords">
+      <td>
+        <select name="settings[commit_update_keywords][if_tracker_id][]">{% for o in opts.tracker_options %}<option value="{{ o[1] }}"{% if rule.if_tracker_id is defined and rule.if_tracker_id ~ '' == o[1] %} selected="selected"{% endif %}>{{ o[0] }}</option>{% endfor %}</select>
+      </td>
+      <td>
+        <input type="text" name="settings[commit_update_keywords][keywords][]" value="{{ rule.keywords ?? '' }}" size="30" />
+      </td>
+      <td>
+        <select name="settings[commit_update_keywords][status_id][]">{% for o in opts.status_options %}<option value="{{ o[1] }}"{% if rule.status_id is defined and rule.status_id ~ '' == o[1] %} selected="selected"{% endif %}>{{ o[0] }}</option>{% endfor %}</select>
+      </td>
+      <td>
+        <select name="settings[commit_update_keywords][done_ratio][]">{% for o in opts.done_ratio_options %}<option value="{{ o[1] }}"{% if rule.done_ratio is defined and rule.done_ratio ~ '' == o[1] %} selected="selected"{% endif %}>{{ o[0] }}</option>{% endfor %}</select>
+      </td>
+      <td class="buttons">
+        <a class="delete-commit-keywords icon-only icon-del" title="{{ l('button_delete') }}" href="#">{{ sprite_icon('del', l('button_delete')) }}</a>
+      </td>
+    </tr>
+    {% endfor %}
+    <tr>
+      <td></td>
+      <td><em class="info">{{ l('text_comma_separated') }}</em></td>
+      <td></td>
+      <td></td>
+      <td class="buttons">
+        <a class="add-commit-keywords icon-only icon-add" title="{{ l('button_add') }}" href="#">{{ sprite_icon('add', l('button_add')) }}</a>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p><input type="submit" name="commit" value="{{ l('button_save') }}" data-disable-with="{{ l('button_save') }}" /></p>
+</form>
+
+<script>
+$('#commit-keywords').on('click', 'a.delete-commit-keywords', function(e){
+  e.preventDefault();
+  if ($('#commit-keywords tbody tr.commit-keywords').length > 1) {
+    $(this).parents('#commit-keywords tr').remove();
+  } else {
+    $('#commit-keywords tbody tr.commit-keywords').find('input, select').val('');
+  }
+});
+$('#commit-keywords').on('click', 'a.add-commit-keywords', function(e){
+  e.preventDefault();
+  var row = $('#commit-keywords tr.commit-keywords:last');
+  row.clone().insertAfter(row).find('input, select').val('');
+});
+</script>

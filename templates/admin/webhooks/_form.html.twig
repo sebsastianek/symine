@@ -1,0 +1,44 @@
+{% include 'admin/_error_messages.html.twig' %}
+
+<div class="splitcontent">
+  <div class="splitcontentleft">
+    <div class="box tabular">
+      {% if other_user %}
+        <p><label for="webhook_user">{{ l('field_user') }}</label><input type="text" name="webhook_user" id="webhook_user" value="{{ webhook.user.getName() }}" disabled="disabled" /></p>
+      {% endif %}
+      <p><label for="webhook_url">{{ l('field_url') }}<span class="required"> *</span></label><input size="60" required="required" type="text" value="{{ form_url }}" name="webhook[url]" id="webhook_url" />
+        <em class="info">{{ l('webhook_url_info') }}</em>
+      </p>
+      <p>
+        <label for="webhook_secret">{{ l('field_secret') }}</label><input type="text" value="{{ other_user ? '' : webhook.secret }}" name="webhook[secret]" id="webhook_secret" />
+        <em class="info">{{ l('webhook_secret_info_html')|raw }}</em>
+        {% if other_user %}<em class="info">{{ l('webhook_secret_keep_info') }}</em>{% endif %}
+      </p>
+      <p><label for="webhook_active">{{ l('field_active') }}</label><input name="webhook[active]" type="hidden" value="0" /><input type="checkbox" value="1" name="webhook[active]" id="webhook_active"{% if form_active %} checked="checked"{% endif %} /></p>
+    </div>
+
+    <h3>{{ l('label_webhook_events') }}</h3>
+    <div class="box tabular" id="events">
+    {% for type, actions in setable_events %}
+      <fieldset id="{{ type }}_events"><legend><a title="{{ l('button_check_all') }} / {{ l('button_uncheck_all') }}" class="icon icon-checked" href="#" onclick="toggleCheckboxesBySelector('#{{ type }}_events input'); return false;">{{ sprite_icon('checked', '') }}</a>{{ l('label_' ~ type ~ '_plural') }}</legend>
+        {% for action in actions %}
+          {% set name = type ~ '.' ~ action %}
+          <label class="floating">
+            <input type="checkbox" name="webhook[events][]" id="webhook_events_{{ name }}" value="{{ name }}"{% if name in selected_events %} checked="checked"{% endif %} />
+            {{ l('webhook_event_' ~ action, {object_name: type|replace({'_': ' '})|capitalize})|capitalize }}
+          </label>
+        {% endfor %}
+      </fieldset>
+    {% endfor %}
+    <br /><a href="#" onclick="checkAll('events', true); return false;">{{ l('button_check_all') }}</a> | <a href="#" onclick="checkAll('events', false); return false;">{{ l('button_uncheck_all') }}</a>
+    <input type="hidden" name="webhook[events][]" value="" />
+    </div>
+  </div>
+
+  <div class="splitcontentright">
+    <fieldset class="box" id="webhook_project_ids"><legend><a title="{{ l('button_check_all') }} / {{ l('button_uncheck_all') }}" class="icon icon-checked" href="#" onclick="toggleCheckboxesBySelector('#webhook_project_ids input[type=checkbox]'); return false;">{{ sprite_icon('checked', '') }}</a>{{ l('label_project_plural') }}</legend>
+      {{ project_tree|raw }}
+      <input type="hidden" name="webhook[project_ids][]" value="" />
+    </fieldset>
+  </div>
+</div>
