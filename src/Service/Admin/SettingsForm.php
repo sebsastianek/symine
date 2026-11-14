@@ -15,6 +15,7 @@ use App\I18n\RailsTimeZones;
 use App\Security\AccessControl;
 use App\Service\Settings;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Administration settings form (port of SettingsController#edit, SettingsHelper and Setting.set_all_from_params).
@@ -77,7 +78,69 @@ final class SettingsForm
         private readonly Localizer $i18n,
         private readonly string $projectDir,
         private readonly ?\App\Security\Twofa\TwofaManager $twofa = null,
+        private readonly ?SecurityNotifier $security = null,
+        private readonly ?\App\Theme\ThemeRegistry $themes = null,
     ) {
+    }
+
+    /**
+     * The settings[...] of a submitted form: unticking "default due date" empties its offset.
+     *
+     * @return array<string, mixed>
+     */
+    public function posted(Request $request): array
+    {
+        $posted = $request->request->all('settings');
+        if (($posted['default_issue_due_date_offset_enabled'] ?? null) === '0') {
+            $posted['default_issue_due_date_offset'] = '';
+        }
+
+        return $posted;
+    }
+
+    /**
+     * Saves the submitted settings when all of them are valid.
+     *
+     * @param array<string, mixed> $posted
+     *
+     * @return array<string, string> setting name => message; empty when the settings were saved
+     */
+    public function submit(array $posted): array
+    {
+        $errors = $this->validate($posted);
+        if ([] === $errors) {
+            $this->save($posted);
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Variables of the settings page, with what was submitted when it could not be saved.
+     *
+     * @param array<string, mixed>  $posted
+     * @param array<string, string> $errors
+     *
+     * @return array<string, mixed>
+     */
+    public function view(Request $request, User $current, array $posted = [], array $errors = []): array
+    {
+        $tabs = [];
+        foreach (self::TABS as $name => [$template, $label]) {
+            $tabs[] = ['name' => $name, 'label' => $label, 'template' => 'admin/settings/_'.$template.'.html.twig'];
+        }
+
+        return [
+            'tabs' => $tabs,
+            'values' => $this->values($posted),
+            'posted' => $posted,
+            'setting_errors' => $errors,
+            'opts' => $this->options($current),
+            'guessed_host_and_path' => $request->getHttpHost().$request->getBasePath(),
+            'admin_menu_selected' => 'settings',
+            'page_title' => $this->i18n->l('label_settings'),
+            'body_css' => 'controller-settings action-edit',
+        ];
     }
 
     /**
@@ -174,7 +237,23 @@ final class SettingsForm
         if ('0' === ($values['twofa'] ?? null) && null !== $this->twofa && $this->twofa->enabled()) {
             $this->twofa->unpairAll();
         }
+        // settings flagged security_notifications whose value changes are reported to the administrators
+        $definitions = $this->settings->definitions();
+        $comparable = static fn (mixed $v): mixed => \is_array($v) ? $v : (string) (true === $v ? '1' : (false === $v ? '0' : $v));
+        $previous = [];
+        foreach ($values as $name => $value) {
+            if ($definitions[$name]['security_notifications'] ?? false) {
+                $previous[$name] = $comparable($this->settings->get($name));
+            }
+        }
         $this->settings->setMany($values);
+        $changes = [];
+        foreach ($previous as $name => $old) {
+            if ($comparable($this->settings->get($name)) != $old) {
+                $changes[] = $name;
+            }
+        }
+        $this->security?->settingsUpdated($changes);
     }
 
     /** Setting.commit_update_keywords_from_params */
@@ -210,10 +289,12 @@ final class SettingsForm
         $today = $i->today();
         $now = new \DateTimeImmutable();
 
+        // Redmine::Themes.themes; the default theme is the blank option of the select
         $themes = [];
-        foreach (glob($this->projectDir.'/public/assets/themes/*', \GLOB_ONLYDIR) ?: [] as $dir) {
-            $id = basename($dir);
-            $themes[] = [ucfirst(str_replace('_', ' ', $id)), $id];
+        foreach ($this->themes?->all() ?? [] as $theme) {
+            if (!$theme->isDefault()) {
+                $themes[] = [$theme->name, $theme->id];
+            }
         }
         $languages = [];
         foreach ($i->languageOptions() as $code => $name) {

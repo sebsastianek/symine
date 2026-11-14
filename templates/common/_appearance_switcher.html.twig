@@ -1,0 +1,45 @@
+{#- Quick appearance switcher of the top menu: the personal options a theme marks as "quick" (colour scheme, ...).
+    Only rendered for themes with such options, so the markup of the default theme stays Redmine's. -#}
+{%- set _appearance = theme_context() -%}
+{%- set _quick = _appearance.quickOptions() -%}
+{%- set _themes = _appearance.themeChoices() -%}
+{% if (_quick or _themes) and (current_user().isLogged() or not settings.loginRequired()) %}
+<div id="appearance-switcher" class="dropdown" data-controller="dropdown" data-appearance-url="{{ path('appearance_update') }}">
+  <a href="{{ current_user().isLogged() ? path('my_appearance') : '#' }}" class="dropdown-trigger" data-action="click->dropdown#toggle" title="{{ l('label_appearance') }}" aria-label="{{ l('label_appearance') }}">
+    <svg class="s18 icon-svg appearance-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></svg>
+  </a>
+  <div class="dropdown-content hidden" data-dropdown-target="content">
+    {% for option in _quick %}
+      {%- set _value = _appearance.option(option.name) -%}
+      <div class="appearance-quick" role="group" aria-label="{{ theme_text(option.label, option.name) }}" data-appearance-option="{{ option.name }}" data-appearance-attribute="{{ option.attribute }}">
+        <span class="appearance-quick-label">{{ theme_text(option.label, option.name) }}</span>
+        <span class="appearance-quick-choices">
+        {% if option.type == 'toggle' %}
+          <button type="button" data-appearance-value="1" data-appearance-attribute-value="on" aria-pressed="{{ _value == '1' ? 'true' : 'false' }}">{{ l('general_text_Yes') }}</button>
+          <button type="button" data-appearance-value="0" data-appearance-attribute-value="off" aria-pressed="{{ _value == '1' ? 'false' : 'true' }}">{{ l('general_text_No') }}</button>
+        {% else %}
+          {% for id, choice in option.choices %}
+            <button type="button" data-appearance-value="{{ id }}" data-appearance-attribute-value="{{ id }}" aria-pressed="{{ _value == id ? 'true' : 'false' }}">{{ theme_text(choice.label, id) }}</button>
+          {% endfor %}
+        {% endif %}
+        </span>
+      </div>
+    {% endfor %}
+    {% if _themes %}
+      {%- set _chosen = _appearance.chosenTheme() -%}
+      <form class="appearance-quick appearance-quick-theme" action="{{ path('my_appearance') }}" method="post">{{ csrf_field() }}
+        <label class="appearance-quick-label" for="appearance-quick-theme">{{ l('label_theme') }}</label>
+        <select name="theme" id="appearance-quick-theme" onchange="this.form.submit()">
+          <option value=""{% if not _chosen %} selected{% endif %}>{{ l('label_theme_site_default', {name: _appearance.siteTheme().name}) }}</option>
+          {% for _t in _themes %}<option value="{{ _t.id }}"{% if _chosen and _chosen.id == _t.id %} selected{% endif %}>{{ _t.name }}</option>{% endfor %}
+        </select>
+        <noscript><input type="submit" value="{{ l('button_apply') }}" /></noscript>
+      </form>
+    {% endif %}
+    {% if current_user().isLogged() %}
+      <div class="dropdown-divider"></div>
+      <a class="appearance-more" href="{{ path('my_appearance') }}">{{ l('label_theme_all_options') }}</a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}

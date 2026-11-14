@@ -11,7 +11,7 @@
 {% if cvs is not empty %}
 <ul>
   {% for cv in cvs %}
-    <li><span class="label">{{ cv.field.name }}:</span> {{ cv.formatted }}</li>
+    <li><span class="label">{{ cv.field.name }}:</span> {{ issue_cf_value_html(cv.field, cv.value, version.project, version) }}</li>
   {% endfor %}
 </ul>
 {% endif %}

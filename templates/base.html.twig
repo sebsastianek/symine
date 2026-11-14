@@ -1,9 +1,16 @@
-{#- Symine base layout: same markup as Redmine's app/views/layouts/base.html.erb so Redmine stylesheets/scripts apply. -#}
-{%- set user = current_user() -%}
+{#- Symine base layout: same markup as Redmine's app/views/layouts/base.html.erb so Redmine stylesheets/scripts apply.
+    Themes can replace this template (templates/base.html.twig of the theme) or extend it as "@Symine/base.html.twig"
+    and redefine its regions: theme_head_tags, layout_flyout_menu, layout_top_menu, layout_header (with layout_quick_search,
+    layout_page_title and page_header inside), main_menu, layout_main, sidebar, content, layout_footer. -#}
+{#- The person looking at the page. Pages often have a "user" of their own (the account being edited), so the
+    layout keeps its own variable and only provides "user" to the pages that do not set one. -#}
+{%- set _me = current_user() -%}
+{%- if user is not defined %}{% set user = _me %}{% endif -%}
 {%- set project = project ?? null -%}
 {%- set locale = i18n.locale() -%}
 <!DOCTYPE html>
-<html lang="{{ locale }}" dir="{{ l('direction') }}">
+{%- set _theme = current_theme() -%}
+<html lang="{{ locale }}" dir="{{ l('direction') }}"{{ theme_html_attributes() }}>
 <head>
 <meta charset="utf-8" />
 <title>{% block title %}{% if page_title is defined and page_title %}{{ page_title }} - {% endif %}{% if project %}{{ project.name }} - {% endif %}{% endblock %}{{ settings.appTitle() }}</title>
@@ -12,14 +19,10 @@
 <meta name="keywords" content="issue,bug,tracker" />
 <meta name="csrf-param" content="_token" />
 <meta name="csrf-token" content="{{ csrf_token_value() }}" />
-<link rel="shortcut icon" type="image/x-icon" href="/assets/favicon.ico" />
-<link rel="stylesheet" href="/assets/jquery/jquery-ui-1.13.2.css" media="all" />
-<link rel="stylesheet" href="/assets/tribute-5.1.3.css" media="all" />
-<link rel="stylesheet" href="/assets/application.css" media="all" />
-<link rel="stylesheet" href="/assets/dropdown.css" media="all" />
-<link rel="stylesheet" href="/assets/jstoolbar.css" media="all" />
-<link rel="stylesheet" href="/assets/responsive.css" media="all" />
-{% set theme = settings.string('ui_theme') %}{% if theme %}<link rel="stylesheet" href="/assets/themes/{{ theme }}/application.css" media="all" />{% endif %}
+<link rel="shortcut icon" type="image/x-icon" href="{{ theme_favicon() ?? '/assets/favicon.ico' }}" />
+{% for stylesheet in theme_stylesheets() %}
+<link rel="stylesheet" href="{{ stylesheet }}" media="all" />
+{% endfor %}
 <script type="importmap">{{ importmap_json() }}</script>
 <script type="module">import "application"</script>
 <script src="/assets/jquery-3.7.1-ui-1.13.3.js"></script>
@@ -37,6 +40,12 @@ var datepickerOptions={dateFormat: 'yy-mm-dd', firstDay: {{ i18n.startOfWeek() %
 rm.AutoComplete = {dataSources: {{ {issues: (path_exists('issues_auto_complete') ? path('issues_auto_complete', _ac_params) : ''), wiki_pages: (path_exists('wiki_pages_auto_complete') ? path('wiki_pages_auto_complete', _ac_params) : '')}|json_encode|raw }}};
 //]]>
 </script>
+{% for script in theme_javascripts() %}
+<script src="{{ script }}"></script>
+{% endfor %}
+{% if not _theme.legacy %}<script src="/assets/appearance.js" defer></script>
+{% endif %}
+{% block theme_head_tags %}{% endblock %}
 {% block header_tags %}{% endblock %}
 {{ call_hook('view_layouts_base_html_head') }}
 </head>
@@ -55,12 +64,14 @@ rm.AutoComplete = {dataSources: {{ {issues: (path_exists('issues_auto_complete')
     {% endif %}
     {% endblock %}
 {%- endset -%}
-<body class="{% block body_class %}{% if project %}project-{{ project.identifier }} {% endif %}{% if main_menu_html|trim is not empty %}has-main-menu {% endif %}{{ body_css ?? '' }}{% endblock %}" data-text-formatting="{{ settings.textFormatting() }}">
+<body class="{% if theme_body_classes() %}{{ theme_body_classes() }} {% endif %}{% block body_class %}{% if project %}project-{{ project.identifier }} {% endif %}{% if main_menu_html|trim is not empty %}has-main-menu {% endif %}{{ body_css ?? '' }}{% endblock %}" data-text-formatting="{{ settings.textFormatting() }}">
 {{ call_hook('view_layouts_base_body_top') }}
+{% if theme_context().previewed() %}{% include 'common/_theme_preview_bar.html.twig' %}{% endif %}
 <div id="wrapper">
 
+{% block layout_flyout_menu %}
 <div class="flyout-menu js-flyout-menu">
-    {% if user.isLogged() or not settings.loginRequired() %}
+    {% if _me.isLogged() or not settings.loginRequired() %}
         <div class="flyout-menu__search">
             <form action="{{ path_exists('search') ? path('search') : '#' }}" method="get">
             <label class="search-magnifier search-magnifier--flyout" for="flyout-search">{{ sprite_icon('search', l('label_search'), 18, true) }}</label>
@@ -68,10 +79,10 @@ rm.AutoComplete = {dataSources: {{ {issues: (path_exists('issues_auto_complete')
             </form>
         </div>
     {% endif %}
-    {% if user.isLogged() %}
+    {% if _me.isLogged() %}
         <div class="flyout-menu__avatar">
-          {{ avatar(user, 40) }}
-          {{ link_to_user(user) }}
+          {{ avatar(_me, 40) }}
+          {{ link_to_user(_me) }}
         </div>
     {% endif %}
     {% if project %}
@@ -84,26 +95,29 @@ rm.AutoComplete = {dataSources: {{ {issues: (path_exists('issues_auto_complete')
     <h3>{{ l('label_profile') }}</h3>
     <span class="js-profile-menu"></span>
 </div>
+{% endblock %}
 
+{% block layout_top_menu %}
 <nav class="top-menu" id="top-menu">
   <div class="general-menu">
     <div class="top-menu__links">
-      {% if user.isLogged() or not settings.loginRequired() %}
+      {% if _me.isLogged() or not settings.loginRequired() %}
         {% include 'common/_menu.html.twig' with {items: top_menu()} %}
       {% endif %}
     </div>
   </div>
   <div class="profile-menu">
-    {% if user.isLogged() %}
+    {% if not _theme.legacy %}{% include 'common/_appearance_switcher.html.twig' %}{% endif %}
+    {% if _me.isLogged() %}
     <div id="account" class="dropdown" data-controller="dropdown">
       <a href="#" class="dropdown-trigger" data-action="click->dropdown#toggle">
-        {{ avatar(user, 22) }}
+        {{ avatar(_me, 22) }}
         {{ sprite_icon('angle-down', null, 14) }}
       </a>
       <div class="dropdown-content hidden" data-dropdown-target="content">
         <div class="user-info">
-          <span class="user-name">{{ user.getName() }}</span>
-          <span class="user-login">@{{ user.login }}</span>
+          <span class="user-name">{{ _me.getName() }}</span>
+          <span class="user-login">@{{ _me.login }}</span>
         </div>
         <div class="dropdown-divider"></div>
         {% include 'common/_menu.html.twig' with {items: account_menu()} %}
@@ -116,10 +130,13 @@ rm.AutoComplete = {dataSources: {{ {issues: (path_exists('issues_auto_complete')
     {% endif %}
   </div>
 </nav>
+{% endblock %}
 
+{% block layout_header %}
 <div id="header">
     <a href="#" class="mobile-toggle-button js-flyout-menu-toggle-button"></a>
-    {% if user.isLogged() or not settings.loginRequired() %}
+    {% block layout_quick_search %}
+    {% if _me.isLogged() or not settings.loginRequired() %}
     <div id="quick-search">
         <form action="{{ path_exists('search') ? (project and path_exists('project_search') ? path('project_search', {id: project.identifier}) : path('search')) : '#' }}" method="get">
         <input type="hidden" name="scope" value="{{ project ? 'subprojects' : '' }}" />
@@ -130,13 +147,18 @@ rm.AutoComplete = {dataSources: {{ {issues: (path_exists('issues_auto_complete')
         {% include 'common/_project_jump_box.html.twig' %}
     </div>
     {% endif %}
+    {% endblock %}
 
+    {% block layout_page_title %}
     <h1>{% block page_header %}{% if project %}{% for a in project.getAncestors() %}{{ link_to_project(a) }} &raquo; {% endfor %}<span class="current-project">{{ project.name }}</span>{% elseif admin_menu_selected is defined %}{{ l('label_administration') }}{% else %}{{ settings.appTitle() }}{% endif %}{% endblock %}</h1>
+    {% endblock %}
 
     {{ main_menu_html }}
 </div>
+{% endblock %}
 
 {% set sidebar_html %}{% block sidebar %}{% endblock %}{{ call_hook('view_layouts_base_sidebar') }}{% endset %}
+{% block layout_main %}
 <div id="main" class="{{ sidebar_html|trim is empty ? 'nosidebar' : 'collapsiblesidebar' }}">
     {% if sidebar_html|trim is not empty %}<script>$('#main.collapsiblesidebar').collapsibleSidebar();</script>{% endif %}
     <div id="sidebar">
@@ -161,9 +183,12 @@ rm.AutoComplete = {dataSources: {{ {issues: (path_exists('issues_auto_complete')
         <div style="clear:both;"></div>
     </div>
 </div>
+{% endblock %}
+{% block layout_footer %}
 <div id="footer">
     Powered by <a href="https://github.com/symine/symine" target="_blank" rel="noopener">Symine</a>, a Symfony port of <a href="https://www.redmine.org/" target="_blank" rel="noopener">Redmine</a> &copy; 2006-2026 Jean-Philippe Lang
 </div>
+{% endblock %}
 
 <div id="ajax-indicator" style="display:none;">
   <span class="icon">{{ sprite_icon('loader', l('label_loading'), 18, false, 'svg-loader') }}</span>

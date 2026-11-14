@@ -1,0 +1,112 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}
+{{ plugin_stylesheet('symine_kanban', 'kanban') }}
+{{ plugin_javascript('symine_kanban', 'kanban_settings') }}
+{% endblock %}
+{% block content %}
+<div class="contextual">
+  <a class="icon icon-del" href="{{ path('kanban_board_destroy', {id: board.id}) }}" data-method="delete" data-confirm="{{ l('text_are_you_sure') }}">{{ sprite_icon('del', l('button_delete')) }}</a>
+</div>
+<h2><a href="{{ path('kanban_board_show', {id: board.id}) }}">{{ board.name }}</a> &#187; {{ l('label_settings') }}</h2>
+{% if errors %}<div id="errorExplanation">{{ sprite_icon('warning') }}<ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>{% endif %}
+
+<form action="{{ path('kanban_board_update', {id: board.id}) }}" method="post" id="kanban-board-form">{{ csrf_field() }}
+  {% include '@KanbanPlugin/boards/_form_general.html.twig' %}
+
+  <fieldset class="box" id="kanban-columns-editor">
+    <legend>{{ l('label_kanban_columns_and_statuses') }}</legend>
+    <p class="kanban-editor-intro"><em class="info">{{ l('text_kanban_mapping') }}</em></p>
+
+    <div class="splitcontent kanban-editor">
+      <div class="splitcontentleft">
+        <h4>{{ l('label_kanban_column_plural') }}</h4>
+        <table class="list kanban-columns-table">
+          <thead><tr><th></th><th>{{ l('field_name') }}</th><th title="{{ l('text_kanban_wip_limit') }}">{{ l('field_kanban_wip_limit') }}</th><th></th></tr></thead>
+          <tbody id="kanban-column-rows">
+            {% for column in board.columns %}
+              {%- set key = 'c' ~ column.id -%}
+              <tr class="kanban-column-row" data-key="{{ key }}">
+                <td class="reorder"><span class="sort-handle kanban-sort-handle" title="{{ l('button_sort') }}">{{ sprite_icon('reorder') }}</span>
+                  <input type="hidden" name="columns[{{ key }}][position]" value="{{ loop.index }}" class="kanban-column-position" /></td>
+                <td><input type="text" name="columns[{{ key }}][name]" value="{{ column.name }}" maxlength="255" size="24" required class="kanban-column-name-input" aria-label="{{ l('field_name') }}" /></td>
+                <td><input type="number" name="columns[{{ key }}][wip_limit]" value="{{ column.wipLimit }}" min="1" step="1" size="4" class="kanban-wip-input" aria-label="{{ l('field_kanban_wip_limit') }}" /></td>
+                <td class="buttons"><label class="kanban-column-delete"><input type="checkbox" name="columns[{{ key }}][delete]" value="1" /> {{ l('button_delete') }}</label></td>
+              </tr>
+            {% endfor %}
+            {% for n in 1..2 %}
+              {%- set key = 'n' ~ n -%}
+              <tr class="kanban-column-row kanban-column-new" data-key="{{ key }}">
+                <td class="reorder"><span class="sort-handle kanban-sort-handle" title="{{ l('button_sort') }}">{{ sprite_icon('reorder') }}</span>
+                  <input type="hidden" name="columns[{{ key }}][position]" value="{{ board.columns|length + n }}" class="kanban-column-position" /></td>
+                <td><input type="text" name="columns[{{ key }}][name]" value="" maxlength="255" size="24" placeholder="{{ l('label_kanban_new_column') }}" class="kanban-column-name-input" aria-label="{{ l('label_kanban_new_column') }}" /></td>
+                <td><input type="number" name="columns[{{ key }}][wip_limit]" value="" min="1" step="1" size="4" class="kanban-wip-input" aria-label="{{ l('field_kanban_wip_limit') }}" /></td>
+                <td class="buttons"></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <p><button type="button" id="kanban-add-column" hidden>{{ l('label_kanban_add_column') }}</button></p>
+      </div>
+
+      <div class="splitcontentright">
+        <h4>{{ l('label_issue_status_plural') }}</h4>
+        {% if unmapped_count > 0 %}<p class="warning" id="kanban-mapping-warning">{{ l('text_kanban_unmapped_count', {count: unmapped_count}) }}</p>{% endif %}
+        <table class="list kanban-status-table">
+          <thead><tr><th>{{ l('field_status') }}</th><th>{{ l('label_kanban_shown_in') }}</th></tr></thead>
+          <tbody>
+            {% for row in statuses %}
+              <tr class="kanban-status-row{% if not row.relevant %} kanban-status-unused{% endif %}{% if row.relevant and row.column == '' %} kanban-status-unmapped{% endif %}">
+                <td class="name">{{ row.status.name }}{% if row.status.isClosed %} <span class="badge badge-status-closed">{{ l('label_closed_issues') }}</span>{% endif %}
+                  {% if not row.relevant %}<br /><em class="info">{{ l('text_kanban_status_unused') }}</em>{% endif %}</td>
+                <td>
+                  <select name="status_column[{{ row.status.id }}]" class="kanban-status-select" aria-label="{{ row.status.name }}">
+                    <option value=""{% if row.column == '' %} selected{% endif %}>{{ l('label_kanban_unmapped_option') }}</option>
+                    {% for column in board.columns %}<option value="c{{ column.id }}"{% if row.column == 'c' ~ column.id %} selected{% endif %}>{{ column.name }}</option>{% endfor %}
+                    {% for n in 1..2 %}<option value="n{{ n }}">{{ l('label_kanban_new_column') }} {{ n }}</option>{% endfor %}
+                    <option value="hidden"{% if row.column == 'hidden' %} selected{% endif %}>{{ l('label_kanban_hidden_option') }}</option>
+                  </select>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset class="box tabular">
+    <legend>{{ l('label_kanban_cards') }}</legend>
+    {%- set options = board.allOptions() -%}
+    <p><label for="board_swimlane">{{ l('label_kanban_swimlanes') }}</label>
+      <select name="board[options][swimlane]" id="board_swimlane">
+        {% for name in swimlanes %}<option value="{{ name }}"{% if options.swimlane == name %} selected{% endif %}>{{ l('label_kanban_swimlane_' ~ name) }}</option>{% endfor %}
+      </select>
+      <em class="info">{{ l('text_kanban_swimlanes') }}</em></p>
+    <p><label for="board_sort">{{ l('label_kanban_order') }}</label>
+      <select name="board[options][sort]" id="board_sort">
+        {% for name in sorts %}<option value="{{ name }}"{% if options.sort == name %} selected{% endif %}>{{ l('label_kanban_sort_' ~ name) }}</option>{% endfor %}
+      </select></p>
+    <p><label for="board_color_by">{{ l('label_kanban_color_by') }}</label>
+      <select name="board[options][color_by]" id="board_color_by">
+        {% for name in color_by %}<option value="{{ name }}"{% if options.color_by == name %} selected{% endif %}>{{ l('label_kanban_color_' ~ name) }}</option>{% endfor %}
+      </select></p>
+    <p><label>{{ l('label_kanban_card_fields') }}</label>
+      <input type="hidden" name="board[options][card_fields][]" value="" />
+      {% for name in card_fields %}
+        <label class="inline"><input type="checkbox" name="board[options][card_fields][]" value="{{ name }}"{% if name in options.card_fields %} checked{% endif %} /> {{ l('label_kanban_field_' ~ name) }}</label>
+      {% endfor %}</p>
+    <p><label for="board_closed_days">{{ l('label_kanban_closed_days') }}</label>
+      <input type="number" name="board[options][closed_days]" id="board_closed_days" value="{{ options.closed_days }}" min="0" max="3650" size="5" /> {{ l('label_day_plural') }}
+      <em class="info">{{ l('text_kanban_closed_days') }}</em></p>
+    <p><label for="board_card_limit">{{ l('label_kanban_card_limit') }}</label>
+      <input type="number" name="board[options][card_limit]" id="board_card_limit" value="{{ options.card_limit }}" min="10" max="500" size="5" /></p>
+    <p><label for="board_refresh">{{ l('label_kanban_refresh') }}</label>
+      <input type="number" name="board[options][refresh]" id="board_refresh" value="{{ options.refresh }}" min="0" max="3600" size="5" /> {{ l('label_kanban_seconds') }}
+      <em class="info">{{ l('text_kanban_refresh') }}</em></p>
+  </fieldset>
+
+  <p><input type="submit" name="commit" value="{{ l('button_save') }}" />
+    <input type="submit" name="continue" value="{{ l('label_kanban_save_and_continue') }}" />
+    <a href="{{ path('kanban_board_show', {id: board.id}) }}">{{ l('button_cancel') }}</a></p>
+</form>
+{% endblock %}

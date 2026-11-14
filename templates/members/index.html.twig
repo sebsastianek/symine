@@ -1,0 +1,7 @@
+{#- members/index.html.erb: members of the project for the users allowed to view them (view_members) -#}
+{% extends 'base.html.twig' %}
+{% block content %}
+<h2>{{ l('label_member_plural') }}</h2>
+
+{% include 'members/_members.html.twig' %}
+{% endblock %}

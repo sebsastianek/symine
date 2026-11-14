@@ -1,0 +1,5 @@
+@import url(/application.css);
+#header { background: url(/themes/fx_redmine/pic.png); }
+#top-menu a.help { background-image: url(/help.png); }
+#footer { background: url(/no-such-core-file.png); }
+a { background: url("//cdn.example.org/x.png"); }

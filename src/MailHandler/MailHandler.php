@@ -33,6 +33,7 @@ use App\Service\IssueService;
 use App\Service\MembershipService;
 use App\Service\ProjectService;
 use App\Service\Settings;
+use App\Service\TimeEntryService;
 use App\Service\WatcherService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\EventDispatcher\EventDispatcherInterface;
@@ -310,23 +311,26 @@ final class MailHandler implements EventSubscriberInterface
         if (null === $issue->startDate && $this->settings->bool('default_issue_start_date_to_creation_date')) {
             $issue->startDate = $this->i18n->today($this->user);
         }
-        if ($this->settings->has('default_issue_due_date_offset_in_days') && '' !== $this->settings->string('default_issue_due_date_offset_in_days') && null === $issue->dueDate) {
-            $issue->dueDate = $this->i18n->today($this->user)->modify('+'.$this->settings->int('default_issue_due_date_offset_in_days').' days');
+        // Setting.default_issue_due_date_offset_in_days: blank means no default due date
+        $offset = trim($this->settings->string('default_issue_due_date_offset'));
+        if ('' !== $offset && preg_match('/\A[+-]?\d+\z/', $offset) && null === $issue->dueDate) {
+            $issue->dueDate = $this->i18n->today($this->user)->modify(((int) $offset >= 0 ? '+' : '').(int) $offset.' days');
         }
         if ('1' === (string) ($this->options['issue']['is_private'] ?? '')) {
             $issue->isPrivate = true;
         }
         // To and Cc become watchers so they can reply (added right before notifications)
         $this->pendingWatchers = [spl_object_id($issue), array_map(static fn (User $u) => (int) $u->id, $this->watcherCandidates($project, 'Issue', null))];
-        $attachments = $this->buildAttachments();
-        if ([] !== $attachments) {
-            $this->issues->addAttachments($issue, $attachments);
-        }
         $errors = $this->issues->save($issue, $this->user);
         if ([] !== $errors) {
             $this->pendingWatchers = null;
-            $this->discard($attachments);
             throw new MailHandlerException('Validation failed: '.implode(', ', $errors), MailHandlerException::INVALID);
+        }
+        // receive_issue: issue.save! (and its notification), then add_attachments(issue)
+        $attachments = $this->buildAttachments();
+        if ([] !== $attachments) {
+            $this->attachments->attachTo($attachments, 'Issue', (int) $issue->id);
+            $this->em->flush();
         }
         $this->info("issue #{$issue->id} created by {$this->user}");
 
@@ -358,21 +362,45 @@ final class MailHandler implements EventSubscriberInterface
         foreach ($this->watcherCandidates($project, 'Issue', $issue->id) as $u) {
             $this->watchers->add('Issue', (int) $issue->id, $u);
         }
-        $attachments = $this->buildAttachments();
-        if ([] !== $attachments) {
-            $this->issues->addAttachments($issue, $attachments);
-        }
         $before = $issue->journals->count();
         $errors = $this->issues->save($issue, $this->user);
         if ([] !== $errors) {
-            $this->discard($attachments);
             $this->em->refresh($issue);
             throw new MailHandlerException('Validation failed: '.implode(', ', $errors), MailHandlerException::INVALID);
         }
-        $this->info("issue #{$issue->id} updated by {$this->user}");
         $journal = $issue->journals->count() > $before ? $issue->journals->last() : null;
+        // receive_issue_reply: issue.save! (the journal is created and notified), then add_attachments(issue):
+        // the files are journalized in the journal of the reply, without another notification. When the reply
+        // is nothing but attachments, they create the journal (and its notification).
+        $attachments = $this->buildAttachments();
+        if ([] !== $attachments) {
+            if ($journal instanceof Journal) {
+                $this->attachments->attachTo($attachments, 'Issue', (int) $issue->id);
+                foreach ($attachments as $a) {
+                    $this->em->persist($journal->addDetail('attachment', (string) $a->id, null, $a->filename));
+                }
+                $this->em->flush();
+            } else {
+                $this->issues->addAttachments($issue, $attachments);
+                $errors = $this->issues->save($issue, $this->user);
+                if ([] !== $errors) {
+                    $this->discard($attachments);
+                    $this->em->refresh($issue);
+                    throw new MailHandlerException('Validation failed: '.implode(', ', $errors), MailHandlerException::INVALID);
+                }
+                $journal = $issue->journals->count() > $before ? $issue->journals->last() : null;
+            }
+        }
+        $this->info("issue #{$issue->id} updated by {$this->user}");
+        if (!$journal instanceof Journal) {
+            // receive_issue_reply returns the journal even when it was not saved (empty note and no change):
+            // the e-mail is processed, not rejected
+            $journal = new Journal();
+            $journal->issue = $issue;
+            $journal->user = $this->user;
+        }
 
-        return $journal instanceof Journal ? $journal : false;
+        return $journal;
     }
 
     private function receiveJournalReply(int $journalId): Journal|false
@@ -414,7 +442,11 @@ final class MailHandler implements EventSubscriberInterface
         $reply->board = $message->board;
         $reply->parent = $message;
         if ('' === $reply->subject || '' === trim((string) $reply->content)) {
-            throw new MailHandlerException('Validation failed: subject and content can\'t be blank', MailHandlerException::INVALID);
+            // "message.children << reply" does not raise when the reply is invalid: the unsaved reply is
+            // returned and the e-mail counts as processed
+            $this->info("reply to message [{$message->id}] not saved: subject and content cannot be blank");
+
+            return $reply;
         }
         $this->forums->createMessage($reply);
         $attachments = $this->buildAttachments();
@@ -478,8 +510,12 @@ final class MailHandler implements EventSubscriberInterface
         $out = [];
         $author = $this->user;
         foreach ($this->email->attachments() as $part) {
-            $filename = $part->filename() ?? 'attachment';
+            $filename = (string) $part->filename();
             if (!$this->acceptAttachment($filename)) {
+                continue;
+            }
+            if ('' === trim($filename)) {
+                // an attachment without a file name cannot be saved (Attachment validates the presence of the filename)
                 continue;
             }
             $content = $part->decodedBody();
@@ -647,6 +683,10 @@ final class MailHandler implements EventSubscriberInterface
         $attrs['start_date'] = $this->getKeyword('start_date', '\d{4}-\d{2}-\d{2}');
         $attrs['due_date'] = $this->getKeyword('due_date', '\d{4}-\d{2}-\d{2}');
         $attrs['estimated_hours'] = $this->getKeyword('estimated_hours');
+        // Issue#estimated_hours=: String#to_hours ("2h30", "1:30", "90m"...)
+        if (null !== $attrs['estimated_hours'] && null !== ($hours = TimeEntryService::toHours($attrs['estimated_hours']))) {
+            $attrs['estimated_hours'] = (string) $hours;
+        }
         $attrs['done_ratio'] = $this->getKeyword('done_ratio', '(\d|10)?0');
         $private = $this->getKeywordBool('is_private');
         $attrs['is_private'] = null === $private ? null : ($private ? '1' : '0');
@@ -701,7 +741,6 @@ final class MailHandler implements EventSubscriberInterface
     /** CustomField#value_from_keyword */
     private function valueFromKeyword(CustomField $cf, string $keyword, Issue $issue): mixed
     {
-        $tokens = $cf->isMultiple() ? array_map('trim', explode(',', $keyword)) : [trim($keyword)];
         $find = function (string $token) use ($cf, $issue): ?string {
             return match ($cf->fieldFormat) {
                 'list' => (function () use ($cf, $token) {
@@ -740,9 +779,32 @@ final class MailHandler implements EventSubscriberInterface
                 default => $token,
             };
         };
-        $values = array_values(array_filter(array_map($find, $tokens), static fn ($v) => null !== $v));
+        if (!$cf->isMultiple()) {
+            return $find(trim($keyword)) ?? '';
+        }
+        // FieldFormat#parse_keyword: the longest comma separated prefixes are tried first, so that
+        // values containing commas are found
+        $values = [];
+        while ('' !== $keyword) {
+            $k = $keyword;
+            while (true) {
+                if (null !== ($v = $find(trim($k)))) {
+                    $values[] = $v;
+                    break;
+                }
+                $pos = strrpos($k, ',');
+                if (false === $pos) {
+                    break;
+                }
+                $k = substr($k, 0, $pos);
+            }
+            $keyword = substr($keyword, \strlen($k));
+            if (str_starts_with($keyword, ',')) {
+                $keyword = substr($keyword, 1);
+            }
+        }
 
-        return $cf->isMultiple() ? $values : ($values[0] ?? '');
+        return $values;
     }
 
     /**
@@ -854,7 +916,8 @@ final class MailHandler implements EventSubscriberInterface
     {
         $out = [];
         foreach ($parts as $p) {
-            if ($p !== $this->email && $p->isAttachment()) {
+            // email_parts_to_text: parts.reject!(&:attachment?), also for a message that is itself a named file
+            if ($p->isAttachment()) {
                 continue;
             }
             $body = str_replace(["\r\n", "\r"], "\n", $p->text());
@@ -938,6 +1001,14 @@ final class MailHandler implements EventSubscriberInterface
         if (!preg_match('/\A[a-z0-9_\-@\.]*\z/i', $user->login) || null !== $repo->findOneBy(['login' => $user->login])) {
             $user->login = 'user'.bin2hex(random_bytes(3));
         }
+        // create_user_from_email: the account is only created when the user is valid (user.save),
+        // e.g. not when the sender's domain is denied by email_domains_denied / email_domains_allowed
+        $errors = $this->accounts->userErrors($user);
+        if ([] !== $errors) {
+            $this->error('failed to create User: '.implode(', ', $errors));
+
+            return [null, null];
+        }
         $password = $this->accounts->randomPassword();
         $this->accounts->setPassword($user, $password);
         try {
@@ -956,7 +1027,9 @@ final class MailHandler implements EventSubscriberInterface
     private function addUserToGroups(string $groups, User $user): void
     {
         foreach (array_filter(array_map('trim', explode(',', $groups))) as $name) {
-            $group = $this->em->getRepository(Group::class)->findOneBy(['lastname' => $name]);
+            // Group.named: case-insensitive match on the name
+            $groupId = $this->em->getConnection()->fetchOne("SELECT id FROM users WHERE type = 'Group' AND LOWER(lastname) = LOWER(?) ORDER BY id", [$name]);
+            $group = false !== $groupId && null !== $groupId ? $this->em->find(Group::class, (int) $groupId) : null;
             if (null !== $group) {
                 $this->memberships->addUserToGroup($group, $user);
             } else {

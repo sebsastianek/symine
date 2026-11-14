@@ -1,0 +1,193 @@
+{#- The dialog of a card. Variables: CardDetails::view(). Fields save as soon as they change (kanban.js posts
+    issue[<name>] to data-update-url); everything also reads fine without the script. -#}
+{%- set base = {id: board.id, issue_id: issue.id} -%}
+<div class="kanban-dialog-body {{ issue_css_classes(issue) }}" data-issue-id="{{ issue.id }}"
+  data-update-url="{{ path('kanban_card_update', base) }}" data-attach-url="{{ path('kanban_card_attach', base) }}"
+  data-subtask-url="{{ path('kanban_card_subtask', base) }}" data-watch-url="{{ path('kanban_card_watch', base) }}">
+  <header class="kanban-dialog-head">
+    <p class="kanban-dialog-kicker">
+      <a href="{{ path('issue_show', {id: issue.id}) }}" class="kanban-dialog-id">{{ issue.tracker.name }} #{{ issue.id }}</a>
+      <span>{{ issue.project.name }}</span>
+      {% if column %}<span>{{ column.name }}</span>{% endif %}
+      {% if issue.isPrivate %}<span class="badge badge-private private">{{ l('field_is_private') }}</span>{% endif %}
+      {% if issue.isClosed() %}<span class="badge badge-status-closed">{{ l('label_closed_issues') }}</span>{% endif %}
+    </p>
+    <h3 class="kanban-dialog-title" id="kanban-dialog-title">{{ issue.subject }}</h3>
+    {% if editable.subject is defined %}
+      <button type="button" class="kanban-dialog-edit icon-only" data-edit="subject" title="{{ l('button_edit') }}" aria-label="{{ l('button_edit') }}: {{ l('field_subject') }}">{{ sprite_icon('edit') }}</button>
+      <form class="kanban-dialog-inline" data-field="subject" hidden>
+        <input type="text" name="issue[subject]" value="{{ issue.subject }}" maxlength="255" required aria-label="{{ l('field_subject') }}" />
+        <input type="submit" name="commit" value="{{ l('button_save') }}" /> <button type="button" data-cancel>{{ l('button_cancel') }}</button>
+      </form>
+    {% endif %}
+    <button type="button" class="kanban-dialog-close icon-only" title="{{ l('button_close') }}" aria-label="{{ l('button_close') }}">{{ sprite_icon('close') }}</button>
+  </header>
+
+  <p class="kanban-dialog-errors flash error" role="alert" hidden></p>
+
+  <div class="kanban-dialog-columns">
+    <div class="kanban-dialog-main">
+      <section class="kanban-dialog-section kanban-dialog-description">
+        <h4>{{ l('field_description') }}
+          {% if editable.description is defined %}<button type="button" class="kanban-dialog-link" data-edit="description">{{ l('button_edit') }}</button>{% endif %}</h4>
+        {% if issue.description %}
+          <div class="wiki" data-view="description">{{ textilizable(issue.description, project, {object: issue}) }}</div>
+        {% else %}
+          <p class="kanban-dialog-empty" data-view="description">{{ l('text_kanban_no_description') }}</p>
+        {% endif %}
+        {% if editable.description is defined %}
+          <form class="kanban-dialog-inline kanban-dialog-inline-block" data-field="description" hidden>
+            <textarea name="issue[description]" rows="8" class="wiki-edit" aria-label="{{ l('field_description') }}">{{ issue.description }}</textarea>
+            <p><input type="submit" name="commit" value="{{ l('button_save') }}" /> <button type="button" data-cancel>{{ l('button_cancel') }}</button></p>
+          </form>
+        {% endif %}
+      </section>
+
+      {% if attachments or can_attach %}
+      <section class="kanban-dialog-section kanban-dialog-files">
+        <h4>{{ l('label_attachment_plural') }}{% if attachments %} <span class="kanban-count">{{ attachments|length }}</span>{% endif %}</h4>
+        {% if attachments %}
+          <ul class="kanban-dialog-attachments">
+            {% for attachment in attachments %}
+              <li>
+                {% if attachment_thumbnailable(attachment) %}<span class="kanban-dialog-thumb">{{ attachment_thumbnail(attachment) }}</span>{% endif %}
+                <span class="kanban-dialog-file">{{ attachment_link(attachment, {class: 'icon icon-attachment', icon: 'file'}) }}
+                  <span class="size">({{ number_to_human_size(attachment.filesize) }})</span>
+                  <span class="author">{{ attachment.author ? attachment.author.getName() : '' }}, {{ format_time(attachment.createdOn) }}</span></span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        {% if can_attach %}
+          <form class="kanban-dialog-attach" enctype="multipart/form-data">
+            <label class="kanban-dialog-link">{{ sprite_icon('add') }} {{ l('label_kanban_add_files') }}
+              <input type="file" name="attachments[]" multiple hidden /></label>
+          </form>
+        {% endif %}
+      </section>
+      {% endif %}
+
+      {% if children or can_add_subtask %}
+      <section class="kanban-dialog-section kanban-dialog-subtasks">
+        <h4>{{ l('label_subtask_plural') }}{% if children %} <span class="kanban-count">{{ children_closed }} / {{ children|length }}</span>{% endif %}</h4>
+        {% if children %}
+          <div class="kanban-card-progress" role="img" aria-label="{{ children_closed }} / {{ children|length }}"><i style="inline-size: {{ (children_closed * 100 / children|length)|round }}%"></i></div>
+          <ul class="kanban-dialog-checklist">
+            {% for child in children %}
+              <li class="{{ child.isClosed() ? 'closed' : 'open' }}">
+                <span class="kanban-dialog-check" aria-hidden="true">{{ child.isClosed() ? sprite_icon('checked') : '' }}</span>
+                <a href="{{ path('issue_show', {id: child.id}) }}" data-open-card="{{ child.id }}">{{ child.tracker.name }} #{{ child.id }}: {{ child.subject }}</a>
+                <span class="kanban-dialog-substatus">{{ child.status.name }}{% if child.assignedTo %} · {{ child.assignedTo.getName() }}{% endif %}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+        {% if can_add_subtask %}
+          <form class="kanban-dialog-subtask">
+            <input type="text" name="subject" maxlength="255" required placeholder="{{ l('label_kanban_add_subtask') }}" aria-label="{{ l('label_kanban_add_subtask') }}" autocomplete="off" />
+            <input type="submit" value="{{ l('button_add') }}" />
+          </form>
+        {% endif %}
+      </section>
+      {% endif %}
+
+      <section class="kanban-dialog-section kanban-dialog-activity">
+        <h4>{{ l('label_activity') }}{% if comments_count %} <span class="kanban-count">{{ l('label_kanban_comment_count', {count: comments_count}) }}</span>{% endif %}</h4>
+        {% if can_comment %}
+          <form class="kanban-dialog-comment">
+            <textarea name="notes" rows="2" class="wiki-edit" required placeholder="{{ l('label_kanban_write_comment') }}" aria-label="{{ l('label_kanban_write_comment') }}"></textarea>
+            <p>
+              <input type="submit" name="commit" value="{{ l('label_kanban_comment') }}" />
+              {% if can_comment_privately %}<label class="kanban-dialog-private"><input type="checkbox" name="private_notes" value="1" /> {{ l('field_private_notes') }}</label>{% endif %}
+            </p>
+          </form>
+        {% endif %}
+        {% if journals %}
+          <ol class="kanban-dialog-journals">
+            {% for journal in journals %}
+              {%- set details = issue_details_to_strings(journal) -%}
+              <li class="kanban-dialog-journal{% if journal.privateNotes %} private-notes{% endif %}{% if journal.hasNotes() %} has-notes{% endif %}" id="kanban-journal-{{ journal.id }}">
+                <span class="kanban-dialog-avatar">{{ avatar(journal.user, 24) }}</span>
+                <div class="kanban-dialog-entry">
+                  <p class="kanban-dialog-who">{{ authoring(journal.createdOn, journal.user, 'label_updated_time_by') }}
+                    {% if journal.privateNotes %}<span class="badge badge-private private">{{ l('field_is_private') }}</span>{% endif %}</p>
+                  {% if journal.hasNotes() %}<div class="wiki kanban-dialog-note">{{ textilizable(journal.notes, project, {object: journal}) }}</div>{% endif %}
+                  {% if details %}<ul class="kanban-dialog-changes">{% for line in details %}<li>{{ line|raw }}</li>{% endfor %}</ul>{% endif %}
+                </div>
+              </li>
+            {% endfor %}
+          </ol>
+        {% elseif not can_comment %}
+          <p class="kanban-dialog-empty">{{ l('text_kanban_no_activity') }}</p>
+        {% endif %}
+      </section>
+    </div>
+
+    <aside class="kanban-dialog-side" aria-label="{{ l('label_kanban_details') }}">
+      <div class="kanban-dialog-field"><label for="kanban-field-status" class="kanban-dialog-label">{{ l('field_status') }}</label>
+        {% if editable.status_id is defined and statuses|length > 1 %}
+          <select id="kanban-field-status" name="issue[status_id]" data-auto>{% for status in statuses %}<option value="{{ status.id }}"{% if status.id == issue.status.id %} selected{% endif %}>{{ status.name }}</option>{% endfor %}</select>
+        {% else %}<span class="kanban-dialog-value">{{ issue.status.name }}</span>{% endif %}</div>
+
+      <div class="kanban-dialog-field"><label for="kanban-field-assignee" class="kanban-dialog-label">{{ l('field_assigned_to') }}</label>
+        {% if editable.assigned_to_id is defined %}
+          <select id="kanban-field-assignee" name="issue[assigned_to_id]" data-auto>
+            <option value=""></option>
+            {% for person in assignees %}<option value="{{ person.id }}"{% if issue.assignedTo and issue.assignedTo.id == person.id %} selected{% endif %}>{{ person.getName() }}</option>{% endfor %}
+          </select>
+          {% if not issue.assignedTo or issue.assignedTo.id != current_user().id %}{% for person in assignees %}{% if person.id == current_user().id %}
+            <button type="button" class="kanban-dialog-link" data-set="issue[assigned_to_id]" data-value="{{ person.id }}">{{ l('label_assign_to_me') }}</button>
+          {% endif %}{% endfor %}{% endif %}
+        {% else %}<span class="kanban-dialog-value">{{ issue.assignedTo ? issue.assignedTo.getName() : '-' }}</span>{% endif %}</div>
+
+      <div class="kanban-dialog-field"><label for="kanban-field-priority" class="kanban-dialog-label">{{ l('field_priority') }}</label>
+        {% if editable.priority_id is defined %}
+          <select id="kanban-field-priority" name="issue[priority_id]" data-auto>{% for priority in priorities %}<option value="{{ priority.id }}"{% if priority.id == issue.priority.id %} selected{% endif %}>{{ priority.name }}</option>{% endfor %}</select>
+        {% else %}<span class="kanban-dialog-value">{{ issue.priority.name }}</span>{% endif %}</div>
+
+      {% if versions or issue.fixedVersion %}
+      <div class="kanban-dialog-field"><label for="kanban-field-version" class="kanban-dialog-label">{{ l('field_fixed_version') }}</label>
+        {% if editable.fixed_version_id is defined and versions %}
+          <select id="kanban-field-version" name="issue[fixed_version_id]" data-auto><option value=""></option>
+            {% for version in versions %}<option value="{{ version.id }}"{% if issue.fixedVersion and issue.fixedVersion.id == version.id %} selected{% endif %}>{{ version.name }}</option>{% endfor %}</select>
+        {% else %}<span class="kanban-dialog-value">{{ issue.fixedVersion ? issue.fixedVersion.name : '-' }}</span>{% endif %}</div>
+      {% endif %}
+
+      {% if categories %}
+      <div class="kanban-dialog-field"><label for="kanban-field-category" class="kanban-dialog-label">{{ l('field_category') }}</label>
+        {% if editable.category_id is defined %}
+          <select id="kanban-field-category" name="issue[category_id]" data-auto><option value=""></option>
+            {% for category in categories %}<option value="{{ category.id }}"{% if issue.category and issue.category.id == category.id %} selected{% endif %}>{{ category.name }}</option>{% endfor %}</select>
+        {% else %}<span class="kanban-dialog-value">{{ issue.category ? issue.category.name : '-' }}</span>{% endif %}</div>
+      {% endif %}
+
+      <div class="kanban-dialog-field"><label for="kanban-field-start" class="kanban-dialog-label">{{ l('field_start_date') }}</label>
+        {% if editable.start_date is defined %}<input type="date" id="kanban-field-start" name="issue[start_date]" value="{{ issue.startDate ? issue.startDate|date('Y-m-d') : '' }}" data-auto />
+        {% else %}<span class="kanban-dialog-value">{{ issue.startDate ? format_date(issue.startDate) : '-' }}</span>{% endif %}</div>
+
+      <div class="kanban-dialog-field"><label for="kanban-field-due" class="kanban-dialog-label">{{ l('field_due_date') }}</label>
+        {% if editable.due_date is defined %}<input type="date" id="kanban-field-due" name="issue[due_date]" value="{{ issue.dueDate ? issue.dueDate|date('Y-m-d') : '' }}" data-auto />
+        {% else %}<span class="kanban-dialog-value{% if issue.isOverdue() %} kanban-card-overdue{% endif %}">{{ issue.dueDate ? format_date(issue.dueDate) : '-' }}</span>{% endif %}</div>
+
+      <div class="kanban-dialog-field"><label for="kanban-field-done" class="kanban-dialog-label">{{ l('field_done_ratio') }}</label>
+        {% if editable.done_ratio is defined %}
+          <select id="kanban-field-done" name="issue[done_ratio]" data-auto>{% for ratio in done_ratios %}<option value="{{ ratio }}"{% if ratio == issue.doneRatio %} selected{% endif %}>{{ ratio }} %</option>{% endfor %}</select>
+        {% else %}<span class="kanban-dialog-value">{{ issue.doneRatio }} %</span>{% endif %}</div>
+
+      <div class="kanban-dialog-field"><label for="kanban-field-estimate" class="kanban-dialog-label">{{ l('field_estimated_hours') }}</label>
+        {% if editable.estimated_hours is defined %}<input type="text" id="kanban-field-estimate" name="issue[estimated_hours]" value="{{ issue.estimatedHours is not null ? format_hours(issue.estimatedHours) : '' }}" size="6" inputmode="decimal" data-auto />
+        {% else %}<span class="kanban-dialog-value">{{ issue.estimatedHours is not null ? format_hours(issue.estimatedHours) ~ ' h' : '-' }}</span>{% endif %}</div>
+
+      {% if spent_hours is not null %}
+        <div class="kanban-dialog-field"><span class="kanban-dialog-label">{{ l('label_spent_time') }}</span><span class="kanban-dialog-value">{{ format_hours(spent_hours) }} h</span></div>
+      {% endif %}
+
+      <div class="kanban-dialog-actions">
+        {% if can_watch %}
+          <button type="button" class="kanban-dialog-watch" data-watch aria-pressed="{{ watching ? 'true' : 'false' }}">{{ sprite_icon(watching ? 'unwatch' : 'watch') }} {{ watching ? l('button_unwatch') : l('button_watch') }}</button>
+        {% endif %}
+        <a class="kanban-dialog-open" href="{{ path('issue_show', {id: issue.id}) }}">{{ l('label_kanban_open_issue') }}</a>
+      </div>
+    </aside>
+  </div>
+</div>

@@ -81,7 +81,8 @@ final class SyntaxHighlightingTest extends ContentWebTestCase
         static::getContainer()->get(\App\Service\Settings::class)->set('text_formatting', 'textile');
         $f = static::getContainer()->get(TextFormatter::class);
         $html = $f->format("<pre><code class=\"ruby\">\ndef foo; \"x\" < 3 end\n</code></pre>");
-        self::assertStringContainsString('<pre><code class="ruby syntaxhl" data-language="ruby"><span class="k">def</span> <span class="nf">foo</span>', $html);
+        self::assertStringContainsString('<pre data-clipboard-target="pre"><code class="ruby syntaxhl" data-language="ruby"><span class="k">def</span> <span class="nf">foo</span>', $html);
+        self::assertStringStartsWith('<div class="pre-wrapper" data-controller="clipboard"><a class="copy-pre-content-link icon-only" title="Copy" data-action="clipboard#copyPre">', $html);
         self::assertStringContainsString('&lt; ', $html);
         $html = $f->format("<pre><code class=\"nosuch\">\n<b>x</b>\n</code></pre>");
         self::assertStringContainsString('<code data-language="nosuch">&lt;b&gt;x&lt;/b&gt;', $html);

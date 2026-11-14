@@ -66,7 +66,7 @@ final class UserQueryExtension extends AbstractExtension
             return $value instanceof \DateTimeInterface ? self::h($this->i18n->formatTime($value)) : '';
         }
 
-        return $this->queries->formatObject(\is_array($value) ? ['custom_field' => $value['custom_field'], 'value' => $value['value']] : $value);
+        return $this->queries->formatObject(\is_array($value) ? ['custom_field' => $value['custom_field'], 'value' => $value['value'], 'customized' => $user] : $value);
     }
 
     /** UserQueriesHelper#csv_value (QueriesHelper#csv_content); null gives an empty unquoted CSV field */

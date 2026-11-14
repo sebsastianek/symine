@@ -1,0 +1,147 @@
+/* Strata design tokens.
+ *
+ * The dark scheme is a neutral, slightly cool graphite: the accent is then the only saturated colour on screen,
+ * whichever accent is chosen.
+ *
+ * Every colour is written once with light-dark(): the first value is used by light colour schemes, the second by
+ * dark ones. Which one applies comes from the "color-scheme" property that Symine sets on <html> for the scheme
+ * in use (theme.yaml: color_schemes), so nothing here has to be repeated per scheme.
+ *
+ * The second half maps Redmine's own variables (Open Color scale, --color-*) onto these tokens: whatever the core
+ * stylesheets and the plugins draw follows the theme, dark mode included, without being restyled piece by piece.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  /* --- Surfaces: three strata, from the deepest (navigation) to the top (menus, dialogs) --- */
+  --st-sunken: light-dark(#eef1ef, #101216);
+  --st-canvas: light-dark(#ffffff, #16181d);
+  --st-raised: light-dark(#ffffff, #1d2026);
+  --st-inset: light-dark(#f5f7f6, #1a1d22);
+  --st-hover: light-dark(#f0f3f1, #23272e);
+
+  --st-line: light-dark(#dfe4e1, #2b3038);
+  --st-line-strong: light-dark(#c3cbc6, #3c424c);
+
+  --st-text: light-dark(#17201d, #e7e9ec);
+  --st-text-muted: light-dark(#55625c, #a2a8b1);
+  --st-text-faint: light-dark(#7d8983, #737a85);
+
+  /* --- Accent: one colour picked in the appearance options; everything else is derived from it --- */
+  --st-accent-source: #0e7566;
+  /* relative colours keep any picked colour readable: capped lightness on light schemes, raised on dark ones */
+  --st-accent: light-dark(oklch(from var(--st-accent-source) min(l, 0.56) c h), oklch(from var(--st-accent-source) 0.74 c h));
+  --st-accent-strong: light-dark(oklch(from var(--st-accent-source) min(l - 0.05, 0.48) c h), oklch(from var(--st-accent-source) 0.81 c h));
+  --st-accent-soft: color-mix(in oklch, var(--st-accent) 11%, var(--st-canvas));
+  --st-accent-softer: color-mix(in oklch, var(--st-accent) 6%, var(--st-canvas));
+  --st-accent-line: color-mix(in oklch, var(--st-accent) 38%, var(--st-canvas));
+  --st-on-accent: light-dark(#ffffff, #0d0f12);
+
+  /* --- Meaning --- */
+  --st-danger: light-dark(#b9322a, #ff8a80);
+  --st-danger-soft: light-dark(#fdf0ee, #321c1d);
+  --st-danger-line: light-dark(#f0c4bf, #6b2c27);
+  --st-success: light-dark(#1d7a4c, #6fd39b);
+  --st-success-soft: light-dark(#ecf7f0, #172a22);
+  --st-success-line: light-dark(#b9dfc8, #2b5a41);
+  --st-warning: light-dark(#8a5a00, #f0c05a);
+  --st-warning-soft: light-dark(#fdf6e3, #2e2714);
+  --st-warning-line: light-dark(#ecd596, #5f4d17);
+
+  /* --- Type --- */
+  --st-font-sans: "IBM Plex Sans", "Noto Sans", system-ui, sans-serif;
+  --st-font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, "Liberation Mono", monospace;
+  --st-font-size: 14px;
+  /* page titles are set a little narrower than the text: the width axis of IBM Plex Sans */
+  --st-font-title-stretch: 88%;
+
+  /* --- Shape and rhythm (the density option changes the last four) --- */
+  --st-radius: 6px;
+  --st-radius-small: calc(var(--st-radius) * 0.66);
+  --st-rail-width: 15.5rem;
+  --st-content-max: none;
+  --st-space: 16px;
+  --st-row-pad: 7px;
+  --st-control-height: 30px;
+  --st-rail-item-pad: 6px;
+
+  --st-shadow-menu: 0 1px 2px light-dark(rgba(23, 32, 29, 0.06), rgba(0, 0, 0, 0.4)), 0 8px 24px light-dark(rgba(23, 32, 29, 0.12), rgba(0, 0, 0, 0.5));
+  --st-focus: 0 0 0 3px color-mix(in oklch, var(--st-accent) 30%, transparent);
+  /* black bitmap or background icons (jQuery UI, the editor toolbar) are inverted on dark schemes: 0 or 1, set at the
+     end of this file, for "filter: invert(var(--st-icon-invert))" — a filter cannot be written with light-dark() */
+  --st-icon-invert: 0;
+
+  /* ===== Redmine variables ================================================================== */
+  --fonts-main: var(--st-font-sans);
+  --fonts-monospace: var(--st-font-mono);
+  --color-current-marker: var(--st-accent);
+  --color-top-menu-background: var(--st-canvas);
+  --color-header-background: var(--st-sunken);
+  --color-text-muted: var(--st-text-muted);
+
+  --oc-white: var(--st-canvas);
+  --oc-black: light-dark(#000000, #ffffff);
+
+  --oc-gray-0: light-dark(#f6f8f7, #1a1d22);
+  --oc-gray-1: light-dark(#eff2f0, #20232a);
+  --oc-gray-2: light-dark(#e6eae8, #272b32);
+  --oc-gray-3: light-dark(#dce1de, #2f343c);
+  --oc-gray-4: light-dark(#cdd4d0, #3c424c);
+  --oc-gray-5: light-dark(#a5aea9, #58606b);
+  --oc-gray-6: light-dark(#7c8782, #818994);
+  --oc-gray-7: light-dark(#4b5651, #b6bcc4);
+  --oc-gray-8: light-dark(#333c38, #d5d9de);
+  --oc-gray-9: var(--st-text);
+  --oc-gray-9-rgb: 23, 32, 29;
+
+  /* blue and indigo are Redmine's "interactive" colours: they follow the accent */
+  --oc-blue-0: var(--st-accent-softer);
+  --oc-blue-1: var(--st-accent-soft);
+  --oc-blue-2: color-mix(in oklch, var(--st-accent) 20%, var(--st-canvas));
+  --oc-blue-5: color-mix(in oklch, var(--st-accent) 70%, var(--st-canvas));
+  --oc-blue-7: var(--st-accent);
+  --oc-blue-8: var(--st-accent-strong);
+  --oc-blue-9: var(--st-accent-strong);
+  --oc-indigo-0: var(--st-accent-softer);
+  --oc-indigo-1: var(--st-accent-soft);
+  --oc-indigo-2: color-mix(in oklch, var(--st-accent) 20%, var(--st-canvas));
+  --oc-indigo-5: var(--st-accent);
+  --oc-indigo-7: var(--st-accent);
+  --oc-indigo-8: var(--st-accent-strong);
+  --oc-indigo-9: var(--st-accent-strong);
+
+  /* red */
+  --oc-red-0: light-dark(#fff5f5, #371e22); --oc-red-1: light-dark(#ffe3e3, #462024); --oc-red-2: light-dark(#ffc9c9, #572327); --oc-red-3: light-dark(#ffa8a8, #72282b); --oc-red-4: light-dark(#ff8787, #8e2d2f);
+  --oc-red-5: light-dark(#ff6b6b, #fa5252); --oc-red-6: light-dark(#fa5252, #ff6b6b); --oc-red-7: light-dark(#f03e3e, #ff6b6b); --oc-red-8: light-dark(#e03131, #ff8787); --oc-red-9: light-dark(#c92a2a, #ffa8a8);
+  /* pink */
+  --oc-pink-0: light-dark(#fff0f6, #331c29); --oc-pink-1: light-dark(#ffdeeb, #401e2e); --oc-pink-2: light-dark(#fcc2d7, #502035); --oc-pink-3: light-dark(#faa2c1, #67233e); --oc-pink-4: light-dark(#f783ac, #802748);
+  --oc-pink-5: light-dark(#f06595, #e64980); --oc-pink-6: light-dark(#e64980, #f06595); --oc-pink-7: light-dark(#d6336c, #f06595); --oc-pink-8: light-dark(#c2255c, #f783ac); --oc-pink-9: light-dark(#a61e4d, #faa2c1);
+  /* grape */
+  --oc-grape-0: light-dark(#f8f0fc, #2d1e37); --oc-grape-1: light-dark(#f3d9fa, #372043); --oc-grape-2: light-dark(#eebefa, #442351); --oc-grape-3: light-dark(#e599f7, #562865); --oc-grape-4: light-dark(#da77f2, #6a2d7c);
+  --oc-grape-5: light-dark(#cc5de8, #be4bdb); --oc-grape-6: light-dark(#be4bdb, #cc5de8); --oc-grape-7: light-dark(#ae3ec9, #cc5de8); --oc-grape-8: light-dark(#9c36b5, #da77f2); --oc-grape-9: light-dark(#862e9c, #e599f7);
+  /* violet */
+  --oc-violet-0: light-dark(#f3f0ff, #241f3b); --oc-violet-1: light-dark(#e5dbff, #2a234a); --oc-violet-2: light-dark(#d0bfff, #31265a); --oc-violet-3: light-dark(#b197fc, #3c2c72); --oc-violet-4: light-dark(#9775fa, #48328d);
+  --oc-violet-5: light-dark(#845ef7, #7950f2); --oc-violet-6: light-dark(#7950f2, #845ef7); --oc-violet-7: light-dark(#7048e8, #845ef7); --oc-violet-8: light-dark(#6741d9, #9775fa); --oc-violet-9: light-dark(#5f3dc4, #b197fc);
+  /* cyan */
+  --oc-cyan-0: light-dark(#e3fafc, #152b33); --oc-cyan-1: light-dark(#c5f6fa, #15343d); --oc-cyan-2: light-dark(#99e9f2, #143e48); --oc-cyan-3: light-dark(#66d9e8, #134e59); --oc-cyan-4: light-dark(#3bc9db, #135e6c);
+  --oc-cyan-5: light-dark(#22b8cf, #15aabf); --oc-cyan-6: light-dark(#15aabf, #22b8cf); --oc-cyan-7: light-dark(#1098ad, #22b8cf); --oc-cyan-8: light-dark(#0c8599, #3bc9db); --oc-cyan-9: light-dark(#0b7285, #66d9e8);
+  /* teal */
+  --oc-teal-0: light-dark(#e6fcf5, #142d2b); --oc-teal-1: light-dark(#c3fae8, #143731); --oc-teal-2: light-dark(#96f2d7, #134338); --oc-teal-3: light-dark(#63e6be, #125443); --oc-teal-4: light-dark(#38d9a9, #10664f);
+  --oc-teal-5: light-dark(#20c997, #12b886); --oc-teal-6: light-dark(#12b886, #20c997); --oc-teal-7: light-dark(#0ca678, #20c997); --oc-teal-8: light-dark(#099268, #38d9a9); --oc-teal-9: light-dark(#087f5b, #63e6be);
+  /* green */
+  --oc-green-0: light-dark(#ebfbee, #1b2f24); --oc-green-1: light-dark(#d3f9d8, #1d3a28); --oc-green-2: light-dark(#b2f2bb, #20462b); --oc-green-3: light-dark(#8ce99a, #245931); --oc-green-4: light-dark(#69db7c, #286d37);
+  --oc-green-5: light-dark(#51cf66, #40c057); --oc-green-6: light-dark(#40c057, #51cf66); --oc-green-7: light-dark(#37b24d, #51cf66); --oc-green-8: light-dark(#2f9e44, #69db7c); --oc-green-9: light-dark(#2b8a3e, #8ce99a);
+  /* lime */
+  --oc-lime-0: light-dark(#f4fce3, #24301c); --oc-lime-1: light-dark(#e9fac8, #2b3b1b); --oc-lime-2: light-dark(#d8f5a2, #32481b); --oc-lime-3: light-dark(#c0eb75, #3d5b1a); --oc-lime-4: light-dark(#a9e34b, #4a7019);
+  --oc-lime-5: light-dark(#94d82d, #82c91e); --oc-lime-6: light-dark(#82c91e, #94d82d); --oc-lime-7: light-dark(#74b816, #94d82d); --oc-lime-8: light-dark(#66a80f, #a9e34b); --oc-lime-9: light-dark(#5c940d, #c0eb75);
+  /* yellow */
+  --oc-yellow-0: light-dark(#fff9db, #372c19); --oc-yellow-1: light-dark(#fff3bf, #473617); --oc-yellow-2: light-dark(#ffec99, #594014); --oc-yellow-3: light-dark(#ffe066, #745111); --oc-yellow-4: light-dark(#ffd43b, #91620d);
+  --oc-yellow-5: light-dark(#fcc419, #fab005); --oc-yellow-6: light-dark(#fab005, #fcc419); --oc-yellow-7: light-dark(#f59f00, #fcc419); --oc-yellow-8: light-dark(#f08c00, #ffd43b); --oc-yellow-9: light-dark(#e67700, #ffe066);
+  /* orange */
+  --oc-orange-0: light-dark(#fff4e6, #38241a); --oc-orange-1: light-dark(#ffe8cc, #482918); --oc-orange-2: light-dark(#ffd8a8, #5a3016); --oc-orange-3: light-dark(#ffc078, #743914); --oc-orange-4: light-dark(#ffa94d, #924311);
+  --oc-orange-5: light-dark(#ff922b, #fd7e14); --oc-orange-6: light-dark(#fd7e14, #ff922b); --oc-orange-7: light-dark(#f76707, #ff922b); --oc-orange-8: light-dark(#e8590c, #ffa94d); --oc-orange-9: light-dark(#d9480f, #ffc078);
+}
+
+:root[data-color-scheme="dark"] { --st-icon-invert: 1; }
+@media (prefers-color-scheme: dark) { :root[data-color-scheme="auto"] { --st-icon-invert: 1; } }

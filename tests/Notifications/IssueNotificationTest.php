@@ -82,7 +82,7 @@ final class IssueNotificationTest extends NotificationTestCase
     public function testSuppressedIssueIsNotNotified(): void
     {
         $issue = $this->em->find(Issue::class, 13);
-        NotificationSubscriber::suppress(13);
+        $this->service(NotificationSubscriber::class)->suppress(13);
         $this->updateIssue($issue, $this->user('dlopper'), ['notes' => 'quiet']);
         self::assertSame([], $this->emails());
     }

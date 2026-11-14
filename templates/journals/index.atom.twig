@@ -18,7 +18,7 @@
     <author>
       <name>{{ change.user.getName() }}</name>
     </author>
-    <content type="html">{% apply escape %}<ul>{% for s in issue_details_to_strings(change, false, true) %}<li>{{ s|raw }}</li>{% endfor %}</ul>{% if change.hasNotes() %}{{ textilizable(change.notes, issue.project) }}{% endif %}{% endapply %}</content>
+    <content type="html">{% apply escape %}<ul>{% for s in issue_details_to_strings(change, false, true) %}<li>{{ s|raw }}</li>{% endfor %}</ul>{% if change.hasNotes() %}{{ textilizable(change.notes, issue.project, {object: change, only_path: false}) }}{% endif %}{% endapply %}</content>
   </entry>
   {% endfor %}
 </feed>

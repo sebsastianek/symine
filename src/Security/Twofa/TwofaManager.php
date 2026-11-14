@@ -157,6 +157,14 @@ final class TwofaManager
         $this->em->flush();
     }
 
+    /** Starts a pairing unless one is already going on: the confirmation page always has a secret to show */
+    public function ensurePairing(User $user): void
+    {
+        if (null === $this->totpKey($user)) {
+            $this->initPairing($user);
+        }
+    }
+
     /** Twofa::Base#confirm_pairing!: only an OTP (no backup code) activates the scheme */
     public function confirmPairing(User $user, string $scheme, string $code): bool
     {
@@ -192,6 +200,14 @@ final class TwofaManager
         $this->em->flush();
         $this->em->getConnection()->executeStatement("DELETE FROM tokens WHERE user_id = ? AND action = 'twofa_backup_code'", [$user->id]);
         $this->notify($user, 'twofa_mail_body_security_notification_unpaired');
+    }
+
+    /** TwofaController#admin_deactivate: an administrator removes the scheme of a user who has one, without a code */
+    public function unpairByAdministrator(User $user): void
+    {
+        if (self::isActive($user)) {
+            $this->destroyPairingWithoutVerify($user);
+        }
     }
 
     /** Redmine::Twofa.unpair_all! (when 2FA is switched off in the settings) */

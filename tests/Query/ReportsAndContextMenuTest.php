@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Query;
 
-use App\Controller\ContextMenusController;
-use App\Controller\ReportsController;
 use App\Entity\User;
+use App\Service\Tracking\ContextMenu\QueryString;
+use App\Service\Tracking\Reports\ReportAggregator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -49,10 +49,10 @@ final class ReportsAndContextMenuTest extends WebTestCase
             ['status_id' => '5', 'closed' => true, 'tracker_id' => '1', 'total' => '1'],
             ['status_id' => '1', 'closed' => false, 'tracker_id' => '2', 'total' => '3'],
         ];
-        self::assertSame(6, ReportsController::aggregate($data, []));
-        self::assertSame(2, ReportsController::aggregate($data, ['tracker_id' => 1, 'closed' => false]));
-        self::assertSame(1, ReportsController::aggregate($data, ['tracker_id' => 1, 'closed' => true]));
-        self::assertSame(5, ReportsController::aggregate($data, ['status_id' => 1]));
+        self::assertSame(6, ReportAggregator::aggregate($data, []));
+        self::assertSame(2, ReportAggregator::aggregate($data, ['tracker_id' => 1, 'closed' => false]));
+        self::assertSame(1, ReportAggregator::aggregate($data, ['tracker_id' => 1, 'closed' => true]));
+        self::assertSame(5, ReportAggregator::aggregate($data, ['status_id' => 1]));
     }
 
     public function testIssueReportMatchesRedmine(): void
@@ -103,7 +103,7 @@ final class ReportsAndContextMenuTest extends WebTestCase
     public function testToQueryLikeRails(): void
     {
         self::assertSame('back_url=%2Fissues&ids%5B%5D=13&ids%5B%5D=14&issue%5Bstatus_id%5D=1',
-            ContextMenusController::toQuery(['issue' => ['status_id' => 1], 'ids' => [13, 14], 'back_url' => '/issues']));
+            QueryString::toQuery(['issue' => ['status_id' => 1], 'ids' => [13, 14], 'back_url' => '/issues']));
     }
 
     public function testContextMenuSingleIssue(): void

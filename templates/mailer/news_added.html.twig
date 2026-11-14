@@ -3,7 +3,7 @@
 <h1><a href="{{ news_url }}">{{ news.title }}</a></h1>
 <em>{{ news.author.name }}</em>
 
-{{ mail.textilizable(news.description, news.project)|raw }}
+{{ mail.textilizable(news.description, news.project, news)|raw }}
 
 {% set attachments = mail.attachmentsOf('News', news.id) %}
 {% if attachments is not empty %}

@@ -5,27 +5,20 @@ declare(strict_types=1);
 namespace App\Controller\Admin;
 
 use App\Controller\AbstractController;
-use App\Query\ProjectAdminQuery;
-use App\Query\QueryError;
-use App\Query\QueryFactory;
-use App\Query\StatementInvalid;
-use App\Service\Activity\ProjectLastActivity;
-use App\Entity\User;
-use App\Entity\Webhook;
+use App\Mailer\NotificationMailer;
+use App\Plugin\PluginRegistry;
 use App\Service\Admin\DefaultDataLoader;
+use App\Service\Admin\ProjectAdminList;
+use App\Service\Admin\SystemInfo;
+use App\Service\Admin\WebhookManager;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Kernel;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Address;
-use Symfony\Component\Mime\Email;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 
 /** Port of Redmine's AdminController (admin index, projects, plugins, webhooks, info, test email, default data). */
 final class AdminController extends AbstractController
 {
-    public const string VERSION = '0.1.0';
+    public const string VERSION = SystemInfo::VERSION;
 
     #[Route('/admin', name: 'admin_index', methods: ['GET'])]
     public function index(DefaultDataLoader $loader): Response
@@ -56,40 +49,10 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/admin/projects', name: 'admin_projects', methods: ['GET'])]
-    public function projects(Request $request, QueryFactory $queries, ProjectLastActivity $lastActivity): Response
+    public function projects(Request $request, ProjectAdminList $list): Response
     {
         $this->requireAdmin();
-        // retrieve_query(ProjectAdminQuery, false)
-        try {
-            $query = $queries->retrieve($request, 'ProjectAdminQuery', null, false);
-        } catch (QueryError) {
-            $query = $queries->create('ProjectAdminQuery');
-        }
-        \assert($query instanceof ProjectAdminQuery);
-        $vars = [
-            'query' => $query,
-            'admin_menu_selected' => 'projects',
-            'page_title' => $this->l('label_project_plural'),
-            'body_css' => 'controller-admin action-projects',
-            'clear_url' => $this->generateUrl('admin_projects', ['set_filter' => 1, 'sort' => '']),
-            'new_query_url' => $this->generateUrl('query_new'),
-            'can_save_queries' => $this->auth->allowedTo('save_queries', null, null, true),
-            'extra_query_params' => [],
-            'entries' => [],
-        ];
-        if ($query->isValid()) {
-            try {
-                $count = $query->resultCount();
-                $vars['pager'] = $this->paginate($request, $count);
-                $vars['entries'] = $query->results($vars['pager']['offset'], $vars['pager']['limit']);
-            } catch (StatementInvalid) {
-                $query->errors[] = $this->l('error_query_statement_invalid');
-                $vars['entries'] = [];
-            }
-            if ($query->hasColumn('last_activity_date') && [] !== $vars['entries']) {
-                $query->setLastActivityDates($lastActivity->lastActivityDates($this->user(), array_map(static fn ($p) => (int) $p->id, $vars['entries'])));
-            }
-        }
+        $vars = $list->view($request, $this->paginate(...));
         if ($request->isXmlHttpRequest()) {
             return $this->render('admin/admin/_projects.html.twig', $vars);
         }
@@ -98,7 +61,7 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/admin/plugins', name: 'admin_plugins', methods: ['GET'])]
-    public function plugins(\App\Plugin\PluginRegistry $registry): Response
+    public function plugins(PluginRegistry $registry): Response
     {
         $this->requireAdmin();
 
@@ -111,14 +74,13 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/admin/webhooks', name: 'admin_webhooks', methods: ['GET'])]
-    public function webhooks(): Response
+    public function webhooks(WebhookManager $webhooks): Response
     {
         $this->requireAdmin();
-        $webhooks = $this->em->createQuery('SELECT w, u FROM App\Entity\Webhook w JOIN w.user u ORDER BY u.firstname, u.lastname, w.url')->getResult();
 
         return $this->render('admin/admin/webhooks.html.twig', [
-            'webhooks' => $webhooks,
-            'webhooks_enabled' => $this->settings->bool('webhooks_enabled'),
+            'webhooks' => $webhooks->allByOwner(),
+            'webhooks_enabled' => $webhooks->enabled(),
             'admin_menu_selected' => 'webhooks',
             'page_title' => $this->l('label_webhook_plural'),
             'body_css' => 'controller-admin action-webhooks',
@@ -126,27 +88,14 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/admin/test_email', name: 'admin_test_email', methods: ['POST'])]
-    public function testEmail(MailerInterface $mailer): Response
+    public function testEmail(NotificationMailer $notifications): Response
     {
         $this->requireAdmin();
         $user = $this->user();
         $to = $user->getMail();
         try {
-            if (null === $to || '' === $to) {
-                throw new \RuntimeException('no email address');
-            }
-            $from = $this->settings->string('mail_from') ?: 'redmine@example.net';
-            $url = $this->generateUrl('home', [], \Symfony\Component\Routing\Generator\UrlGeneratorInterface::ABSOLUTE_URL);
-            $text = $this->l('mail_body_test_email');
-            $email = (new Email())
-                ->from(Address::create($from))
-                ->to(new Address($to, $user->getName()))
-                ->subject('['.$this->settings->appTitle().'] '.$this->l('mail_subject_test_email'))
-                ->text($text."\n\n".$url);
-            if (!$this->settings->bool('plain_text_mail')) {
-                $email->html('<p>'.htmlspecialchars($text).'</p><p><a href="'.htmlspecialchars($url).'">'.htmlspecialchars($url).'</a></p>');
-            }
-            $mailer->send($email);
+            // Mailer.deliver_test_email: the regular mailer (layout, headers, configured host name), delivered synchronously
+            $notifications->deliverTestEmail($user);
             $this->flashNotice('notice_email_sent', ['value' => $to]);
         } catch (\Throwable $e) {
             $this->flashError($this->l('notice_email_error', ['value' => $e->getMessage()]));
@@ -156,61 +105,17 @@ final class AdminController extends AbstractController
     }
 
     #[Route('/admin/info', name: 'admin_info', methods: ['GET'])]
-    public function info(UserPasswordHasherInterface $hasher): Response
+    public function info(SystemInfo $info): Response
     {
         $this->requireAdmin();
-        $filesPath = (string) $this->getParameter('symine.files_path');
-        $admin = $this->em->getRepository(User::class)->findOneBy(['login' => 'admin', 'status' => User::STATUS_ACTIVE]);
-        $defaultAdminChanged = true;
-        if ($admin instanceof User && null !== $admin->getPassword()) {
-            try {
-                $defaultAdminChanged = !$hasher->isPasswordValid($admin, 'admin');
-            } catch (\Throwable) {
-            }
-        }
-        $checklist = [
-            ['text_default_administrator_account_changed', $defaultAdminChanged],
-            ['text_file_repository_writable', is_dir($filesPath) ? is_writable($filesPath) : is_writable(\dirname($filesPath))],
-            ['text_minimagick_available', \extension_loaded('imagick') || \extension_loaded('gd')],
-            ['text_convert_available', self::commandAvailable('convert') || self::commandAvailable('magick')],
-            ['text_gs_available', self::commandAvailable('gs')],
-        ];
-        $conn = $this->em->getConnection();
-        $platform = (new \ReflectionClass($conn->getDatabasePlatform()))->getShortName();
-        $environment = [
-            'Symine version' => self::VERSION.' (Redmine 7.0 compatible)',
-            'PHP version' => \PHP_VERSION.' ('.\PHP_SAPI.')',
-            'Symfony version' => Kernel::VERSION,
-            'Environment' => $this->getParameter('kernel.environment'),
-            'Database adapter' => preg_replace('/Platform$/', '', $platform),
-            'Mailer delivery' => self::mailerScheme(),
-            'Files directory' => $filesPath,
-        ];
 
         return $this->render('admin/admin/info.html.twig', [
-            'checklist' => $checklist,
-            'environment' => $environment,
-            'versioned_name' => 'Symine '.self::VERSION,
+            'checklist' => $info->checklist(),
+            'environment' => $info->environment(),
+            'versioned_name' => $info->versionedName(),
             'admin_menu_selected' => 'info',
             'page_title' => $this->l('label_information_plural'),
             'body_css' => 'controller-admin action-info',
         ]);
-    }
-
-    private static function commandAvailable(string $cmd): bool
-    {
-        if (!\function_exists('shell_exec')) {
-            return false;
-        }
-        $out = @shell_exec('command -v '.escapeshellarg($cmd).' 2>/dev/null');
-
-        return \is_string($out) && '' !== trim($out);
-    }
-
-    private static function mailerScheme(): string
-    {
-        $dsn = (string) ($_SERVER['MAILER_DSN'] ?? $_ENV['MAILER_DSN'] ?? getenv('MAILER_DSN') ?: '');
-
-        return '' === $dsn ? 'n/a' : (string) (parse_url($dsn, \PHP_URL_SCHEME) ?: strtok($dsn, ':'));
     }
 }

@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 {% set p = {project_id: project.identifier, id: page.title} %}
-{% block header_tags %}<link rel="stylesheet" href="/assets/scm.css" media="screen" />{% endblock %}
+{% block header_tags %}<link rel="stylesheet" href="{{ stylesheet_path('scm') }}" media="screen" />{% endblock %}
 {% block content %}
 <div class="contextual">
 <a class="icon icon-edit" href="{{ path('wiki_edit', p) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>

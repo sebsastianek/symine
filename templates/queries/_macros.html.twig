@@ -11,11 +11,11 @@ var datepickerOptions={dateFormat: 'yy-mm-dd', firstDay: {{ (sow|default(1)) % 7
 
 {% macro context_menu_tags() -%}
 <script src="/assets/context_menu.js"></script>
-<link rel="stylesheet" href="/assets/context_menu.css" media="screen" />
+<link rel="stylesheet" href="{{ stylesheet_path('context_menu') }}" media="screen" />
 {%- endmacro %}
 
 {% macro error_messages(errors) -%}
-{%- if errors is not empty %}<div id="errorExplanation"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif -%}
+{%- if errors is not empty %}<div id="errorExplanation">{{ sprite_icon('warning') }}<ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>{% endif -%}
 {%- endmacro %}
 
 {% macro filter_warnings(query) -%}

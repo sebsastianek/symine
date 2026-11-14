@@ -147,13 +147,13 @@ class TimeEntryQuery extends AbstractQuery
     /** @return list<TimeEntryCustomField> */
     public function timeEntryCustomFields(): array
     {
-        return $this->memo['time_entry_custom_fields'] ??= $this->ctx->em->getRepository(TimeEntryCustomField::class)->findBy([], ['position' => 'ASC']);
+        return $this->memo['time_entry_custom_fields'] ??= $this->ctx->customFields->fieldsOf(TimeEntryCustomField::class);
     }
 
     /** @return list<ProjectCustomField> */
     public function projectCustomFields(): array
     {
-        return $this->memo['project_custom_fields'] ??= $this->ctx->em->getRepository(ProjectCustomField::class)->findBy([], ['position' => 'ASC']);
+        return $this->memo['project_custom_fields'] ??= $this->ctx->customFields->fieldsOf(ProjectCustomField::class);
     }
 
     public function groupValues(): array
@@ -455,8 +455,19 @@ class TimeEntryQuery extends AbstractQuery
         if ([] === $ids) {
             return [];
         }
+        if (null !== $this->ctx->batch && \count($ids) > 1) {
+            // users and authors cannot be lazy (see BatchLoader::principals)
+            $principals = [];
+            foreach ($this->ctx->conn()->fetchAllNumeric('SELECT DISTINCT user_id, author_id FROM time_entries WHERE id IN ('.implode(',', array_map('intval', $ids)).')') as [$user, $author]) {
+                $principals[] = $user;
+                $principals[] = $author;
+            }
+            $this->ctx->batch->principals($principals);
+        }
         $loaded = $this->ctx->em->createQuery('SELECT te, p, u, a FROM App\Entity\TimeEntry te JOIN te.project p JOIN te.user u JOIN te.activity a WHERE te.id IN (:ids)')
             ->setParameter('ids', $ids)->getResult();
+        // the list shows the issue of each entry
+        $this->ctx->batch?->references(array_map(static fn ($e) => $e->issue, $loaded));
         $byId = [];
         foreach ($loaded as $e) {
             $byId[$e->id] = $e;
@@ -500,7 +511,8 @@ class TimeEntryQuery extends AbstractQuery
         }
         if (QueryColumn::ASSOCIATION_CUSTOM_FIELD === $column->kind && null !== $column->customField) {
             if ('issue' === $column->association) {
-                return null !== $e->issue ? $this->customValueOf('Issue', (int) $e->issue->id, $column->customField) : null;
+                // QueryAssociationCustomFieldColumn#value_object: nothing when the issue is not visible
+                return $this->visibleIssue($e) ? $this->customValueOf('Issue', (int) $e->issue->id, $column->customField) : null;
             }
 
             return $this->customValueOf('Project', (int) $e->project->id, $column->customField);
@@ -516,15 +528,31 @@ class TimeEntryQuery extends AbstractQuery
             'user' => $e->user,
             'activity' => $e->activity,
             'issue' => $e->issue,
-            'issue.tracker' => $e->issue?->tracker,
-            'issue.parent' => $e->issue?->parent,
-            'issue.status' => $e->issue?->status,
-            'issue.category' => $e->issue?->category,
-            'issue.fixed_version' => $e->issue?->fixedVersion,
+            // QueryAssociationColumn#value_object: nothing when the issue is not visible
+            'issue.tracker' => $this->visibleIssue($e)?->tracker,
+            'issue.parent' => $this->visibleIssue($e)?->parent,
+            'issue.status' => $this->visibleIssue($e)?->status,
+            'issue.category' => $this->visibleIssue($e)?->category,
+            'issue.fixed_version' => $this->visibleIssue($e)?->fixedVersion,
             'comments' => $e->comments,
             'hours' => $e->hours,
             default => null,
         };
+    }
+
+    /** @var array<int, bool> issue id => visible by the current user */
+    private array $issueVisibility = [];
+
+    /** The issue of the entry when the current user can see it (assoc && assoc.visible?) */
+    private function visibleIssue(TimeEntry $e): ?\App\Entity\Issue
+    {
+        $issue = $e->issue;
+        if (null === $issue) {
+            return null;
+        }
+        $this->issueVisibility[(int) $issue->id] ??= $this->ctx->issues->isVisible($issue, $this->ctx->user());
+
+        return $this->issueVisibility[(int) $issue->id] ? $issue : null;
     }
 
     private function customValueOf(string $type, int $id, CustomField $cf): mixed

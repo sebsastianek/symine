@@ -66,6 +66,18 @@ final class WebhookManager
         return $out;
     }
 
+    /** @return list<Webhook> the webhooks of the user, by URL (the list of /webhooks) */
+    public function ownedBy(User $user): array
+    {
+        return $this->em->createQuery('SELECT w FROM App\Entity\Webhook w WHERE w.user = :u ORDER BY w.url')->setParameter('u', $user->id)->getResult();
+    }
+
+    /** @return list<Webhook> every webhook, by owner then URL (the list of Administration > Webhooks) */
+    public function allByOwner(): array
+    {
+        return $this->em->createQuery('SELECT w, u FROM App\Entity\Webhook w JOIN w.user u ORDER BY u.firstname, u.lastname, w.url')->getResult();
+    }
+
     /** Projects where the webhook owner has the use_webhooks permission, ordered by lft */
     public function setableProjects(User $owner): array
     {

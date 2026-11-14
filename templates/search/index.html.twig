@@ -1,4 +1,5 @@
-{% extends 'base.html.twig' %}
+{# search#index: render :layout => false if request.xhr? #}
+{% extends app.request.xmlHttpRequest ? 'common/_no_layout.html.twig' : 'base.html.twig' %}
 {% set type_label = {issues: 'label_issue_plural', news: 'label_news_plural', documents: 'label_document_plural', changesets: 'label_changeset_plural', wiki_pages: 'label_wiki_page_plural', messages: 'label_message_plural', projects: 'label_project_plural'} %}
 {% block content %}
 <h2>{{ l('label_search') }}</h2>

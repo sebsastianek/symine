@@ -16,7 +16,32 @@
 <p>
   <label for="issue_tracker_id">{{ l('field_tracker') }}<span class="required"> *</span></label><select onchange="updateIssueFrom('{{ form_update_url|e('js') }}', this)"{% if issue.tracker.description %} title="{{ issue.tracker.description }}"{% endif %} name="issue[tracker_id]" id="issue_tracker_id">{% for t in trackers_for_select %}<option{% if t.id == issue.tracker.id %} selected="selected"{% endif %} value="{{ t.id }}">{{ t.name }}</option>
 {% endfor %}</select>
+  {% if trackers_for_select|filter(t => t.description is not empty)|length > 0 %}<a class="icon-only icon-help" title="{{ l('label_open_trackers_description') }}" onclick="showModal('trackers_description', '500px'); return false;" href="#">{{ sprite_icon('help', l('label_open_trackers_description')) }}</a>{% endif %}
 </p>
+{% if trackers_for_select|filter(t => t.description is not empty)|length > 0 %}
+  <div class="modal" id="trackers_description">
+    <h3 class="title">{{ l('label_trackers_description') }}</h3>
+      <dl>
+      {% for t in trackers_for_select %}
+        {% if t.description is not empty %}
+          <dt><a onclick="selectTracker('{{ t.id }}'); return false;" href="#" title="{{ l('text_select_apply_tracker') }}">{{ t.name }}</a></dt>
+          <dd>{{ t.description }}</dd>
+        {% endif %}
+      {% endfor %}
+      </dl>
+  </div>
+{% endif %}
+<script>
+//<![CDATA[
+  function selectTracker(id) {
+    var target = $('#issue_tracker_id');
+    target.attr("selected", false);
+    target.find('option[value="' + id + '"]').prop('selected', true);
+    target.trigger('change');
+    hideModal('#trackers_description h3');
+  }
+//]]>
+</script>
 {% endif %}
 
 {% if 'subject' in safe %}
@@ -39,6 +64,9 @@
 
 {{ call_hook('view_issues_form_details_bottom', {issue: issue, form: null}) }}
 
+{% if allowed_to('add_issue_watchers', issue.project) %}
+{% include 'common/_mention_data_source.html.twig' with {object_type: 'issue', object_id: issue.id, project: issue.project} only %}
+{% endif %}
 <script>
 $(document).ready(function(){
   $("#issue_tracker_id, #issue_status_id").each(function(){

@@ -157,7 +157,7 @@ final class IssuePdfExporter
         foreach ($this->helpers->customValuesForDisplay($issue, 'full') as $cv) {
             $cf = $cv['field'];
             $isHtml = self::fullTextFormatting($cf);
-            $text = $this->showValue($cf, $cv['value'], $isHtml, $project);
+            $text = $this->showValue($cf, $cv['value'], $isHtml, $project, $issue);
             if ('' === trim($text)) {
                 continue;
             }
@@ -310,10 +310,10 @@ final class IssuePdfExporter
     }
 
     /** CustomFieldsHelper#show_value(custom_value, html) */
-    private function showValue(CustomField $cf, mixed $value, bool $html, ?Project $project = null): string
+    private function showValue(CustomField $cf, mixed $value, bool $html, ?Project $project = null, ?object $customized = null): string
     {
         if ($html) {
-            return $this->pdf->absoluteLinks($this->helpers->customFieldValueHtml($cf, $value, $project));
+            return $this->pdf->absoluteLinks($this->helpers->customFieldValueHtml($cf, $value, $project, $customized));
         }
 
         return html_entity_decode(strip_tags($this->qx->formatObject(['custom_field' => $cf, 'value' => $value], false)), \ENT_QUOTES | \ENT_HTML5);
@@ -482,7 +482,7 @@ final class IssuePdfExporter
             }
             $isHtml = self::fullTextFormatting($column->customField);
 
-            return [$this->showValue($column->customField, $value['value'], $isHtml, $issue->project), $isHtml];
+            return [$this->showValue($column->customField, $value['value'], $isHtml, $issue->project, $issue), $isHtml];
         }
         $text = 'description' === $column->name ? $issue->description : (string) $query->columnValue($column, $issue);
 

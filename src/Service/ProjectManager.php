@@ -22,12 +22,16 @@ use App\Entity\User;
 use App\Entity\Version;
 use App\Entity\Wiki;
 use App\Entity\WikiContent;
+use App\Entity\WikiContentVersion;
 use App\Entity\WikiPage;
+use App\Event\ContentEvent;
 use App\I18n\Localizer;
+use App\Import\ImportNotificationSuppressor;
 use App\Security\Authorization;
 use App\Security\CurrentUser;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Project lifecycle (port of Redmine's Project model: safe_attributes, validations, archive/close,
@@ -52,7 +56,9 @@ final class ProjectManager
         private readonly MembershipService $memberships,
         private readonly CustomFieldService $customFields,
         private readonly IssueService $issues,
+        private readonly ImportNotificationSuppressor $notificationSuppressor,
         private readonly ?\App\Plugin\Hook\Hooks $hooks = null,
+        private readonly ?EventDispatcherInterface $events = null,
     ) {
     }
 
@@ -320,7 +326,7 @@ final class ProjectManager
         if (null !== $pending) {
             foreach ($this->visibleCustomFields($project) as $field) {
                 $value = $pending[$field->id] ?? (null === $project->id ? null : ($this->customFields->values('Project', $project->id)[$field->id] ?? null));
-                array_push($errors, ...$this->customFields->validate($field, $value, $project));
+                array_push($errors, ...$this->customFields->validate($field, $value, $project, null === $project->id ? null : ($this->customFields->values('Project', $project->id)[$field->id] ?? null)));
             }
         } elseif (null === $project->id) {
             foreach ($this->visibleCustomFields($project) as $field) {
@@ -601,8 +607,17 @@ final class ProjectManager
      *
      * @return list<string> errors (validation of the new project)
      */
-    public function copy(Project $source, Project $target, ?array $only = null, ?User $user = null): array
+    public function copy(Project $source, Project $target, ?array $only = null, ?User $user = null, bool $notifications = false): array
     {
+        if (!$notifications) {
+            // Mailer.with_deliveries(false): no e-mail is sent for the copied objects unless asked for
+            $this->notificationSuppressor->begin();
+            try {
+                return $this->copy($source, $target, $only, $user, true);
+            } finally {
+                $this->notificationSuppressor->end();
+            }
+        }
         $user = $this->auth->user($user);
         $items = null === $only ? self::COPY_ITEMS : array_values(array_intersect(self::COPY_ITEMS, $only));
         $errors = $this->save($target, $user);
@@ -616,13 +631,13 @@ final class ProjectManager
         foreach ($items as $item) {
             match ($item) {
                 'members' => $this->copyMembers($source, $target),
-                'wiki' => $this->copyWiki($source, $target),
-                'versions' => $versionMap = $this->copyVersions($source, $target),
+                'wiki' => $this->copyWiki($source, $target, $user),
+                'versions' => $versionMap = $this->copyVersions($source, $target, $user),
                 'issue_categories' => $categoryMap = $this->copyCategories($source, $target),
                 'issues' => $this->copyIssues($source, $target, $versionMap, $categoryMap, $user),
                 'queries' => $this->copyQueries($source, $target),
                 'boards' => $this->copyBoards($source, $target),
-                'documents' => $this->copyDocuments($source, $target),
+                'documents' => $this->copyDocuments($source, $target, $user),
                 default => null,
             };
         }
@@ -633,12 +648,13 @@ final class ProjectManager
         return [];
     }
 
+    /** Attachment#copy(:container => ...): same file, author, description and date; the download counter restarts */
     private function copyAttachments(string $type, int $fromId, int $toId): void
     {
         $this->em->getConnection()->executeStatement(
             'INSERT INTO attachments (container_id, container_type, filename, disk_filename, filesize, content_type, digest, downloads, author_id, created_on, description, disk_directory)
-             SELECT ?, container_type, filename, disk_filename, filesize, content_type, digest, 0, author_id, ?, description, disk_directory FROM attachments WHERE container_type = ? AND container_id = ?',
-            [$toId, (new \DateTimeImmutable())->format('Y-m-d H:i:s'), $type, $fromId],
+             SELECT ?, container_type, filename, disk_filename, filesize, content_type, digest, 0, author_id, created_on, description, disk_directory FROM attachments WHERE container_type = ? AND container_id = ? ORDER BY id',
+            [$toId, $type, $fromId],
         );
     }
 
@@ -660,11 +676,16 @@ final class ProjectManager
         }
     }
 
-    /** @return array<int, Version> source version id => copy */
-    private function copyVersions(Project $source, Project $target): array
+    /**
+     * Project#copy_versions: name, description, due date, wiki page, status and sharing, with the attachments
+     * (files) of the version. The default version of the source project is not carried over.
+     *
+     * @return array<int, Version> source version id => copy
+     */
+    private function copyVersions(Project $source, Project $target, User $user): array
     {
         $map = [];
-        foreach ($this->em->getRepository(Version::class)->findBy(['project' => $source]) as $v) {
+        foreach ($this->em->getRepository(Version::class)->findBy(['project' => $source], ['id' => 'ASC']) as $v) {
             $c = new Version();
             $c->project = $target;
             foreach (['name', 'description', 'effectiveDate', 'wikiPageTitle', 'status', 'sharing'] as $f) {
@@ -674,9 +695,8 @@ final class ProjectManager
             $this->em->flush();
             $this->copyAttachments('Version', (int) $v->id, (int) $c->id);
             $map[(int) $v->id] = $c;
-            if ($source->defaultVersion?->id === $v->id) {
-                $target->defaultVersion = $c;
-            }
+            // Version is webhookable: version.created
+            $this->events?->dispatch(new ContentEvent('version', 'created', $c, $user));
         }
         $this->em->flush();
 
@@ -717,10 +737,17 @@ final class ProjectManager
         $this->em->flush();
         $issues = $this->em->createQuery('SELECT i FROM App\Entity\Issue i WHERE i.project = :p ORDER BY i.rootId, i.lft')->setParameter('p', $source)->getResult();
         $map = [];
+        $versionFields = [];
+        foreach ($this->customFields->fieldsOf(IssueCustomField::class) as $field) {
+            if ('version' === $field->fieldFormat) {
+                $versionFields[(int) $field->id] = $field;
+            }
+        }
         foreach ($issues as $issue) {
-            $copy = $this->issues->copyFrom($issue, $user, ['subtasks' => false, 'link' => false]);
+            // new_issue.copy_from(issue, :subtasks => false, :link => false, :keep_status => true): the copy
+            // gets the attachments and the watchers of the issue, its author is the user who copies the project
+            $copy = $this->issues->copyFrom($issue, $user, ['subtasks' => false, 'link' => false, 'attachments' => true, 'watchers' => true, 'keep_status' => true]);
             $copy->project = $target;
-            $copy->author = $issue->author;
             $copy->fixedVersion = null;
             if (null !== $issue->fixedVersion) {
                 if ($issue->fixedVersion->project->id === $source->id) {
@@ -731,8 +758,34 @@ final class ProjectManager
             }
             $copy->category = null !== $issue->category ? ($categoryMap[(int) $issue->category->id] ?? null) : null;
             $copy->parent = null !== $issue->parent ? ($map[(int) $issue->parent->id] ?? null) : null;
+            // Reassign version custom field values: versions of the source project become their copies
+            $reassigned = [];
+            foreach ($this->issues->pendingCustomValues($copy) as $fieldId => $value) {
+                if (!isset($versionFields[(int) $fieldId]) || null === $value || '' === $value || [] === $value) {
+                    continue;
+                }
+                $new = [];
+                foreach ((array) $value as $versionId) {
+                    $version = '' === (string) $versionId ? null : $this->em->find(Version::class, (int) $versionId);
+                    if (null === $version) {
+                        continue;
+                    }
+                    if ($version->project->id === $source->id) {
+                        if (isset($versionMap[(int) $version->id])) {
+                            $new[] = (string) $versionMap[(int) $version->id]->id;
+                        }
+                    } else {
+                        $new[] = (string) $version->id;
+                    }
+                }
+                $reassigned[$fieldId] = $versionFields[(int) $fieldId]->isMultiple() ? $new : ($new[0] ?? '');
+            }
+            if ([] !== $reassigned) {
+                $this->issues->setSafeAttributes($copy, ['custom_field_values' => $reassigned], $user);
+            }
             $errors = $this->issues->save($copy, $user);
             if ([] === $errors) {
+                $this->issues->afterCopy($copy, $user);
                 $map[(int) $issue->id] = $copy;
             }
         }
@@ -758,21 +811,23 @@ final class ProjectManager
         }
     }
 
+    /**
+     * Project#copy_queries: every query of the project (issue and spent time queries) with its owner; the roles
+     * are copied when the query is visible to roles; the default issue query of the project follows.
+     */
     private function copyQueries(Project $source, Project $target): void
     {
-        $conn = $this->em->getConnection();
-        foreach ($this->em->getRepository(Query::class)->findBy(['project' => $source]) as $q) {
+        foreach ($this->em->getRepository(Query::class)->findBy(['project' => $source], ['id' => 'ASC']) as $q) {
             $c = clone $q;
             $c->id = null;
             $c->project = $target;
-            $c->roles = new \Doctrine\Common\Collections\ArrayCollection($q->roles->toArray());
+            $c->roles = new \Doctrine\Common\Collections\ArrayCollection(1 === (int) $q->visibility ? $q->roles->toArray() : []);
             $this->em->persist($c);
             $this->em->flush();
             if ($source->defaultIssueQueryId === $q->id) {
                 $target->defaultIssueQueryId = $c->id;
             }
         }
-        unset($conn);
     }
 
     private function copyBoards(Project $source, Project $target): void
@@ -796,9 +851,13 @@ final class ProjectManager
         $this->em->flush();
     }
 
-    private function copyDocuments(Project $source, Project $target): void
+    /**
+     * Project#copy_documents: category, title, description and date, with the attachments. Each copy is a new
+     * document (Document#send_notification: "document added" e-mail, unless the copy runs without notifications).
+     */
+    private function copyDocuments(Project $source, Project $target, User $user): void
     {
-        foreach ($this->em->getRepository(Document::class)->findBy(['project' => $source]) as $d) {
+        foreach ($this->em->getRepository(Document::class)->findBy(['project' => $source], ['id' => 'ASC']) as $d) {
             $c = new Document();
             $c->project = $target;
             $c->category = $d->category;
@@ -808,10 +867,17 @@ final class ProjectManager
             $this->em->persist($c);
             $this->em->flush();
             $this->copyAttachments('Document', (int) $d->id, (int) $c->id);
+            $this->events?->dispatch(new ContentEvent('document', 'created', $c, $user, ['attachments' => []]));
         }
     }
 
-    private function copyWiki(Project $source, Project $target): void
+    /**
+     * Project#copy_wiki: start page and status of the wiki; title, protection, text, author and comment of
+     * every page that has a content, with the attachments and the page hierarchy. The content of a copied page
+     * starts a new history (version 1, WikiContent#initialize / #create_version) and is announced like a new
+     * page (WikiContent#send_notification_create, wiki_page.created webhook).
+     */
+    private function copyWiki(Project $source, Project $target, User $user): void
     {
         $wiki = $this->em->getRepository(Wiki::class)->findOneBy(['project' => $source]);
         if (null === $wiki) {
@@ -824,7 +890,7 @@ final class ProjectManager
         $this->em->persist($new);
         $this->em->flush();
         $map = [];
-        $pages = $this->em->getRepository(WikiPage::class)->findBy(['wiki' => $wiki]);
+        $pages = $this->em->getRepository(WikiPage::class)->findBy(['wiki' => $wiki], ['id' => 'ASC']);
         foreach ($pages as $page) {
             if (null === $page->content) {
                 continue;
@@ -839,9 +905,22 @@ final class ProjectManager
             $nc->author = $page->content->author;
             $nc->text = $page->content->text;
             $nc->comments = $page->content->comments;
-            $nc->version = $page->content->version;
+            $nc->version = 1;
             $np->content = $nc;
             $this->em->persist($nc);
+            $this->em->flush();
+            // WikiContent#create_version
+            $history = new WikiContentVersion();
+            $history->wikiContentId = (int) $nc->id;
+            $history->pageId = (int) $np->id;
+            $history->author = $nc->author;
+            $history->comments = $nc->comments;
+            $history->updatedOn = $nc->updatedOn;
+            $history->version = 1;
+            $compressed = 'gzip' === $this->settings->string('wiki_compression') ? gzcompress((string) $nc->text, 9) : false;
+            $history->data = false !== $compressed ? $compressed : (string) $nc->text;
+            $history->compression = false !== $compressed ? 'gzip' : '';
+            $this->em->persist($history);
             $this->em->flush();
             $this->copyAttachments('WikiPage', (int) $page->id, (int) $np->id);
             $map[(int) $page->id] = $np;
@@ -852,6 +931,9 @@ final class ProjectManager
             }
         }
         $this->em->flush();
+        foreach ($map as $np) {
+            $this->events?->dispatch(new ContentEvent('wiki_page', 'created', $np, $user, ['content' => $np->content, 'project' => $target, 'text_changed' => true]));
+        }
     }
 
     /** @return array<string, int> counts of copyable items of the source project (copy form) */
@@ -875,12 +957,16 @@ final class ProjectManager
 
     // --- members / overview -------------------------------------------------------------------
 
-    /** @return list<array{role: Role, principals: list<Principal>}> Project#principals_by_role sorted by role */
+    /**
+     * Project#principals_by_role (memberships.active: users, groups and the built-in groups), sorted by role.
+     *
+     * @return list<array{role: Role, principals: list<Principal>}>
+     */
     public function principalsByRole(Project $project): array
     {
         $members = $this->em->createQuery(
             'SELECT m, mr, r, pr FROM App\Entity\Member m JOIN m.memberRoles mr JOIN mr.role r JOIN m.principal pr
-             WHERE m.project = :p AND pr.status = 1 AND pr NOT INSTANCE OF App\Entity\GroupBuiltin'
+             WHERE m.project = :p AND pr.status = 1'
         )->setParameter('p', $project)->getResult();
         $out = [];
         foreach ($members as $m) {
@@ -892,8 +978,8 @@ final class ProjectManager
         usort($out, static fn ($a, $b) => [$a['role']->builtin, $a['role']->position] <=> [$b['role']->builtin, $b['role']->position]);
         foreach ($out as &$row) {
             $list = array_values($row['principals']);
-            // Principal#<=> : users before groups, then by name
-            usort($list, static fn (Principal $a, Principal $b) => [$a instanceof Group ? 1 : 0, mb_strtolower($a->getName())] <=> [$b instanceof Group ? 1 : 0, mb_strtolower($b->getName())]);
+            // Principal#<=> : users before groups (class name, descending), then by name
+            usort($list, static fn (Principal $a, Principal $b) => [MembersManager::principalTypeRank($a), mb_strtolower($a->getName())] <=> [MembersManager::principalTypeRank($b), mb_strtolower($b->getName())]);
             $row['principals'] = $list;
         }
 

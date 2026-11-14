@@ -8,6 +8,7 @@ use App\Entity\Project;
 use App\Entity\User;
 use App\I18n\Localizer;
 use App\Plugin\Hook\Hooks;
+use App\Security\AccessGuard;
 use App\Security\ApiRequestMatcher;
 use App\Security\Authorization;
 use App\Security\CurrentUser;
@@ -25,6 +26,7 @@ use Symfony\Contracts\Service\Attribute\Required;
 /**
  * Base controller with the equivalents of Redmine's ApplicationController helpers:
  * find_project, authorize, require_login, require_admin, render_403/404, l(), flash.
+ * The access checks are those of App\Security\AccessGuard, which services use directly.
  */
 abstract class AbstractController extends BaseController
 {
@@ -53,6 +55,14 @@ abstract class AbstractController extends BaseController
         $this->i18n = $i18n;
         $this->projects = $projects;
         $this->requestStack = $requestStack;
+    }
+
+    protected AccessGuard $guard;
+
+    #[Required]
+    public function setAccessGuard(AccessGuard $guard): void
+    {
+        $this->guard = $guard;
     }
 
     protected ?Hooks $hooks = null;
@@ -100,58 +110,29 @@ abstract class AbstractController extends BaseController
     /** Finds a visible project by identifier or id (404 otherwise, 403 if not visible) */
     protected function findProject(string|int $id): Project
     {
-        $project = $this->projects->findByIdentifierOrId($id);
-        if (null === $project) {
-            throw $this->createNotFoundException();
-        }
-        if ($project->isArchived() && !$this->user()->admin) {
-            throw new HttpException(403, $this->l('notice_not_authorized_archived_project'));
-        }
-        if (!$this->auth->isProjectVisible($project)) {
-            if ($project->isArchived()) {
-                throw new HttpException(403, $this->l('notice_not_authorized_archived_project'));
-            }
-            $this->deny();
-        }
-
-        return $project;
+        return $this->guard->findProject($id);
     }
 
     /** Raises 403 (or redirects anonymous users to login) unless the user has the permission */
     protected function authorize(string $permission, ?Project $project = null, bool $global = false): void
     {
-        if (!$this->auth->allowedTo($permission, $project, null, $global)) {
-            if (null !== $project && $project->isArchived()) {
-                // ApplicationController#authorize: render_403 :message => :notice_not_authorized_archived_project
-                throw new HttpException(403, $this->l('notice_not_authorized_archived_project'));
-            }
-            $this->deny();
-        }
+        $this->guard->authorize($permission, $project, $global);
     }
 
     protected function requireLogin(): void
     {
-        if (!$this->user()->isLogged()) {
-            throw $this->createAccessDeniedException();
-        }
+        $this->guard->requireLogin();
     }
 
     protected function requireAdmin(): void
     {
-        $this->requireLogin();
-        if (!$this->user()->admin) {
-            throw new HttpException(403, $this->l('notice_not_authorized'));
-        }
+        $this->guard->requireAdmin();
     }
 
     /** @return never */
     protected function deny(?string $message = null): void
     {
-        if (!$this->user()->isLogged()) {
-            // triggers the entry point (redirect to login / 401)
-            throw $this->createAccessDeniedException();
-        }
-        throw new HttpException(403, $message ?? $this->l('notice_not_authorized'));
+        $this->guard->deny($message);
     }
 
     protected function isApi(?Request $request = null): bool

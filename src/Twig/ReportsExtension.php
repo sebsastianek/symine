@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Twig;
 
-use App\Controller\ReportsController;
+use App\Service\Tracking\Reports\ReportAggregator;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
@@ -13,6 +13,6 @@ final class ReportsExtension extends AbstractExtension
 {
     public function getFunctions(): array
     {
-        return [new TwigFunction('aggregate', ReportsController::aggregate(...))];
+        return [new TwigFunction('aggregate', ReportAggregator::aggregate(...))];
     }
 }

@@ -1,5 +1,5 @@
 {% if errors|length > 0 %}
-<div id="errorExplanation"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+<div id="errorExplanation">{{ sprite_icon('warning') }}<ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
 {% endif %}
 
 <div class="box tabular">

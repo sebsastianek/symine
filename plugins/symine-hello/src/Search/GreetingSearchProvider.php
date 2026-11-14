@@ -30,9 +30,11 @@ final class GreetingSearchProvider implements SearchProviderInterface
 
     public function resultRanksAndIds(array $tokens, User $user, ?array $projects, array $options): array
     {
-        if (!$this->schema->isInstalled()) {
-            return [];
-        }
+        return $this->schema->whenInstalled(fn (): array => $this->ranksAndIds($tokens, $user, $projects, $options), []);
+    }
+
+    private function ranksAndIds(array $tokens, User $user, ?array $projects, array $options): array
+    {
         $qb = $this->em->createQueryBuilder()->select('g.createdOn AS rank_date, g.id AS rank_id')->from(Greeting::class, 'g')->join('g.project', 'p')
             ->andWhere($this->auth->allowedToCondition('view_hello_greetings', 'p.id', $user));
         if (null !== $projects) {
@@ -52,11 +54,13 @@ final class GreetingSearchProvider implements SearchProviderInterface
 
     public function results(array $ids): array
     {
-        $out = [];
-        foreach ($this->em->getRepository(Greeting::class)->findBy(['id' => $ids]) as $g) {
-            $out[(int) $g->id] = GreetingActivityProvider::event($g);
-        }
+        return $this->schema->whenInstalled(function () use ($ids): array {
+            $out = [];
+            foreach ($this->em->getRepository(Greeting::class)->findBy(['id' => $ids]) as $g) {
+                $out[(int) $g->id] = GreetingActivityProvider::event($g);
+            }
 
-        return $out;
+            return $out;
+        }, []);
     }
 }

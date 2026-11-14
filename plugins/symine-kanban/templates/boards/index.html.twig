@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}{{ plugin_stylesheet('symine_kanban', 'kanban') }}{% endblock %}
+{% block content %}
+<div class="contextual">
+  {% if can_create %}<a class="icon icon-add" href="{{ path('kanban_board_new', project ? {project_id: project.identifier} : {}) }}">{{ sprite_icon('add', l('label_kanban_board_new')) }}</a>{% endif %}
+</div>
+<h2>{{ l('label_kanban') }}</h2>
+
+{% if installed is defined and not installed %}
+  <p class="warning">{{ l('text_kanban_not_installed') }}</p>
+{% elseif boards is empty %}
+  <p class="nodata">{{ can_create ? l('text_kanban_no_boards_create') : l('text_kanban_no_boards') }}</p>
+{% else %}
+  <table class="list kanban-boards">
+    <thead><tr>
+      <th>{{ l('field_name') }}</th>
+      {% if not project %}<th>{{ l('field_project') }}</th>{% endif %}
+      <th>{{ l('label_kanban_column_plural') }}</th>
+      <th>{{ l('field_visible') }}</th>
+      <th>{{ l('field_updated_on') }}</th>
+    </tr></thead>
+    <tbody>
+    {% for board in boards %}
+      <tr id="kanban-board-{{ board.id }}">
+        <td class="name"><a href="{{ path('kanban_board_show', {id: board.id}) }}">{{ board.name }}</a>{% if board.description %}<br /><span class="description">{{ board.description|length > 140 ? board.description|slice(0, 140) ~ '…' : board.description }}</span>{% endif %}</td>
+        {% if not project %}<td class="project">{% set p = kanban_board_project(board) %}{% if p %}{{ link_to_project(p) }}{% else %}{{ l('label_kanban_all_projects') }}{% endif %}</td>{% endif %}
+        <td class="columns">{{ board.columns|map(c => c.name)|join(' → ') }}</td>
+        <td class="visibility">{{ l(board.visibility == 2 ? 'label_visibility_public' : (board.visibility == 1 ? 'label_visibility_roles' : 'label_visibility_private')) }}</td>
+        <td class="updated_on">{{ format_time(board.updatedOn) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+{% endblock %}

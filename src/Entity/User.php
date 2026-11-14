@@ -28,6 +28,7 @@ class User extends Principal implements UserInterface, LegacyPasswordAuthenticat
 
     public const array MAIL_NOTIFICATION_OPTIONS = ['all', 'selected', 'only_my_events', 'only_assigned', 'only_owner', 'none'];
 
+    /** Format of getName() without argument: the "user_format" setting, applied by App\Service\Admin\UserNameFormatListener */
     public static string $defaultNameFormat = 'firstname_lastname';
 
     /** @var Collection<int, EmailAddress> */

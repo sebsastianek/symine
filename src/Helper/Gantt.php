@@ -647,6 +647,15 @@ final class Gantt
     /** @return array{0: ?\DateTimeImmutable, 1: ?\DateTimeImmutable} Project#start_date / due_date */
     private function projectDates(Project $project): array
     {
+        return $this->projectDates[(int) $project->id] ??= $this->loadProjectDates($project);
+    }
+
+    /** @var array<int, array{0: ?\DateTimeImmutable, 1: ?\DateTimeImmutable}> dates of the projects of this chart */
+    private array $projectDates = [];
+
+    /** @return array{0: ?\DateTimeImmutable, 1: ?\DateTimeImmutable} */
+    private function loadProjectDates(Project $project): array
+    {
         $shared = array_map(static fn (Version $v) => (int) $v->id, $this->ctx->projects->sharedVersions($project));
         $conn = $this->ctx->conn();
         $starts = [$conn->fetchOne('SELECT MIN(start_date) FROM issues WHERE project_id = ?', [$project->id])];

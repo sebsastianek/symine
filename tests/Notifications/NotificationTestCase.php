@@ -7,7 +7,6 @@ namespace App\Tests\Notifications;
 use App\Entity\Issue;
 use App\Entity\Project;
 use App\Entity\User;
-use App\Mailer\NotificationSubscriber;
 use App\Service\IssueService;
 use App\Service\Settings;
 use App\Tests\Integration\SymineTestCase;
@@ -15,12 +14,6 @@ use Symfony\Component\Mime\Email;
 
 abstract class NotificationTestCase extends SymineTestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-        NotificationSubscriber::resetSuppressed();
-    }
-
     protected function settings(): Settings
     {
         return $this->service(Settings::class);

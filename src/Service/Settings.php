@@ -159,6 +159,7 @@ final class Settings
         $this->values = null;
     }
 
+
     private function load(): void
     {
         if (null !== $this->values) {
@@ -166,8 +167,15 @@ final class Settings
         }
         $this->values = [];
         try {
-            foreach ($this->em->getRepository(Setting::class)->findAll() as $s) {
-                $this->values[$s->name] = $s->value;
+            // one query and no entities: every request starts here
+            foreach ($this->em->getConnection()->fetchAllAssociative('SELECT name, value FROM settings ORDER BY id') as $row) {
+                $name = (string) $row['name'];
+                $plain = $row['value'];
+                // Setting#value: only settings declared "serialized" are decoded, all the others are plain strings,
+                // even when they start with "---", "[" or "{" (e.g. the "---" e-mail body delimiter)
+                $this->values[$name] = \is_string($plain) && isset($this->definitions[$name]) && !$this->definitions[$name]['serialized']
+                    ? $plain
+                    : \App\Doctrine\RedmineSerializedType::decode($plain);
             }
         } catch (\Throwable) {
             // database not initialised yet

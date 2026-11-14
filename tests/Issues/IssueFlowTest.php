@@ -146,6 +146,21 @@ final class IssueFlowTest extends IssuesWebTestCase
         self::assertSame(2.5, (float) $this->em->getConnection()->fetchOne('SELECT SUM(hours) FROM time_entries WHERE issue_id = 14'));
     }
 
+    public function testBulkUpdateDoesNotWriteTheIssuesItRejects(): void
+    {
+        // #13 cannot be its own parent: it is rejected, while #15 takes it as parent. The rejected change must not be
+        // written along with the accepted one (it used to be, which made #13 its own parent and hung the tree rebuild)
+        $this->login('jsmith');
+        $this->submit('/issues/bulk_update', ['ids' => ['13', '15'], 'issue' => ['parent_issue_id' => '13']]);
+        self::assertContains($this->code(), [200, 302]);
+        $conn = $this->em->getConnection();
+        self::assertNull($conn->fetchOne('SELECT parent_id FROM issues WHERE id = 13'), '#13 is unchanged');
+        self::assertSame(13, (int) $conn->fetchOne('SELECT parent_id FROM issues WHERE id = 15'));
+        self::assertSame(13, (int) $conn->fetchOne('SELECT root_id FROM issues WHERE id = 15'));
+        $row = $conn->fetchAssociative('SELECT lft, rgt FROM issues WHERE id = 13');
+        self::assertGreaterThan(1, (int) $row['rgt'] - (int) $row['lft'], '#13 now has a subtask in its tree');
+    }
+
     public function testBulkUpdate(): void
     {
         $this->login('jsmith');

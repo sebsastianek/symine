@@ -1,0 +1,16 @@
+name: Fixture child
+parent: fx_base
+stylesheets:
+  - stylesheets/child.css
+tokens:
+  fx-gap: 20px
+  fx-extra: 1
+color_schemes:
+  dark:
+    tokens: {fx-paper: '#222222'}
+options:
+  wide: ~
+  tagline:
+    type: text
+    token: fx-tagline
+    default: From the child

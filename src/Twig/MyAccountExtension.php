@@ -38,7 +38,17 @@ final class MyAccountExtension extends AbstractExtension
     {
         return [
             new TwigFilter('html_hours', static fn (?string $t) => preg_replace('/(\d+)([.,:])(\d+)/', '<span class="hours hours-int">$1</span><span class="hours hours-dec">$2$3</span>', htmlspecialchars((string) $t)) ?? '', ['is_safe' => ['html']]),
+            new TwigFilter('account_js', self::escapeJavascript(...), ['is_safe' => ['all']]),
         ];
+    }
+
+    /**
+     * escape_javascript of the *.js.twig views of the account area (my/add_block.js.twig...): makes a string safe
+     * between the quotes of a JavaScript string.
+     */
+    public static function escapeJavascript(mixed $s): string
+    {
+        return strtr((string) $s, ['\\' => '\\\\', '</' => '<\/', "\r\n" => '\n', "\n" => '\n', "\r" => '\n', '"' => '\"', "'" => "\\'"]);
     }
 
     /**

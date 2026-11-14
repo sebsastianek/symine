@@ -51,9 +51,10 @@ final class ReceiveEmailCommand
         $options = self::options(compact('project', 'status', 'tracker', 'category', 'priority', 'assignedTo', 'fixedVersion', 'private', 'allowOverride', 'unknownUser', 'defaultGroup', 'noAccountNotice', 'noNotification', 'noPermissionCheck', 'projectFromSubaddress'));
         $result = $this->handler->safeReceive($raw, $options);
         if (false === $result) {
-            $io->error('E-mail rejected or ignored'.(null !== $this->handler->lastError() ? ': '.$this->handler->lastError() : '.'));
+            $io->warning('E-mail rejected or ignored'.(null !== $this->handler->lastError() ? ': '.$this->handler->lastError() : '.'));
 
-            return 75; // EX_TEMPFAIL is not appropriate for rejections; non-zero for the MTA log
+            // like "rake redmine:email:read": an ignored e-mail is not a failure, the MTA must not defer or bounce it
+            return Command::SUCCESS;
         }
         $io->writeln(\sprintf('Processed: %s #%d', (new \ReflectionClass($result))->getShortName(), $result->id));
 

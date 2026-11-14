@@ -1,0 +1,8 @@
+{#- update_data_sources_for_auto_complete: where the "@" autocomplete of the text areas of the page finds its users.
+    Params: object_type, object_id (an id, a list of ids or null), project (optional). The search term is appended
+    to the URL, so "q" comes last (as in the URLs Rails builds). -#}
+{%- set _mention = {} -%}
+{%- if object_id is not null and object_id is not same as([]) %}{% set _mention = _mention|merge({object_id: object_id}) %}{% endif -%}
+{%- set _mention = _mention|merge({object_type: object_type}) -%}
+{%- if project ?? null %}{% set _mention = _mention|merge({project_id: project.identifier}) %}{% endif -%}
+<script>rm.AutoComplete.dataSources = Object.assign(rm.AutoComplete.dataSources, {{ {users: path('watchers_autocomplete_for_mention', _mention|merge({q: ''}))}|json_encode|raw }});</script>

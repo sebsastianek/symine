@@ -102,7 +102,7 @@ class ProjectQuery extends AbstractQuery
     /** @return list<ProjectCustomField> ProjectCustomField.sorted */
     public function projectCustomFields(): array
     {
-        return $this->memo['project_custom_fields'] ??= $this->ctx->em->getRepository(ProjectCustomField::class)->findBy([], ['position' => 'ASC']);
+        return $this->memo['project_custom_fields'] ??= $this->ctx->customFields->fieldsOf(ProjectCustomField::class);
     }
 
     /** "mine" / "bookmarks" values of the id and parent_id filters (Query#statement) */

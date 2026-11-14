@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\Health\HealthCheck;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,14 +14,9 @@ use Symfony\Component\Routing\Attribute\Route;
 final class HealthController extends AbstractController
 {
     #[Route('/up.{_format}', name: 'rails_health_check', requirements: ['_format' => 'html|json'], defaults: ['_format' => 'html'], methods: ['GET'])]
-    public function show(Request $request, string $_format = 'html'): Response
+    public function show(Request $request, HealthCheck $health, string $_format = 'html'): Response
     {
-        try {
-            $this->em->getConnection()->executeQuery('SELECT 1')->fetchOne();
-            $up = true;
-        } catch (\Throwable) {
-            $up = false;
-        }
+        $up = $health->isUp();
         $status = $up ? 200 : 503;
         $json = 'json' === $_format || str_contains((string) $request->headers->get('Accept'), 'application/json');
         if ($json) {

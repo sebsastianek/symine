@@ -57,7 +57,7 @@ final class Installer
             $admin->mailNotification = 'all';
             $admin->language = 'en';
             $admin->mustChangePasswd = true;
-            $admin->setMail('admin@example.net');
+            $admin->setMail('admin@dummy.invalid'); // db/migrate/001_setup.rb
             $admin->hashedPassword = $this->hasher->hashPassword($admin, $adminPassword);
             $this->em->persist($admin);
         }

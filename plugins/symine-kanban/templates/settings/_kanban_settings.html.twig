@@ -1,0 +1,9 @@
+{#- Administration » Plugins » Symine Kanban » Configure: defaults of new boards -#}
+<p><label for="settings_default_closed_days">{{ l('label_kanban_closed_days') }}</label>
+  <input type="number" name="settings[default_closed_days]" id="settings_default_closed_days" value="{{ settings.default_closed_days ?? 14 }}" min="0" max="3650" size="5" /> {{ l('label_day_plural') }}
+  <em class="info">{{ l('text_kanban_closed_days') }}</em></p>
+<p><label for="settings_default_card_limit">{{ l('label_kanban_card_limit') }}</label>
+  <input type="number" name="settings[default_card_limit]" id="settings_default_card_limit" value="{{ settings.default_card_limit ?? 100 }}" min="10" max="500" size="5" /></p>
+<p><label for="settings_default_refresh">{{ l('label_kanban_refresh') }}</label>
+  <input type="number" name="settings[default_refresh]" id="settings_default_refresh" value="{{ settings.default_refresh ?? 60 }}" min="0" max="3600" size="5" /> {{ l('label_kanban_seconds') }}
+  <em class="info">{{ l('text_kanban_refresh') }}</em></p>

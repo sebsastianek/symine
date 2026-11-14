@@ -4,7 +4,7 @@
 
 {% block header_tags %}
 {{ qm.calendar_headers() }}
-<link rel="stylesheet" href="/assets/gantt.css" media="all" />
+<link rel="stylesheet" href="{{ stylesheet_path('gantt') }}" media="all" />
 {{ qm.context_menu_tags() }}
 {% endblock %}
 

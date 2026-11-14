@@ -53,6 +53,7 @@ final class UserImporter extends AbstractImporter
     public function __construct(
         private readonly UserPasswordHasherInterface $hasher,
         private readonly EventDispatcherInterface $events,
+        private readonly ?\App\Service\Admin\SecurityNotifier $security = null,
     ) {
     }
 
@@ -196,7 +197,7 @@ final class UserImporter extends AbstractImporter
                 unset($cfValues[(string) $cf->id]);
                 continue;
             }
-            $v = $cfValues[(string) $cf->id] ?? $cf->defaultValue;
+            $v = $cfValues[(string) $cf->id] ?? $this->customFields->defaultValue($cf);
             array_push($errors, ...$this->customFields->validate($cf, $this->customFields->normalize($cf, $v), null));
         }
         if ([] !== $errors) {
@@ -227,6 +228,8 @@ final class UserImporter extends AbstractImporter
         $this->em->flush();
         $this->customFields->saveValues('Principal', (int) $user->id, $fields, $cfValues + $this->customFields->defaultValues($fields));
         $this->em->flush();
+        // User#deliver_security_notification (after_save): an imported administrator is reported to the administrators
+        $this->security?->userSaved($user, null);
 
         // kept for extend_object (account information e-mail)
         $this->passwords[$user->id] = $password;

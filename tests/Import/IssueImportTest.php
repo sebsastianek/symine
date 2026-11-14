@@ -20,12 +20,6 @@ final class IssueImportTest extends ImportWebTestCase
 
         CSV;
 
-    protected function tearDown(): void
-    {
-        ImportNotificationSuppressor::reset();
-        parent::tearDown();
-    }
-
     public function testFullWizard(): void
     {
         $this->login('jsmith');
@@ -129,9 +123,14 @@ final class IssueImportTest extends ImportWebTestCase
         self::assertSame($items[6]['obj_id'], (int) $conn->fetchOne('SELECT parent_id FROM issues WHERE id = ?', [$items[5]['obj_id']]));
         self::assertSame(3, (int) $conn->fetchOne('SELECT tracker_id FROM issues WHERE id = ?', [$items[6]['obj_id']]));
 
-        // notifications disabled: mailer must ignore those issues
-        self::assertTrue(ImportNotificationSuppressor::isSuppressed((int) $first['id']));
-        self::assertFalse(ImportNotificationSuppressor::isActive());
+        // notifications disabled (issue.notify = false): no "issue added" e-mail for those issues;
+        // the suppression only lasts for the request
+        foreach (self::getMailerMessages() as $message) {
+            self::assertStringNotContainsString('has been reported by', (string) $message->getTextBody());
+        }
+        $suppressor = static::getContainer()->get(ImportNotificationSuppressor::class);
+        self::assertFalse($suppressor->isSuppressed((int) $first['id']));
+        self::assertFalse($suppressor->isActive());
 
         // saved objects listed, finished import cannot be run again
         self::assertStringContainsString('First imported', $html);
@@ -164,7 +163,7 @@ final class IssueImportTest extends ImportWebTestCase
         self::assertCount(12, $items);
         self::assertNull($items[11]['obj_id']);
         self::assertSame('Tracker cannot be blank', $items[11]['message']);
-        self::assertFalse(ImportNotificationSuppressor::isSuppressed((int) $items[0]['obj_id']));
+        self::assertFalse(static::getContainer()->get(ImportNotificationSuppressor::class)->isSuppressed((int) $items[0]['obj_id']));
     }
 
     public function testFixedTrackerAndSemicolonFile(): void

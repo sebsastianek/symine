@@ -1,5 +1,7 @@
 parameters:
     symine.files_path: '%env(resolve:SYMINE_FILES_PATH)%'
+    # Extra directories scanned for themes, besides themes/ and the themes/ directory of the plugins
+    symine.theme_paths: []
 
 services:
     _defaults:
@@ -13,3 +15,18 @@ services:
         exclude:
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    App\Theme\ThemeRegistry:
+        arguments:
+            $themePaths: '%symine.theme_paths%'
+
+    # Templates of the active theme take precedence over the application templates
+    App\Theme\ThemeTemplateLoader:
+        autoconfigure: false
+        tags:
+            - { name: twig.loader, priority: 64 }
+
+when@test:
+    parameters:
+        # fixture themes of tests/Theme
+        symine.theme_paths: ['%kernel.project_dir%/tests/fixtures/themes']

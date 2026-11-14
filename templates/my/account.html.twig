@@ -44,7 +44,7 @@
   {% endif %}
 
   {% for field in custom_fields %}
-    <p>{{ m.cf_label('user', field) }}{{ m.cf_tag('user', field, custom_values[field.id] ?? null, cf_options(field)) }}</p>
+    <p>{{ issue_cf_tag('user', field, custom_values[field.id] ?? null) }}</p>
   {% endfor %}
   {{ call_hook('view_my_account', {user: user, form: null}) }}
 </fieldset>

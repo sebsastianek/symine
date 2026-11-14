@@ -1,5 +1,5 @@
 {% extends 'base.html.twig' %}
-{% block header_tags %}{% if path_exists('project_activity') %}<link rel="alternate" type="application/atom+xml" title="ATOM" href="{{ path('project_activity', {id: project.identifier, format: 'atom'}|merge(atom_key ? {key: atom_key} : {})) }}" />{% endif %}{% endblock %}
+{% block header_tags %}{% if path_exists('project_activity') %}<link rel="alternate" type="application/atom+xml" title="ATOM" href="{{ path('project_activity', {id: project.identifier, _format: 'atom'}|merge(atom_key ? {key: atom_key} : {})) }}" />{% endif %}{% endblock %}
 {% block content %}
 <div class="contextual">
   {% include 'projects/_bookmark_link.html.twig' %}
@@ -40,7 +40,7 @@
     <li><span class="label">{{ l('field_homepage') }}:</span> {% if project.homepage matches '{^(https?|ftp)://}i' %}<a href="{{ project.homepage }}">{{ project.homepage }}</a>{% else %}{{ project.homepage }}{% endif %}</li>
   {% endif %}
   {% for cv in custom_field_values %}
-    <li class="{{ cv.field.fieldFormat }}_cf cf_{{ cv.field.id }}"><span class="label">{{ cv.field.name }}:</span> {{ cv.value }}</li>
+    <li class="{{ cv.field.fieldFormat }}_cf cf_{{ cv.field.id }}"><span class="label">{{ cv.field.name }}:</span> {{ issue_cf_value_html(cv.field, cv.raw, project, project) }}</li>
   {% endfor %}
   </ul>
   {% endif %}
@@ -49,7 +49,7 @@
   <div class="issues box">
     <h3 class="icon icon-issue">
       {{ sprite_icon('issue', l('label_issue_tracking')) }}&nbsp;
-      {% if path_exists('project_issues_report_details') %}<a class="icon-only icon-zoom-in" title="{{ l('label_details') }}" href="{{ path('project_issues_report_details', {id: project.identifier, detail: 'tracker'}) }}">{{ sprite_icon('zoom-in', l('label_details')) }}</a>{% endif %}
+      {% if path_exists('issues_report_details') %}<a class="icon-only icon-zoom-in" title="{{ l('label_details') }}" href="{{ path('issues_report_details', {id: project.identifier, detail: 'tracker'}) }}">{{ sprite_icon('zoom-in', l('label_details')) }}</a>{% endif %}
     </h3>
     {% set issues_url = path_exists('project_issues') ? path('project_issues', {project_id: project.identifier}) : null %}
     {% if trackers|length > 0 %}
@@ -85,7 +85,7 @@
     {% endif %}
     <p>
       {% if issues_url %}<a href="{{ issues_url }}?set_filter=1">{{ l('label_issue_view_all') }}</a>{% endif %}
-      {% if path_exists('project_issues_report') %}| <a href="{{ path('project_issues_report', {id: project.identifier}) }}">{{ l('field_summary') }}</a>{% endif %}
+      {% if path_exists('issues_report') %}| <a href="{{ path('issues_report', {id: project.identifier}) }}">{{ l('field_summary') }}</a>{% endif %}
       {% if allowed_to('view_calendar', project, true) and path_exists('project_calendar') %}
         | <a href="{{ path('project_calendar', {project_id: project.identifier}) }}">{{ l('label_calendar') }}</a>
       {% endif %}
@@ -126,7 +126,7 @@
     {% for n in news %}
     <p>
 {% if path_exists('news_show') %}<a href="{{ path('news_show', {id: n.id}) }}">{{ n.title }}</a>{% else %}{{ n.title }}{% endif %}
-{% if n.commentsCount > 0 %}<span class="comments">({{ l('label_x_comments', {count: n.commentsCount}) }})</span>{% endif %}
+ {% if n.commentsCount > 0 %}<span class="comments">({{ l('label_x_comments', {count: n.commentsCount}) }})</span>{% endif %}
 <br />
 {% if n.summary %}<span class="summary">{{ n.summary }}</span><br />{% endif %}
 <span class="author">{{ authoring(n.createdOn, n.author) }}</span></p>
@@ -139,8 +139,11 @@
   <div class="members box">
     <h3 class="icon icon-group">{{ sprite_icon('group', l('label_member_plural')) }}</h3>
     {% for row in principals_by_role %}
-      <p><span class="label">{{ row.role.name }}:</span> {% for p in row.principals %}{% if p.isGroup() %}{% if path_exists('group_show') %}<a class="group icon icon-group" href="{{ path('group_show', {id: p.id}) }}">{{ sprite_icon('group') }}{{ p.getName() }}</a>{% else %}{{ p.getName() }}{% endif %}{% else %}{{ link_to_user(p) }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+      <p><span class="label">{{ row.role.name }}:</span> {% for p in row.principals %}{% if p.isGroup() %}{% set group_name = members_manager is defined ? members_manager.principalName(p) : p.getName() %}{% if path_exists('group_show') %}<a class="group icon icon-group" href="{{ path('group_show', {id: p.id}) }}">{{ sprite_icon('group') }}{{ group_name }}</a>{% else %}{{ group_name }}{% endif %}{% else %}{{ link_to_user(p) }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</p>
     {% endfor %}
+    {% if allowed_to('view_members', project) and path_exists('project_members') %}
+      <p><a href="{{ path('project_members', {project_id: project.identifier}) }}">{{ l('label_member_view_all') }}</a></p>
+    {% endif %}
   </div>
   {% endif %}
 

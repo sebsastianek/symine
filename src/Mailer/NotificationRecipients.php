@@ -232,11 +232,49 @@ final class NotificationRecipients
         $users = $this->em->createQuery('SELECT u FROM App\Entity\User u WHERE u.login IN (:l) AND u.status = :s ORDER BY u.id')
             ->setParameter('l', $logins)->setParameter('s', Principal::STATUS_ACTIVE)->getResult();
         $users = array_filter($users, fn (User $u) => null !== $this->mailOf($u) && 'none' !== $u->mailNotification);
+        // User.visible: only the users the author of the text is allowed to see can be mentioned
+        $users = $this->visibleByCurrentUser(array_values($users));
         if (null !== $visible) {
             $users = array_filter($users, $visible);
         }
 
         return array_values($users);
+    }
+
+    /**
+     * Principal.visible(User.current): all active users for admins and for roles with users_visibility "all",
+     * otherwise the user himself and the members of the projects he can see.
+     *
+     * @param list<User> $users
+     *
+     * @return list<User>
+     */
+    private function visibleByCurrentUser(array $users): array
+    {
+        $viewer = $this->auth->user();
+        if ([] === $users || $viewer->admin) {
+            return $users;
+        }
+        $memberships = $viewer->isLogged() ? $this->auth->membershipsOf($viewer) : [];
+        if ([] === $memberships) {
+            $viewAllActive = 'all' === $this->auth->builtinRole($viewer)->usersVisibility;
+        } else {
+            $viewAllActive = false;
+            foreach ($memberships as $m) {
+                foreach ($m->getRoles() as $role) {
+                    $viewAllActive = $viewAllActive || 'all' === $role->usersVisibility;
+                }
+            }
+        }
+        if ($viewAllActive) {
+            return $users;
+        }
+        $projectIds = $this->auth->visibleProjectIds($viewer);
+        $memberIds = [] === $projectIds ? [] : array_map('intval', $this->em->getConnection()->fetchFirstColumn(
+            'SELECT DISTINCT user_id FROM members WHERE project_id IN (?)', [$projectIds], [\Doctrine\DBAL\ArrayParameterType::INTEGER]
+        ));
+
+        return array_values(array_filter($users, static fn (User $u) => $u->id === $viewer->id || \in_array($u->id, $memberIds, true)));
     }
 
     // ------------------------------------------------------------------------------------------

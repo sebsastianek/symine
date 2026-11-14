@@ -879,9 +879,14 @@ class IssueQuery extends AbstractQuery
         if ([] === $ids) {
             return [];
         }
+        // authors and assignees cannot be lazy (see BatchLoader::principals): without this, each of them is one
+        // or two queries while the issues are hydrated
+        $this->ctx->batch?->issuePrincipals($ids);
         $found = $this->ctx->em->createQuery(
             'SELECT i, p, t, s, pr FROM App\Entity\Issue i JOIN i.project p JOIN i.tracker t JOIN i.status s JOIN i.priority pr WHERE i.id IN (:ids)'
         )->setParameter('ids', $ids)->getResult();
+        // lists, calendars and charts ask every issue whether it has subtasks
+        $this->ctx->batch?->collections($found, 'children');
         $byId = [];
         foreach ($found as $i) {
             $byId[$i->id] = $i;

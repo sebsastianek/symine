@@ -51,7 +51,7 @@ final class ProjectQueryExtension extends AbstractExtension
     {
         $value = $query->columnValue($column, $item);
         if ($column->isCustomField() && null !== $column->customField) {
-            return $this->queries->formatObject(['custom_field' => $column->customField, 'value' => $value]);
+            return $this->queries->formatObject(['custom_field' => $column->customField, 'value' => $value, 'customized' => $item]);
         }
         $user = $this->currentUser->get();
         switch ($column->name) {

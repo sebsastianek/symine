@@ -16,7 +16,7 @@ use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 /**
  * Rails-like protect_from_forgery: every non-GET browser request must carry the global CSRF
  * token (form field "_token" or "X-CSRF-Token" header, as sent by rails-ujs).
- * Stateless API requests authenticated by key/basic auth are exempt.
+ * Stateless API requests (json/xml) are exempt.
  */
 final class CsrfSubscriber implements EventSubscriberInterface
 {
@@ -35,15 +35,14 @@ final class CsrfSubscriber implements EventSubscriberInterface
         if (!$event->isMainRequest() || $request->isMethodSafe()) {
             return;
         }
-        if ((new ApiRequestMatcher())->matches($request)) {
+        // ApplicationController#verify_authenticity_token: only API requests (json/xml) are exempt. They never
+        // use the session (ApiRequestMatcher), so they cannot be forged from a browser session. A key in the
+        // URL (feeds key, API key) never exempts a browser-format request from the check.
+        if (ApiRequestMatcher::isApiRequest($request)) {
             return;
         }
         // Login form and logout use their own security tokens
         if (\in_array($request->attributes->get('_route'), ['signin', 'signout', 'mail_handler', 'oauth_token', 'oauth_revoke', 'sys_projects', 'sys_create_project_repository', 'sys_fetch_changesets'], true)) {
-            return;
-        }
-        // API requests (json/xml) without credentials are rejected later by authorization
-        if (ApiRequestMatcher::isApiRequest($request) && !$request->hasPreviousSession()) {
             return;
         }
         $token = $request->request->get('_token') ?? $request->headers->get('X-CSRF-Token');

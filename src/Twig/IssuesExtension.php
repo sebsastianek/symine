@@ -58,6 +58,7 @@ final class IssuesExtension extends AbstractExtension
         private readonly EntityManagerInterface $em,
         private readonly AppExtension $app,
         private readonly \App\Service\TextFormatter $formatter,
+        private readonly ?\App\Doctrine\BatchLoader $batch = null,
     ) {
     }
 
@@ -79,7 +80,7 @@ final class IssuesExtension extends AbstractExtension
             new TwigFunction('issue_relation_text', $this->relationText(...), $safe),
             new TwigFunction('issue_relation_types', $this->relationTypeOptions(...)),
             new TwigFunction('issue_custom_values', $this->customValuesForDisplay(...)),
-            new TwigFunction('issue_cf_value_html', $this->customFieldValueHtml(...), $safe),
+            new TwigFunction('issue_cf_value_html', fn (array $context, CustomField $cf, mixed $value, ?Project $project = null, ?object $customized = null) => $this->customFieldValueHtml($cf, $value, $project, $customized ?? (($context['issue'] ?? null) instanceof Issue ? $context['issue'] : null)), $safe + ['needs_context' => true]),
             new TwigFunction('issue_cf_tag', $this->customFieldTag(...), $safe),
             new TwigFunction('issue_cf_bulk_tag', $this->customFieldBulkTag(...), $safe),
             new TwigFunction('issue_principals_options', $this->principalsOptionsForSelect(...), $safe),
@@ -329,12 +330,13 @@ final class IssuesExtension extends AbstractExtension
     {
         $other = $relation->otherIssue($issue);
         $label = $this->i18n->l($relation->labelFor($issue));
-        $s = htmlspecialchars($label).' '.$this->app->linkToIssue($other, ['project' => $this->settings->bool('cross_project_issue_relations')]);
-        if (IssueRelation::TYPE_PRECEDES === $relation->relationType && $relation->delay) {
+        // IssueRelation#to_s: "Follows (2 days) Project - Feature #24: subject"
+        $s = htmlspecialchars($label);
+        if ($relation->delay) {
             $s .= ' '.htmlspecialchars('('.$this->i18n->l('datetime.distance_in_words.x_days', ['count' => $relation->delay]).')');
         }
 
-        return $s;
+        return $s.' '.$this->app->linkToIssue($other, ['project' => $this->settings->bool('cross_project_issue_relations')]);
     }
 
     /** @param list<IssueRelation> $relations */
@@ -448,6 +450,8 @@ final class IssuesExtension extends AbstractExtension
         $user = $this->auth->user($user);
         $visibleCf = null;
         $out = [];
+        // asked for each journal of an issue in turn: the details of all of them come in one query
+        $this->batch?->collection($journal, 'details');
         foreach ($journal->details as $d) {
             if ('cf' === $d->property) {
                 if (null === $visibleCf) {
@@ -731,22 +735,36 @@ final class IssuesExtension extends AbstractExtension
         return 'text' === $cf->fieldFormat && \in_array($cf->getFormatOption('full_width_layout'), ['1', 1, true], true);
     }
 
-    public function customFieldValueHtml(CustomField $cf, mixed $value, ?Project $project = null): string
+    /**
+     * Custom field value as HTML (FieldFormat#formatted_value with html = true, then format_object).
+     *
+     * @param object|null $customized the object holding the value (issue, project, user...), for the
+     *                                %id%, %project_id% and %project_identifier% tokens of URL patterns
+     */
+    public function customFieldValueHtml(CustomField $cf, mixed $value, ?Project $project = null, ?object $customized = null): string
     {
         $values = array_values(array_filter((array) $value, static fn ($v) => null !== $v && '' !== (string) $v));
         if ([] === $values) {
             return '';
         }
+        $format = (string) $cf->fieldFormat;
+        // Base#formatted_value / LinkFormat#formatted_value: values rendered as links (URL pattern, link fields)
+        if (null !== ($links = $this->customFields->linkedValueHtml($cf, $values, $customized, $project))) {
+            return $links;
+        }
+        $delimiter = '1' === (string) $cf->getFormatOption('thousands_delimiter') ? $this->i18n->l('number.format.delimiter') : '';
         $out = [];
         foreach ($values as $v) {
             $v = (string) $v;
-            $out[] = match ($cf->fieldFormat) {
+            $out[] = match ($format) {
                 'text' => \in_array($cf->getFormatOption('text_formatting'), ['full'], true) ? '<div class="wiki">'.$this->formatter->format($v, $project).'</div>' : nl2br(htmlspecialchars($v)),
-                'link' => $this->linkValue($cf, $v),
-                'string' => \in_array($cf->getFormatOption('text_formatting'), ['full'], true) ? $this->formatter->format($v, $project) : ($cf->getFormatOption('url_pattern') ? $this->linkValue($cf, $v) : htmlspecialchars($v)),
+                'string' => \in_array($cf->getFormatOption('text_formatting'), ['full'], true) ? $this->formatter->format($v, $project) : htmlspecialchars($v),
                 'user' => ($u = $this->em->find(Principal::class, (int) $v)) ? $this->app->linkToUser($u) : htmlspecialchars($v),
                 'version' => ($ver = $this->em->find(Version::class, (int) $v)) ? $this->app->linkToVersion($ver) : htmlspecialchars($v),
                 'progressbar' => $this->app->progressBar((float) $v, $v.'%'),
+                // format_object(Integer|Float, thousands_delimiter: custom_field.thousands_delimiter?)
+                'int' => preg_match('/^\s*[+-]?\d+\s*$/', $v) ? htmlspecialchars(number_format((int) $v, 0, '.', $delimiter)) : htmlspecialchars($v),
+                'float' => is_numeric(trim($v)) ? htmlspecialchars(number_format((float) $v, 2, '.', $delimiter)) : htmlspecialchars($v),
                 default => htmlspecialchars($this->customFields->formatValue($cf, $v)),
             };
         }
@@ -754,27 +772,24 @@ final class IssuesExtension extends AbstractExtension
         return implode(', ', $out);
     }
 
-    private function linkValue(CustomField $cf, string $v): string
-    {
-        $pattern = (string) $cf->getFormatOption('url_pattern', '');
-        $url = '' !== $pattern ? str_replace(['%value%', '%id%'], [rawurlencode($v), ''], $pattern) : (preg_match('#^[a-z][a-z0-9+.\-]*://#i', $v) ? $v : 'http://'.$v);
-
-        return '<a class="external" href="'.htmlspecialchars($url).'">'.htmlspecialchars($v).'</a>';
-    }
-
     /**
      * Form field for a custom field value (CustomFieldsHelper#custom_field_tag_with_label).
      */
     public function customFieldTag(string $objectName, CustomField $cf, mixed $value, ?Project $project = null, bool $required = false, bool $withLabel = true, ?Issue $issue = null): string
     {
-        $id = $objectName.'_custom_field_values_'.$cf->id;
+        // sanitize_to_id: "enumerations[3]" => "enumerations_3"
+        $id = preg_replace('/[^-a-zA-Z0-9:.]/', '_', str_replace(']', '', $objectName)).'_custom_field_values_'.$cf->id;
         $name = $objectName.'[custom_field_values]['.$cf->id.']';
         $css = $cf->fieldFormat.'_cf cf_'.$cf->id;
         $required = $required || $cf->isRequired;
         $style = (string) $cf->getFormatOption('edit_tag_style', '');
+        // List#select_edit_tag: no blank option for a required field with a default value, "--- Please select ---" for other required fields
+        $blankOption = $cf->isRequired
+            ? (null !== $cf->defaultValue && '' !== $cf->defaultValue ? '' : '<option value="">--- '.htmlspecialchars($this->i18n->l('actionview_instancetag_blank_option')).' ---</option>')
+            : '<option value="">&nbsp;</option>';
         $labelText = '<span'.($cf->description ? ' title="'.htmlspecialchars($cf->description).'"' : '').'>'.htmlspecialchars($cf->name).'</span>'.($required ? ' <span class="required">*</span>' : '');
         $multipleOrChecks = $cf->isMultiple() || \in_array($style, ['check_box', 'radio'], true);
-        $label = $withLabel ? '<label'.($multipleOrChecks && '' !== $style ? '' : ' for="'.$id.'"').'>'.$labelText.'</label>' : '';
+        $label = $withLabel ? '<label'.($multipleOrChecks && '' !== $style && !('bool' === $cf->fieldFormat && 'check_box' === $style) ? '' : ' for="'.$id.'"').'>'.$labelText.'</label>' : '';
         $values = array_map('strval', array_filter((array) $value, static fn ($v) => null !== $v));
         $single = (string) ($values[0] ?? '');
         $h = htmlspecialchars(...);
@@ -792,7 +807,7 @@ final class IssuesExtension extends AbstractExtension
                 } elseif ('radio' === $style) {
                     $tag = $this->radioOrChecks($name, [['', $this->i18n->l('label_none')], ['1', $this->i18n->l('general_text_Yes')], ['0', $this->i18n->l('general_text_No')]], [$single], false, $css);
                 } else {
-                    $tag = '<select class="'.$css.'" name="'.$h($name).'" id="'.$id.'"><option value="">&nbsp;</option>'
+                    $tag = '<select class="'.$css.'" name="'.$h($name).'" id="'.$id.'">'.$blankOption
                         .'<option value="1"'.('1' === $single ? ' selected="selected"' : '').'>'.$h($this->i18n->l('general_text_Yes')).'</option>'
                         .'<option value="0"'.('0' === $single ? ' selected="selected"' : '').'>'.$h($this->i18n->l('general_text_No')).'</option></select>';
                 }
@@ -801,7 +816,19 @@ final class IssuesExtension extends AbstractExtension
             case 'enumeration':
             case 'user':
             case 'version':
-                $options = $this->customFields->possibleValuesOptions($cf, $project, $issue);
+                // possible_custom_value_options: the possible values plus the current values that are no longer possible
+                $principals = 'user' === $cf->fieldFormat ? $this->customFields->possiblePrincipals($cf, $project) : [];
+                foreach ('user' === $cf->fieldFormat ? $values : [] as $v) {
+                    if ('' !== $v && !\in_array((int) $v, array_map(static fn (Principal $pr) => (int) $pr->id, $principals), true) && null !== ($missing = $this->em->find(Principal::class, (int) $v))) {
+                        $principals[] = $missing;
+                    }
+                }
+                $options = 'user' === $cf->fieldFormat ? $this->customFields->principalsOptions($cf, $principals) : $this->customFields->possibleValuesOptions($cf, $project, $issue);
+                foreach ('user' === $cf->fieldFormat ? [] : $values as $v) {
+                    if ('' !== $v && !\in_array($v, array_map(static fn (array $o) => (string) $o[0], $options), true)) {
+                        $options[] = [$v, $this->customFields->formatValue($cf, $v)];
+                    }
+                }
                 if (\in_array($style, ['check_box', 'radio'], true)) {
                     $tag = $this->radioOrChecks($name.($cf->isMultiple() ? '[]' : ''), $cf->isMultiple() ? $options : [['', $this->i18n->l('label_none')], ...$options], $values, $cf->isMultiple(), $css);
                     if ($cf->isMultiple()) {
@@ -810,16 +837,24 @@ final class IssuesExtension extends AbstractExtension
                 } else {
                     $tag = '<select name="'.$h($name).($cf->isMultiple() ? '[]' : '').'" id="'.$id.'" class="'.$css.'"'.($cf->isMultiple() ? ' multiple="multiple"' : '').'>';
                     if (!$cf->isMultiple()) {
-                        $tag .= '<option value="">'.($required && null !== $cf->defaultValue && '' !== $cf->defaultValue ? '' : '&nbsp;').'</option>';
+                        $tag .= $blankOption;
                     }
-                    foreach ($options as [$v, $text]) {
-                        $tag .= '<option value="'.$h((string) $v).'"'.(\in_array((string) $v, $values, true) ? ' selected="selected"' : '').'>'.$h((string) $text).'</option>';
+                    if ('user' === $cf->fieldFormat) {
+                        $tag .= $this->customFieldPrincipalsOptionTags($cf, $principals, $values);
+                    } else {
+                        foreach ($options as [$v, $text]) {
+                            $tag .= '<option value="'.$h((string) $v).'"'.(\in_array((string) $v, $values, true) ? ' selected="selected"' : '').'>'.$h((string) $text).'</option>';
+                        }
                     }
                     $tag .= '</select>';
                     if ($cf->isMultiple()) {
                         $tag .= '<input type="hidden" name="'.$h($name).'[]" id="'.$id.'_" value="">';
                     }
                 }
+                break;
+            case 'progressbar':
+                // ProgressbarFormat#edit_tag: 0..100 % by steps of the ratio interval of the field
+                $tag = '<select name="'.$h($name).'" id="'.$id.'" class="'.$css.'" style="width: 75px;">'.$this->progressbarOptions($cf, $single).'</select>';
                 break;
             case 'attachment':
                 $tag = '';
@@ -831,11 +866,48 @@ final class IssuesExtension extends AbstractExtension
         return $label.$tag;
     }
 
-    /** Custom field tag for the bulk edit form (no value, with "none" option) */
-    public function customFieldBulkTag(CustomField $cf, mixed $value, ?Project $project = null): string
+    /** Options of a progress bar custom field: "0 %", "10 %"... (ProgressbarFormat#edit_tag) */
+    private function progressbarOptions(CustomField $cf, ?string $selected): string
     {
-        $id = 'issue_custom_field_values_'.$cf->id;
-        $name = 'issue[custom_field_values]['.$cf->id.']';
+        $interval = (int) $cf->getFormatOption('ratio_interval', 0);
+        if ($interval <= 0) {
+            $interval = max(1, $this->settings->int('issue_done_ratio_interval') ?: 10);
+        }
+        $s = '';
+        foreach (range(0, 100, $interval) as $r) {
+            $s .= '<option value="'.$r.'"'.(null !== $selected && '' !== $selected && (string) $r === trim($selected) ? ' selected="selected"' : '').'>'.$r.' %</option>';
+        }
+
+        return $s;
+    }
+
+    /**
+     * UserFormat#principals_option_tags: "<< me >>", then the principals; users and groups are
+     * separated in option groups when both are present.
+     *
+     * @param list<Principal> $principals
+     * @param list<string>    $selected
+     */
+    private function customFieldPrincipalsOptionTags(CustomField $cf, array $principals, array $selected): string
+    {
+        $opt = static fn (string $value, string $text): string => '<option value="'.htmlspecialchars($value).'"'.(\in_array($value, $selected, true) ? ' selected="selected"' : '').'>'.htmlspecialchars($text).'</option>';
+        $tags = fn (array $list): string => implode('', array_map(static fn (Principal $pr) => $opt((string) $pr->id, $pr->getName()), $list));
+        $s = null !== ($me = $this->customFields->meOption($cf, $principals)) ? $opt($me[0], $me[1]) : '';
+        $users = array_values(array_filter($principals, static fn (Principal $pr) => $pr instanceof User));
+        $groups = array_values(array_filter($principals, static fn (Principal $pr) => !$pr instanceof User));
+        if ([] !== $users && [] !== $groups) {
+            return $s.'<optgroup label="'.htmlspecialchars($this->i18n->l('label_user_plural')).'">'.$tags($users).'</optgroup>'
+                .'<optgroup label="'.htmlspecialchars($this->i18n->l('label_group_plural')).'">'.$tags($groups).'</optgroup>';
+        }
+
+        return $s.$tags($principals);
+    }
+
+    /** Custom field tag for the bulk edit form (no value, with "none" option) */
+    public function customFieldBulkTag(CustomField $cf, mixed $value, ?Project $project = null, string $objectName = 'issue'): string
+    {
+        $id = $objectName.'_custom_field_values_'.$cf->id;
+        $name = $objectName.'[custom_field_values]['.$cf->id.']';
         $css = $cf->fieldFormat.'_cf cf_'.$cf->id;
         $h = htmlspecialchars(...);
         $values = array_map('strval', array_filter((array) $value, static fn ($v) => null !== $v && '' !== $v));
@@ -853,18 +925,27 @@ final class IssuesExtension extends AbstractExtension
             case 'user':
             case 'version':
                 $tag = '<select class="'.$css.'" name="'.$h($name).($cf->isMultiple() ? '[]' : '').'" id="'.$id.'"'.($cf->isMultiple() ? ' multiple="multiple"' : '').'>'.($cf->isMultiple() ? '' : $noChange).$none;
-                foreach ($this->customFields->possibleValuesOptions($cf, $project) as [$v, $text]) {
-                    $tag .= '<option value="'.$h((string) $v).'"'.(\in_array((string) $v, $values, true) ? ' selected="selected"' : '').'>'.$h((string) $text).'</option>';
+                if ('user' === $cf->fieldFormat) {
+                    $tag .= $this->customFieldPrincipalsOptionTags($cf, $this->customFields->possiblePrincipals($cf, $project), $values);
+                } else {
+                    foreach ($this->customFields->possibleValuesOptions($cf, $project) as [$v, $text]) {
+                        $tag .= '<option value="'.$h((string) $v).'"'.(\in_array((string) $v, $values, true) ? ' selected="selected"' : '').'>'.$h((string) $text).'</option>';
+                    }
                 }
                 $tag .= '</select>';
                 break;
+            case 'progressbar':
+                // ProgressbarFormat#bulk_edit_tag
+                $tag = '<select class="'.$css.'" name="'.$h($name).'" id="'.$id.'" style="width: 75px;">'.$noChange.$this->progressbarOptions($cf, null).'</select>'
+                    .($cf->isRequired ? '' : '<label class="inline"><input type="checkbox" name="'.$h($name).'" value="__none__" data-disables="#'.$id.'">'.$h($this->i18n->l('button_clear')).'</label>');
+                break;
             case 'date':
                 $tag = '<input size="10" type="date" class="'.$css.'" value="'.$h($values[0] ?? '').'" name="'.$h($name).'" id="'.$id.'">'
-                    .($cf->isRequired ? '' : '<label class="inline"><input type="checkbox" name="'.$h($name).'" value="__none__">'.$h($this->i18n->l('button_clear')).'</label>');
+                    .($cf->isRequired ? '' : '<label class="inline"><input type="checkbox" name="'.$h($name).'" value="__none__" data-disables="#'.$id.'">'.$h($this->i18n->l('button_clear')).'</label>');
                 break;
             default:
                 $tag = '<input type="text" class="'.$css.'" value="'.$h($values[0] ?? '').'" name="'.$h($name).'" id="'.$id.'">'
-                    .($cf->isRequired ? '' : '<label class="inline"><input type="checkbox" name="'.$h($name).'" value="__none__">'.$h($this->i18n->l('button_clear')).'</label>');
+                    .($cf->isRequired ? '' : '<label class="inline"><input type="checkbox" name="'.$h($name).'" value="__none__" data-disables="#'.$id.'">'.$h($this->i18n->l('button_clear')).'</label>');
         }
 
         return $label.$tag;
@@ -943,19 +1024,34 @@ final class IssuesExtension extends AbstractExtension
             }
             $s .= '</optgroup>';
         }
-        if ([] !== $users) {
-            $s .= '<optgroup label="'.$h($this->i18n->l('label_user_plural')).'">';
-            foreach ($users as $u) {
-                $s .= $opt($u);
-            }
-            $s .= '</optgroup>';
+        // Setting.assignee_dropdown_display_format (ApplicationHelper#principals_options_for_select)
+        $usersLabel = $this->i18n->l('label_user_plural');
+        $groupsLabel = $this->i18n->l('label_group_plural');
+        switch ($this->settings->string('assignee_dropdown_display_format')) {
+            case 'groups_then_users':
+                $optgroups = [[$groupsLabel, $groups], [$usersLabel, $users]];
+                break;
+            case 'users_by_group':
+                // principal_users_by_group_optgroups_for_select: the groups, each group's users, the ungrouped users
+                $optgroups = [[$groupsLabel, $groups]];
+                $grouped = [];
+                foreach ($groups as $g) {
+                    $memberIds = array_map(static fn ($u) => $u->id, $g->users->toArray());
+                    $members = array_values(array_filter($users, static fn ($u) => \in_array($u->id, $memberIds, true)));
+                    if ([] !== $members) {
+                        $optgroups[] = [$g->getName(), $members];
+                        $grouped += array_fill_keys(array_map(static fn ($u) => $u->id, $members), true);
+                    }
+                }
+                $optgroups[] = [$usersLabel, array_values(array_filter($users, static fn ($u) => !isset($grouped[$u->id])))];
+                break;
+            default:
+                $optgroups = [[$usersLabel, $users], [$groupsLabel, $groups]];
         }
-        if ([] !== $groups) {
-            $s .= '<optgroup label="'.$h($this->i18n->l('label_group_plural')).'">';
-            foreach ($groups as $g) {
-                $s .= $opt($g);
+        foreach ($optgroups as [$label, $principals]) {
+            if ([] !== $principals) {
+                $s .= '<optgroup label="'.$h($label).'">'.implode('', array_map(static fn ($p) => $opt($p), $principals)).'</optgroup>';
             }
-            $s .= '</optgroup>';
         }
 
         return $s;

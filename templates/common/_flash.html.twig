@@ -1,2 +1,3 @@
 {#- Flash types ending in "_html" carry trusted HTML built by controllers (e.g. links); others are escaped. -#}
-{% for type, messages in app.flashes %}{% set css = type|replace({'_html': ''}) %}{% for message in messages %}<div class="flash {{ css }}" id="flash_{{ css }}">{% if type ends with '_html' %}{{ message|raw }}{% else %}{{ message }}{% endif %}</div>{% endfor %}{% endfor %}
+{#- notice_icon: Redmine puts an icon in front of the message -#}
+{% set _icons = {notice: 'checked', warning: 'warning', error: 'warning'} %}{% for type, messages in app.flashes %}{% set css = type|replace({'_html': ''}) %}{% for message in messages %}<div class="flash {{ css }}" id="flash_{{ css }}">{% if css in _icons|keys %}{{ sprite_icon(_icons[css]) }}{% endif %}{% if type ends with '_html' %}{{ message|raw }}{% else %}{{ message }}{% endif %}</div>{% endfor %}{% endfor %}

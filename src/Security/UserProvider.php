@@ -35,29 +35,25 @@ final class UserProvider implements UserProviderInterface, PasswordUpgraderInter
         return $user;
     }
 
+    /**
+     * User.find_by_login: the exact login first, then a case-insensitive match. Only the login identifies a
+     * user (User.try_to_login): an e-mail address is not a user name, for the login form as for the API.
+     */
     public function findByLogin(string $login): ?User
     {
+        if ('' === $login) {
+            return null;
+        }
         $users = $this->em->createQuery(
-            'SELECT u FROM App\Entity\User u WHERE LOWER(u.login) = :l AND u NOT INSTANCE OF App\Entity\AnonymousUser'
+            'SELECT u FROM App\Entity\User u WHERE LOWER(u.login) = :l AND u NOT INSTANCE OF App\Entity\AnonymousUser ORDER BY u.id'
         )->setParameter('l', mb_strtolower($login))->getResult();
         foreach ($users as $u) {
             if ($u->login === $login) {
                 return $u;
             }
         }
-        if ($users) {
-            return $users[0];
-        }
-        if (str_contains($login, '@')) {
-            $u = $this->em->createQuery(
-                'SELECT u FROM App\Entity\User u JOIN u.emailAddresses e WHERE LOWER(e.address) = :m'
-            )->setParameter('m', mb_strtolower($login))->setMaxResults(1)->getOneOrNullResult();
-            if ($u instanceof User && !$u instanceof AnonymousUser) {
-                return $u;
-            }
-        }
 
-        return null;
+        return $users[0] ?? null;
     }
 
     public function refreshUser(UserInterface $user): UserInterface

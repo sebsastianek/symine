@@ -1,0 +1,430 @@
+/* Strata layout: the shell around every page.
+ *
+ *   rail (project, search, menu) | top bar (site links, appearance, account)
+ *                                | content + contextual sidebar
+ *                                | footer
+ *
+ * The rail is the header of templates/base.html.twig. Below 900px Redmine's responsive layout takes over
+ * (fixed bar + flyout menu), restyled at the end of this file.
+ */
+
+html { font-size: calc(var(--st-font-size) * 16 / 14); }
+
+body {
+  background: var(--st-canvas);
+  color: var(--st-text);
+  font-family: var(--st-font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#wrapper { background: var(--st-canvas); overflow: visible; overflow-x: clip; }
+
+/* ----- Top bar ------------------------------------------------------------------------------ */
+nav.top-menu {
+  background: var(--st-canvas);
+  color: var(--st-text-muted);
+  border-block-end: 1px solid var(--st-line);
+  min-block-size: 3rem;
+  padding-inline: var(--st-space);
+  font-size: 0.8125rem;
+  gap: var(--st-space);
+}
+.top-menu__links ul { gap: 2px; }
+.top-menu__links a, .top-menu__links a:link, .top-menu__links a:visited, #account .dropdown-trigger, #appearance-switcher .dropdown-trigger {
+  color: var(--st-text-muted);
+  padding: 6px 10px;
+  border-radius: var(--st-radius-small);
+  font-weight: 500;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+.top-menu__links a:hover, #account .dropdown-trigger:hover, #appearance-switcher .dropdown-trigger:hover {
+  color: var(--st-text);
+  background-color: var(--st-hover);
+  border-radius: var(--st-radius-small);
+}
+.top-menu__links svg.icon-svg, #account .dropdown-trigger .icon-svg, #appearance-switcher .dropdown-trigger .icon-svg { stroke: currentColor; }
+.top-menu__links a:hover svg.icon-svg, #account .dropdown-trigger:hover .icon-svg { stroke: currentColor; }
+.profile-menu { gap: 4px; }
+#account .dropdown-trigger { padding: 4px 6px; }
+#account .dropdown-content .user-info { color: var(--st-text); }
+#account .dropdown-content .user-info .user-login { color: var(--st-text-muted); }
+
+/* ----- Header: shared ----------------------------------------------------------------------- */
+#header {
+  background: var(--st-sunken);
+  color: var(--st-text);
+  padding: 0;
+}
+#header a { color: var(--st-text); }
+#header a:hover { color: var(--st-text); }
+
+.st-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-block-size: 3rem;
+  padding-inline: var(--st-space);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.st-brand:hover { text-decoration: none; }
+.st-brand-mark { inline-size: 22px; block-size: 22px; flex: none; color: var(--st-accent); }
+.st-brand-logo { max-block-size: 26px; max-inline-size: 132px; flex: none; }
+.st-brand-name { overflow: hidden; text-overflow: ellipsis; }
+
+#header h1 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  font-stretch: var(--st-font-title-stretch);
+  line-height: 1.25;
+  min-block-size: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  color: var(--st-text);
+}
+#header h1 a { color: var(--st-text-muted); font-weight: 400; font-stretch: 100%; font-size: 0.8125rem; }
+#header h1 a:hover { color: var(--st-accent-strong); }
+/* outside projects the title is the application name, which the brand already shows */
+.st-context-is-brand { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+#quick-search { float: none; min-block-size: 0; gap: 8px; }
+#quick-search form { display: block; }
+#quick-search form label { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+#quick-search #q {
+  inline-size: 100%;
+  block-size: var(--st-control-height);
+  border: 1px solid var(--st-line-strong);
+  border-radius: var(--st-radius-small);
+  background: var(--st-raised);
+  padding-inline: 10px;
+}
+#quick-search #project-jump { float: none; }
+#project-jump.drdn { inline-size: 100%; display: block; }
+#project-jump .drdn-trigger {
+  block-size: var(--st-control-height);
+  display: flex;
+  align-items: center;
+  padding: 0 28px 0 10px;
+  border: 1px solid var(--st-line-strong);
+  border-radius: var(--st-radius-small);
+  color: var(--st-text-muted);
+  background-color: var(--st-raised);
+  /* the chevron of the selects (components.css), not Redmine's pale one */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%237d8983' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E");
+  background-size: 14px;
+  background-repeat: no-repeat;
+  background-position: calc(100% - 8px) 50%;
+}
+[dir="rtl"] #project-jump .drdn-trigger { padding: 0 10px 0 28px; background-position: 8px 50%; }
+#project-jump .drdn-trigger:hover { border-color: var(--st-text-faint); color: var(--st-text); }
+.st-jump-current { display: none; }
+.st-jump-label, .st-jump-current { overflow: hidden; text-overflow: ellipsis; }
+#project-jump .drdn.expanded .drdn-trigger, #project-jump.expanded .drdn-trigger { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%237d8983' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E"); border-color: var(--st-accent); }
+#project-jump .drdn-content {
+  inset-block-start: calc(var(--st-control-height) + 4px);
+  inset-inline: 0 auto;
+  inline-size: 300px;
+  border-color: var(--st-line);
+  border-radius: var(--st-radius);
+  box-shadow: var(--st-shadow-menu);
+  background: var(--st-raised);
+  overflow: hidden;
+}
+#project-jump .drdn-items > * { color: var(--st-text) !important; border-color: transparent; padding: 6px 10px; }
+#project-jump .drdn-items > a:hover { background-color: var(--st-accent-soft); color: var(--st-accent-strong) !important; }
+/* the item reached with the keyboard: the scrolling list would clip a focus outline, so it is shown as the hovered item */
+#project-jump .drdn-items > a:focus, #project-jump .drdn-items > a:focus-visible {
+  outline: 0;
+  border-color: transparent;
+  background-color: var(--st-accent-soft);
+  color: var(--st-accent-strong) !important;
+  box-shadow: inset 2px 0 0 var(--st-accent);
+}
+#project-jump .drdn-items > strong, #project-jump .drdn-items > span { color: var(--st-text-muted) !important; font-size: 0.75rem; font-weight: 600; }
+
+/* ----- Main menu: shared -------------------------------------------------------------------- */
+#main-menu { background: transparent; }
+#main-menu li a {
+  color: var(--st-text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--st-radius-small);
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+#main-menu li a:hover { background-color: color-mix(in oklch, var(--st-text) 7%, transparent); color: var(--st-text); }
+#main-menu li a.selected, #main-menu li a.selected:hover {
+  background-color: var(--st-canvas);
+  color: var(--st-text);
+  font-weight: 600;
+}
+#main-menu li a.new-object, #main-menu li a.new-object:hover {
+  background-color: var(--st-raised);
+  border: 1px solid var(--st-line-strong);
+  color: var(--st-accent-strong);
+  font-weight: 600;
+}
+#main-menu li a.new-object:hover { border-color: var(--st-accent); }
+#main-menu .menu-children {
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius);
+  box-shadow: var(--st-shadow-menu);
+  background: var(--st-raised);
+  padding: 4px;
+}
+#main-menu .menu-children li a { background: transparent; color: var(--st-text); border-radius: var(--st-radius-small); padding: 6px 10px; }
+#main-menu .menu-children li a:hover { background-color: var(--st-accent-soft); color: var(--st-accent-strong); }
+
+/* ----- Content area ------------------------------------------------------------------------- */
+#main { min-inline-size: 0; background: var(--st-canvas); }
+#content {
+  background: var(--st-canvas);
+  padding: 22px 28px 28px;
+  min-inline-size: 0;
+  max-inline-size: var(--st-content-max);
+  margin-inline: auto;
+}
+#main.nosidebar #content { margin-inline: auto; }
+
+#sidebar {
+  background: var(--st-canvas);
+  border-inline-start: 1px solid var(--st-line);
+  padding: 22px 16px 22px 20px;
+  font-size: 0.8125rem;
+}
+#sidebar h3 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--st-text-muted);
+  margin-block: 20px 6px;
+  padding: 0;
+}
+#sidebar h3:first-child { margin-block-start: 0; }
+/* a sidebar that starts with a floated action (wiki "Edit", watchers "Add"): its heading is still the first one */
+#sidebar-wrapper > .contextual:first-child + h3, #sidebar > .contextual:first-child + h3 { margin-block-start: 0; }
+#sidebar .contextual { margin-block: 0; }
+#sidebar h4 { font-size: 0.75rem; font-weight: 600; color: var(--st-text-muted); border: 0; margin-block: 14px 4px; }
+#sidebar hr { background: var(--st-line); }
+#sidebar ul li { margin: 0; }
+#sidebar ul li > a:not(.icon-only), #admin-menu a { display: inline-flex; padding: 3px 0; line-height: 1.5; }
+/* (the list-link rule above is the more specific one: the selected link is named the same way to keep its padding) */
+#sidebar a.selected, #sidebar ul li > a.selected:not(.icon-only), #admin-menu a.selected, #sidebar #admin-menu a.selected {
+  background-color: var(--st-accent-soft);
+  color: var(--st-accent-strong);
+  box-shadow: inset 2px 0 0 var(--st-accent);
+  border-radius: 0 var(--st-radius-small) var(--st-radius-small) 0;
+  padding: 3px 8px;
+  margin-inline-start: -8px;
+  line-height: 1.5;
+}
+#sidebar a.selected svg.icon-svg { stroke: var(--st-accent-strong) !important; }
+#admin-menu li { padding-block-end: 2px; }
+#admin-menu a { gap: 2px; color: var(--st-text); }
+#admin-menu a:hover { color: var(--st-accent-strong); text-decoration: none; }
+#sidebar-switch-panel { margin-inline-start: -20px; }
+#sidebar-switch-button { border-radius: var(--st-radius-small); }
+#sidebar-switch-button svg { stroke: var(--st-text-faint); }
+#sidebar-switch-button:hover { background-color: var(--st-hover); }
+
+#footer {
+  background: var(--st-canvas);
+  border-block-start: 1px solid var(--st-line);
+  color: var(--st-text-faint);
+  font-size: 0.75rem;
+  padding: 10px var(--st-space);
+}
+#footer a { color: var(--st-text-muted); }
+
+/* ----- Desktop: navigation as a side rail --------------------------------------------------- */
+@media screen and (min-width: 900px) {
+  :root[data-theme-navigation="rail"] #wrapper {
+    display: grid;
+    grid-template-columns: var(--st-rail-width) minmax(0, 1fr);
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas: "rail top" "rail main" "rail footer";
+  }
+  :root[data-theme-navigation="rail"] nav.top-menu { grid-area: top; }
+  :root[data-theme-navigation="rail"] #main { grid-area: main; }
+  :root[data-theme-navigation="rail"] #footer { grid-area: footer; }
+
+  /* The rail does not scroll as a whole (only its menu does, below): what opens from it — the project switcher,
+     search suggestions — is laid over the page instead of being clipped inside the rail. */
+  :root[data-theme-navigation="rail"] #header {
+    grid-area: rail;
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 40;
+    align-self: start;
+    block-size: 100vh;
+    block-size: 100dvh;
+    box-sizing: border-box; /* the padding is part of the 100dvh: a short page must not scroll */
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    border-inline-end: 1px solid var(--st-line);
+    padding-block-end: 12px;
+  }
+  :root[data-theme-navigation="rail"] body.has-main-menu #header { padding-block-end: 12px; }
+  :root[data-theme-navigation="rail"] .st-brand { flex: none; }
+  /* on short windows only the menu gives way (it scrolls): the title and the search are not squeezed into each other */
+  :root[data-theme-navigation="rail"] #header > *:not(#main-menu) { flex-shrink: 0; }
+  :root[data-theme-navigation="rail"] .st-context:not(.st-context-is-brand) { padding: 10px var(--st-space) 12px; }
+  :root[data-theme-navigation="rail"] #header h1 { display: block; }
+  :root[data-theme-navigation="rail"] #header h1 a { display: inline; }
+  :root[data-theme-navigation="rail"] #quick-search {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    padding: 0 12px 12px;
+  }
+  :root[data-theme-navigation="rail"] #main-menu {
+    position: static;
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    padding: 10px 8px 0;
+    border-block-start: 1px solid var(--st-line);
+  }
+  :root[data-theme-navigation="rail"] #main-menu > ul {
+    flex-direction: column;
+    align-items: stretch;
+    white-space: normal;
+    gap: 1px;
+    margin-inline-start: 0 !important;
+  }
+  :root[data-theme-navigation="rail"] #main-menu li { display: block; position: relative; white-space: normal; padding: 0; }
+  :root[data-theme-navigation="rail"] #main-menu li a {
+    display: flex;
+    align-items: center;
+    padding: var(--st-rail-item-pad) 10px;
+    line-height: 1.4;
+  }
+  /* the seam: a thin vein of the accent marks where you are */
+  :root[data-theme-navigation="rail"] #main-menu li a.selected, :root[data-theme-navigation="rail"] #main-menu li a.selected:hover {
+    box-shadow: inset 2px 0 0 var(--st-accent), 0 0 0 1px var(--st-line);
+  }
+  [dir="rtl"]:root[data-theme-navigation="rail"] #main-menu li a.selected, [dir="rtl"]:root[data-theme-navigation="rail"] #main-menu li a.selected:hover {
+    box-shadow: inset -2px 0 0 var(--st-accent), 0 0 0 1px var(--st-line);
+  }
+  :root[data-theme-navigation="rail"] #main-menu li:has(a#new-object) { padding: 0 0 8px; }
+  :root[data-theme-navigation="rail"] #main-menu li a.new-object { justify-content: center; margin: 0; padding: 6px 10px; }
+  :root[data-theme-navigation="rail"] #main-menu .tabs-buttons { display: none !important; }
+  /* submenus are fixed so the scrolling menu does not clip them: they open at their place in the list */
+  :root[data-theme-navigation="rail"] #main-menu .menu-children {
+    position: fixed;
+    inline-size: max-content;
+    min-inline-size: 180px;
+    max-inline-size: 280px;
+    z-index: 60;
+  }
+  :root[data-theme-navigation="rail"] #project-jump .drdn-content { inline-size: min(320px, 90vw); }
+  /* the sticky header of an issue (fixed, full width) belongs to the content column, aligned with the content */
+  :root[data-theme-navigation="rail"] div#sticky-issue-header { inset-inline-start: var(--st-rail-width); padding-inline: 28px; }
+
+  /* ----- Desktop: navigation as tabs under a horizontal header ----- */
+  :root[data-theme-navigation="tabs"] #header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "brand context search" "menu menu menu";
+    align-items: center;
+    border-block-end: 1px solid var(--st-line);
+    position: relative;
+  }
+  :root[data-theme-navigation="tabs"] body.has-main-menu #header { padding-block-end: 0; }
+  :root[data-theme-navigation="tabs"] .st-brand { grid-area: brand; min-block-size: 3.25rem; }
+  :root[data-theme-navigation="tabs"] .st-context { grid-area: context; padding-inline: 4px var(--st-space); border-inline-start: 1px solid var(--st-line-strong); padding-inline-start: var(--st-space); }
+  :root[data-theme-navigation="tabs"] #header h1 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+  :root[data-theme-navigation="tabs"] #quick-search { grid-area: search; padding-inline: var(--st-space); }
+  :root[data-theme-navigation="tabs"] #quick-search #q { inline-size: 200px; }
+  :root[data-theme-navigation="tabs"] #project-jump.drdn { inline-size: 210px; }
+  :root[data-theme-navigation="tabs"] #project-jump .drdn-content { inset-inline: auto 0; }
+  :root[data-theme-navigation="tabs"] #main-menu {
+    grid-area: menu;
+    position: relative;
+    padding-inline: calc(var(--st-space) - 10px);
+    border-block-start: 1px solid var(--st-line);
+    background: var(--st-canvas);
+  }
+  :root[data-theme-navigation="tabs"] #main-menu ul { min-block-size: 2.5rem; gap: 2px; }
+  :root[data-theme-navigation="tabs"] #main-menu li a { padding: 6px 10px; }
+  :root[data-theme-navigation="tabs"] #main-menu li a.selected, :root[data-theme-navigation="tabs"] #main-menu li a.selected:hover {
+    background: transparent;
+    color: var(--st-accent-strong);
+    border-radius: 0;
+    box-shadow: inset 0 -2px 0 var(--st-accent);
+    padding-block: 12px 10px;
+  }
+  :root[data-theme-navigation="tabs"] #main-menu li a.new-object { padding: 4px 10px; }
+  /* a menu wider than the window: the bar clips its items (clip, not hidden: the "+" menu still drops out of it) and
+     the scroll arrows get an opaque seat of the full height of the bar instead of floating over the items */
+  :root[data-theme-navigation="tabs"] #main-menu { overflow-x: clip; overflow-y: visible; }
+  :root[data-theme-navigation="tabs"] #main-menu .tabs-buttons {
+    inset-block: 0;
+    inset-inline-end: 0;
+    transform: none;
+    block-size: auto;
+    inline-size: 62px;
+    z-index: 2;
+    background-color: var(--st-canvas);
+    box-shadow: -10px 0 8px -4px var(--st-canvas);
+    border: 0;
+  }
+  [dir="rtl"]:root[data-theme-navigation="tabs"] #main-menu .tabs-buttons { box-shadow: 10px 0 8px -4px var(--st-canvas); }
+  :root[data-theme-navigation="tabs"] #main-menu .tabs-buttons button { inset-block-end: calc(50% - 12px); block-size: 24px; }
+  :root[data-theme-navigation="tabs"] #main-menu .tabs-buttons button.tab-left { inset-inline-end: 34px; border-radius: var(--st-radius-small) 0 0 var(--st-radius-small); }
+  :root[data-theme-navigation="tabs"] #main-menu .tabs-buttons button.tab-right { inset-inline-end: 10px; border-radius: 0 var(--st-radius-small) var(--st-radius-small) 0; margin-inline-start: -1px; }
+  :root[data-theme-navigation="tabs"] div#sticky-issue-header { padding-inline: 28px; }
+}
+
+/* ----- Small screens: Redmine's bar and flyout menu ----------------------------------------- */
+@media screen and (max-width: 899px) {
+  #header { background-color: var(--st-sunken); border-block-end: 1px solid var(--st-line); display: block; }
+  #header a.mobile-toggle-button { color: var(--st-text); }
+  .st-brand, .st-context { display: none; }
+  #quick-search form { display: none; }
+  #project-jump.drdn { padding-inline: 12px 64px; padding-block: 12px; }
+  #project-jump .drdn-trigger {
+    block-size: 40px;
+    line-height: 1.3;
+    display: flex;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--st-text);
+    background-color: var(--st-raised);
+    background-position: calc(100% - 10px) 50%;
+    border: 1px solid var(--st-line-strong);
+    padding: 0 30px 0 12px;
+  }
+  #project-jump .drdn-trigger:before { content: none; }
+  #project-jump .drdn-trigger:has(.st-jump-current) .st-jump-label { display: none; }
+  .st-jump-current { display: block; }
+  #project-jump .drdn-content { inset-block-start: 56px; inset-inline: 12px auto; inline-size: min(320px, calc(100vw - 24px)); }
+  .flyout-menu { background-color: var(--st-sunken); color: var(--st-text); border-inline-start: 1px solid var(--st-line); }
+  .flyout-menu h3 {
+    background-color: transparent;
+    border: 0;
+    color: var(--st-text-muted);
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    block-size: auto;
+    padding-block: 12px 4px;
+  }
+  .flyout-menu h4 { color: var(--st-text-muted); }
+  .flyout-menu ul li a, .flyout-menu a, .flyout-menu .flyout-menu__avatar a { color: var(--st-text); }
+  .flyout-menu ul li a:hover, .flyout-menu ul li a.selected { background-color: var(--st-accent-soft); color: var(--st-accent-strong); }
+  .flyout-menu ul li, .flyout-menu ul li a { border-color: var(--st-line); }
+  /* the round avatar is not set flush against the edge of the menu, but in line with the items below it */
+  .flyout-menu .flyout-menu__avatar { padding-inline-start: 8px; padding-block: 6px; align-items: center; }
+  #content { padding: 16px; }
+  /* page actions wrap as whole buttons ("Log time" stays on one line). Redmine keeps the row floated although it is
+     100% wide: a flex title or toolbar after it would get a width of 0 */
+  #content > .contextual { flex-wrap: wrap; float: none; }
+  #content > .contextual > a, #content > .contextual > span > a.icon { white-space: nowrap; }
+}

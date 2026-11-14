@@ -17,13 +17,13 @@
 {% if custom_values|length > 0 %}
 <ul>
   {% for cv in custom_values %}
-    <li><span class="label">{{ cv.name }}:</span> {{ cv.value }}</li>
+    <li><span class="label">{{ cv.name }}:</span> {{ issue_cf_value_html(cv.field, cv.raw, document.project, document) }}</li>
   {% endfor %}
 </ul>
 {% endif %}
 
 <div class="wiki">
-{{ textilizable(document.description, project) }}
+{{ textilizable(document.description, project, {object: document}) }}
 </div>
 
 <h3>{{ l('label_attachment_plural') }}</h3>

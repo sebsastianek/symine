@@ -1,0 +1,60 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}
+{{ plugin_stylesheet('symine_kanban', 'kanban') }}
+{{ plugin_javascript('symine_kanban', 'kanban') }}
+{% endblock %}
+{% block content %}
+<div class="contextual">
+  {% if can_edit %}<a class="icon icon-settings" href="{{ path('kanban_board_edit', {id: board.id}) }}">{{ sprite_icon('settings', l('button_configure')) }}</a>{% endif %}
+  {% if can_create_board %}
+    <a class="icon icon-copy" href="{{ path('kanban_board_copy', {id: board.id}) }}" data-method="post">{{ sprite_icon('copy', l('button_copy')) }}</a>
+    <a class="icon icon-add" href="{{ path('kanban_board_new', project ? {project_id: project.identifier} : {}) }}">{{ sprite_icon('add', l('label_kanban_board_new')) }}</a>
+  {% endif %}
+</div>
+
+<h2 class="kanban-title">
+  {% if siblings|length > 1 %}
+    <label class="hidden" for="kanban-switch">{{ l('label_kanban_board') }}</label>
+    <select id="kanban-switch" class="kanban-switch">
+      {% for sibling in siblings %}<option value="{{ path('kanban_board_show', {id: sibling.id}) }}"{% if sibling.id == board.id %} selected{% endif %}>{{ sibling.name }}</option>{% endfor %}
+    </select>
+  {% else %}
+    {{ board.name }}
+  {% endif %}
+  {% if board.isPrivate() %}<span class="badge badge-status-locked">{{ l('field_is_private') }}</span>{% endif %}
+</h2>
+{% if board.description %}<p class="subtitle kanban-description">{{ board.description }}</p>{% endif %}
+
+<form class="kanban-filters" id="kanban-filters" action="{{ path('kanban_board_show', {id: board.id}) }}" method="get">
+  <input type="search" name="q" value="{{ filter.text }}" placeholder="{{ l('label_kanban_filter_text') }}" aria-label="{{ l('label_kanban_filter_text') }}" size="24" />
+  <select name="assigned_to_id" aria-label="{{ l('field_assigned_to') }}">
+    <option value="">{{ l('field_assigned_to') }}: {{ l('label_all') }}</option>
+    {% if current_user().isLogged() %}<option value="me"{% if filter.assignee == 'me' %} selected{% endif %}>&lt;&lt; {{ l('label_me') }} &gt;&gt;</option>{% endif %}
+    <option value="none"{% if filter.assignee == 'none' %} selected{% endif %}>{{ l('label_kanban_unassigned') }}</option>
+    {% for person in filter_options.assignees %}<option value="{{ person.id }}"{% if filter.assignee == person.id ~ '' %} selected{% endif %}>{{ person.getName() }}</option>{% endfor %}
+  </select>
+  {% if filter_options.trackers|length > 1 %}
+  <select name="tracker_id" aria-label="{{ l('field_tracker') }}">
+    <option value="">{{ l('field_tracker') }}: {{ l('label_all') }}</option>
+    {% for tracker in filter_options.trackers %}<option value="{{ tracker.id }}"{% if filter.trackerId == tracker.id %} selected{% endif %}>{{ tracker.name }}</option>{% endfor %}
+  </select>
+  {% endif %}
+  <select name="priority_id" aria-label="{{ l('field_priority') }}">
+    <option value="">{{ l('field_priority') }}: {{ l('label_all') }}</option>
+    {% for priority in filter_options.priorities %}<option value="{{ priority.id }}"{% if filter.priorityId == priority.id %} selected{% endif %}>{{ priority.name }}</option>{% endfor %}
+  </select>
+  {% if filter_options.versions %}
+  <select name="fixed_version_id" aria-label="{{ l('field_fixed_version') }}">
+    <option value="">{{ l('field_fixed_version') }}: {{ l('label_all') }}</option>
+    {% for version in filter_options.versions %}<option value="{{ version.id }}"{% if filter.versionId == version.id %} selected{% endif %}>{{ version.name }}</option>{% endfor %}
+  </select>
+  {% endif %}
+  <input type="submit" value="{{ l('button_apply') }}" class="kanban-filters-apply" />
+  {% if filter.isActive() %}<a class="icon icon-reload" href="{{ path('kanban_board_show', {id: board.id}) }}">{{ sprite_icon('reload', l('button_clear')) }}</a>{% endif %}
+</form>
+
+<div id="kanban-messages" aria-live="polite"></div>
+<div id="kanban-holder" data-statuses="{{ kanban_status_names()|json_encode|e('html_attr') }}">
+{% include '@KanbanPlugin/boards/_board.html.twig' %}
+</div>
+{% endblock %}

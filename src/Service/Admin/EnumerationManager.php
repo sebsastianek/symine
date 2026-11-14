@@ -59,6 +59,31 @@ final class EnumerationManager
         return $this->em->createQuery("SELECT e FROM $class e WHERE e.project IS NULL ORDER BY e.position, e.id")->getResult();
     }
 
+    /**
+     * The sections of Administration > Enumerations: one per type, with its system values.
+     *
+     * @return list<array{type: string, option_name: string, enumerations: list<Enumeration>}>
+     */
+    public function sections(): array
+    {
+        $sections = [];
+        foreach (self::CLASSES as $type => $class) {
+            $sections[] = [
+                'type' => $type,
+                'option_name' => self::OPTION_NAMES[$type],
+                'enumerations' => $this->shared($type),
+            ];
+        }
+
+        return $sections;
+    }
+
+    /** @return list<Enumeration> the other system values of the type, which can take over the objects of $e */
+    public function others(Enumeration $e): array
+    {
+        return array_values(array_filter($this->shared($e::typeName()), static fn ($x) => $x->id !== $e->id));
+    }
+
     /** @return list<CustomField> custom fields of "<Type>CustomField" */
     public function availableCustomFields(string $type): array
     {
@@ -202,6 +227,31 @@ final class EnumerationManager
         if ($e instanceof IssuePriority) {
             $this->computePositionNames();
         }
+    }
+
+    /**
+     * Destroys the enumeration when no object uses it, or when its objects can go to the value of the same
+     * type named by $reassignToId.
+     *
+     * @return bool false when objects use the enumeration and no other value was given: nothing was destroyed
+     */
+    public function destroyOrReassign(Enumeration $e, string $reassignToId): bool
+    {
+        if (0 === $this->objectsCount($e)) {
+            $this->destroy($e);
+
+            return true;
+        }
+        if ('' !== $reassignToId) {
+            $to = $this->em->find($e::class, (int) $reassignToId);
+            if (null !== $to && $to->id !== $e->id) {
+                $this->destroy($e, $to);
+
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function clearDefault(Enumeration $e): void

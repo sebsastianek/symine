@@ -17,6 +17,34 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class AtomFeed
 {
+    /**
+     * textilizable(item, :event_description): the item gives its attachments to inline images and attachment: links.
+     * 'object' is the record itself, 'event' an activity event (the record is found by its type and id).
+     *
+     * @param array<string, mixed> $item
+     *
+     * @return array<string, mixed>
+     */
+    private static function formatterObject(array $item): array
+    {
+        if (isset($item['object']) && \is_object($item['object'])) {
+            return ['object' => $item['object']];
+        }
+        $event = $item['event'] ?? null;
+        if (!$event instanceof Activity\ActivityEvent) {
+            return [];
+        }
+        if (preg_match('/\A(issue|wikipage|news)-(\d+)\z/', $event->group, $m)) {
+            return ['container' => [['issue' => 'Issue', 'wikipage' => 'WikiPage', 'news' => 'News'][$m[1]], (int) $m[2]]];
+        }
+
+        return match ($event->type) {
+            'message', 'reply' => ['container' => ['Message', $event->id]],
+            'document' => ['container' => ['Document', $event->id]],
+            default => [],
+        };
+    }
+
     public function __construct(
         private readonly Settings $settings,
         private readonly TextFormatter $formatter,
@@ -68,7 +96,7 @@ final class AtomFeed
                 }
                 $xml .= '    </author>'."\n";
             }
-            $xml .= '    <content type="html">'.$e($this->formatter->format($item['content'] ?? '', $itemProject ?? $project)).'</content>'."\n";
+            $xml .= '    <content type="html">'.$e($this->formatter->format($item['content'] ?? '', $itemProject ?? $project, ['only_path' => false] + self::formatterObject($item))).'</content>'."\n";
             $xml .= '  </entry>'."\n";
         }
         $xml .= '</feed>'."\n";

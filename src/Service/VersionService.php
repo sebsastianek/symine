@@ -20,7 +20,7 @@ use Doctrine\ORM\EntityManagerInterface;
 /**
  * Port of Redmine's Version model logic (incl. FixedIssuesExtension) and IssueCategory model logic.
  */
-final class VersionService
+final class VersionService implements \Symfony\Contracts\Service\ResetInterface
 {
     public const array STATUS_BY_CRITERIAS = ['tracker', 'status', 'priority', 'author', 'assigned_to', 'category'];
 
@@ -35,6 +35,7 @@ final class VersionService
         private readonly CustomFieldService $customFields,
         private readonly Localizer $i18n,
         private readonly ?\Symfony\Contracts\EventDispatcher\EventDispatcherInterface $dispatcher = null,
+        private readonly ?\App\Doctrine\QueryMemo $memo = null,
     ) {
     }
 
@@ -121,7 +122,8 @@ final class VersionService
 
     public function startDate(Version $version): ?\DateTimeImmutable
     {
-        $d = $this->em->getConnection()->fetchOne('SELECT MIN(start_date) FROM issues WHERE fixed_version_id = ?', [$version->id]);
+        $load = fn (): mixed => $this->em->getConnection()->fetchOne('SELECT MIN(start_date) FROM issues WHERE fixed_version_id = ?', [$version->id]);
+        $d = null === $this->memo || null === $version->id ? $load() : $this->memo->get('version_start_date:'.$version->id, ['issues'], $load);
 
         return $d ? new \DateTimeImmutable(substr((string) $d, 0, 10)) : null;
     }
@@ -300,6 +302,18 @@ final class VersionService
     // Attributes, validation, persistence
     // ------------------------------------------------------------------------------------------
 
+    /** @project.versions.build: a new open version of the project, not shared */
+    public function newVersion(Project $project): Version
+    {
+        $version = new Version();
+        $version->project = $project;
+        $version->status = 'open';
+        $version->sharing = 'none';
+        $version->description = '';
+
+        return $version;
+    }
+
     /**
      * Version#safe_attributes= (sharing is ignored when not allowed, like the controller does).
      *
@@ -393,8 +407,8 @@ final class VersionService
         $fields = $this->visibleCustomFields($version);
         $current = null !== $version->id ? $this->customFields->values('Version', $version->id) : [];
         foreach ($fields as $f) {
-            $v = \array_key_exists($f->id, $customValues) ? $customValues[$f->id] : ($current[$f->id] ?? (null === $version->id ? $f->defaultValue : null));
-            foreach ($this->customFields->validate($f, $v, $version->project) as $e) {
+            $v = \array_key_exists($f->id, $customValues) ? $customValues[$f->id] : ($current[$f->id] ?? (null === $version->id ? $this->customFields->defaultValue($f) : null));
+            foreach ($this->customFields->validate($f, $v, $version->project, $current[$f->id] ?? null) as $e) {
                 $errors[] = $e;
             }
         }
@@ -470,12 +484,18 @@ final class VersionService
     /** Project#close_completed_versions */
     public function closeCompleted(Project $project): void
     {
+        $closed = [];
         foreach ($project->versions as $version) {
             if (!$version->isClosed() && $this->isCompleted($version)) {
                 $version->status = 'closed';
+                $closed[] = $version;
             }
         }
         $this->em->flush();
+        // Project#close_completed_versions saves each version: version.updated webhooks
+        foreach ($closed as $version) {
+            $this->dispatcher?->dispatch(new \App\Event\ContentEvent('version', 'updated', $version, $this->auth->user(null)));
+        }
         $this->reset();
     }
 

@@ -73,6 +73,8 @@ final class UserManager
         private readonly UserPasswordHasherInterface $hasher,
         private readonly MailerInterface $mailer,
         private readonly UrlGeneratorInterface $urls,
+        private readonly SecurityNotifier $security,
+        private readonly \App\Service\SyntaxHighlighting $highlighting,
     ) {
     }
 
@@ -106,6 +108,8 @@ final class UserManager
         $isNew = null === $user->id;
         $current = $this->currentUser->get();
         $errors = [];
+        $before = $this->security->snapshot($user);
+        $previousMail = $isNew ? null : $user->getMail();
 
         foreach (['firstname', 'lastname'] as $k) {
             if (\array_key_exists($k, $attrs)) {
@@ -176,6 +180,7 @@ final class UserManager
         // custom fields
         $cfValues = $this->customFieldParams($attrs);
         $fields = $this->userCustomFields();
+        $storedCf = $isNew ? [] : $this->customFields->values('Principal', $user->id);
         foreach ($fields as $f) {
             if (!\array_key_exists($f->id, $cfValues)) {
                 if ($isNew && $f->isRequired && (null === $f->defaultValue || '' === $f->defaultValue)) {
@@ -183,7 +188,7 @@ final class UserManager
                 }
                 continue;
             }
-            $errors = [...$errors, ...$this->customFields->validate($f, $cfValues[$f->id])];
+            $errors = [...$errors, ...$this->customFields->validate($f, $cfValues[$f->id], null, $storedCf[$f->id] ?? null)];
         }
 
         if ([] !== $errors) {
@@ -234,6 +239,12 @@ final class UserManager
             $this->deleteLoginTokens($user);
         }
         $this->em->flush();
+
+        // EmailAddress#deliver_security_notification_update + User#deliver_security_notification
+        if (null !== $previousMail && '' !== $previousMail && null !== $mail && '' !== $mail && $mail !== $previousMail) {
+            $this->security->emailAddressChanged($user, $previousMail, $mail);
+        }
+        $this->security->userSaved($user, $before);
 
         return [[], $password];
     }
@@ -442,7 +453,10 @@ final class UserManager
             $p->set('recently_used_projects', (int) $pref['recently_used_projects']);
         }
         if (\array_key_exists('toolbar_language_options', $pref)) {
-            $p->set('toolbar_language_options', implode(',', array_filter(explode(',', str_replace(' ', '', (string) $pref['toolbar_language_options'])))));
+            $p->set('toolbar_language_options', implode(',', array_filter(
+                explode(',', str_replace(' ', '', (string) $pref['toolbar_language_options'])),
+                fn (string $lang): bool => '' !== $lang && $this->highlighting->languageSupported($lang),
+            )));
         }
         if (\array_key_exists('auto_watch_on', $pref)) {
             $p->set('auto_watch_on', array_values(array_intersect(self::AUTO_WATCH_ON_OPTIONS, (array) $pref['auto_watch_on'])));
@@ -600,6 +614,9 @@ final class UserManager
     public function destroyUser(User $user): void
     {
         $id = (int) $user->id;
+        $login = (string) $user->login;
+        $wasAdmin = (bool) $user->admin;
+        $wasActive = Principal::STATUS_ACTIVE === $user->status;
         $anon = $this->anonymous();
         $sid = (int) $anon->id;
         $conn = $this->em->getConnection();
@@ -640,6 +657,8 @@ final class UserManager
         }
         $this->em->clear();
         $this->auth->reset();
+        // User#deliver_security_notification (after_destroy)
+        $this->security->userDestroyed($login, $wasAdmin, $wasActive);
     }
 
     /** Group#remove_references_before_destroy + dependent associations */
@@ -725,9 +744,10 @@ final class UserManager
         }
         $fields = $this->groupCustomFields();
         $cf = $group->isBuiltin() ? [] : $this->customFieldParams($attrs);
+        $storedCf = $isNew ? [] : $this->customFields->values('Principal', $group->id);
         foreach ($fields as $f) {
             if (\array_key_exists($f->id, $cf)) {
-                $errors = [...$errors, ...$this->customFields->validate($f, $cf[$f->id])];
+                $errors = [...$errors, ...$this->customFields->validate($f, $cf[$f->id], null, $storedCf[$f->id] ?? null)];
             } elseif ($isNew && $f->isRequired && (null === $f->defaultValue || '' === $f->defaultValue)) {
                 $errors = [...$errors, ...$this->customFields->validate($f, null)];
             }

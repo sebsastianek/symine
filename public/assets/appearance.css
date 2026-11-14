@@ -1,0 +1,90 @@
+/* Symine: theme administration and personal appearance pages. Uses the core variables so it follows every theme. */
+
+.theme-cards {
+  list-style: none;
+  margin: 0 0 1.5em;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--oc-gray-4);
+  border-radius: 4px;
+  background: var(--oc-white);
+  overflow: hidden;
+}
+.theme-card-active { border-color: var(--oc-blue-7); box-shadow: 0 0 0 1px var(--oc-blue-7); }
+.theme-card-preview { display: block; aspect-ratio: 16 / 7; background: var(--oc-gray-1); border-block-end: 1px solid var(--oc-gray-3); }
+.theme-card-preview img { inline-size: 100%; block-size: 100%; object-fit: cover; object-position: top left; display: block; }
+.theme-card-swatch { display: flex; block-size: 100%; }
+.theme-card-swatch i { flex: 1; }
+.theme-card-swatch i:first-child { flex: 2; }
+.theme-card-body { padding: 12px 14px 14px; display: flex; flex-direction: column; flex: 1; }
+.theme-card h3 { margin: 0 0 4px; padding: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.theme-card-description { margin: 0 0 6px; }
+.theme-card-meta { margin: 0 0 12px; color: var(--color-text-muted); font-size: 0.8125rem; }
+.theme-card-actions { margin-block-start: auto; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.theme-card-actions form { margin: 0; display: inline; }
+#theme-errors ul { margin: 6px 0 0; padding-inline-start: 20px; }
+
+/* narrower than the row, so that what follows the choices (the "personal option" mark) stays beside them when they wrap */
+.appearance-choices { display: inline-flex; flex-wrap: wrap; gap: 6px; vertical-align: middle; max-inline-size: calc(100% - 28px); }
+.tabular p.appearance-field .appearance-choice { float: none; inline-size: auto; margin: 0; padding: 0; font-weight: normal; text-align: start; position: relative; display: inline-flex; }
+.appearance-choice > input[type="radio"] { position: absolute; opacity: 0; inline-size: 1px; block-size: 1px; }
+.appearance-choice > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1px solid var(--oc-gray-4);
+  border-radius: 4px;
+  background: var(--oc-white);
+  cursor: pointer;
+  line-height: 1.5;
+}
+.appearance-choice > input[type="radio"]:checked + span { border-color: var(--oc-blue-7); box-shadow: inset 0 0 0 1px var(--oc-blue-7); }
+.appearance-choice > input[type="radio"]:focus-visible + span { outline: 2px solid var(--oc-blue-5); outline-offset: 2px; }
+.appearance-swatch { inline-size: 14px; block-size: 14px; border-radius: 50%; display: inline-block; flex: none; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15); }
+.appearance-custom-color input[type="color"] { inline-size: 24px; block-size: 22px; padding: 0; border: 0; background: none; cursor: pointer; }
+.appearance-site-default { color: var(--color-text-muted); font-style: normal; font-size: 0.75rem; }
+.appearance-unit { color: var(--color-text-muted); }
+/* a number and its unit stay on one line, also where Redmine's mobile layout makes every field of a form 100% wide */
+.tabular p.appearance-field input[type="number"] { inline-size: 6em; max-inline-size: calc(100% - 4em); }
+.appearance-image img { max-block-size: 48px; max-inline-size: 240px; vertical-align: middle; margin-inline-end: 8px; background: var(--oc-gray-1); border: 1px solid var(--oc-gray-3); border-radius: 3px; padding: 4px; }
+.tabular p.appearance-field label.inline { float: none; inline-size: auto; margin: 0 0 0 8px; font-weight: normal; }
+.appearance-personal { display: inline-flex; vertical-align: middle; margin-inline-start: 6px; opacity: 0.6; }
+.appearance-personal svg.icon-svg { inline-size: 15px; block-size: 15px; }
+p.appearance-legend { color: var(--color-text-muted); font-size: 0.8125rem; margin-block: 0 12px; }
+p.appearance-legend .appearance-personal { margin-inline: 0 2px; }
+.appearance-field-error > label:first-child { color: var(--oc-red-9); }
+textarea.appearance-css { inline-size: 100%; box-sizing: border-box; font-family: var(--fonts-monospace); font-size: 0.8125rem; tab-size: 2; }
+
+/* Quick switcher of the top menu */
+#appearance-switcher { position: relative; display: inline-flex; align-items: center; }
+#appearance-switcher .dropdown-trigger { display: inline-flex; align-items: center; }
+#appearance-switcher .dropdown-content { min-inline-size: 280px; padding: 10px; }
+.appearance-quick { display: flex; flex-direction: column; gap: 6px; }
+.appearance-quick + .appearance-quick { margin-block-start: 10px; }
+.appearance-quick-theme { margin: 0; }
+.appearance-quick-theme select { inline-size: 100%; max-inline-size: 100%; }
+.appearance-quick-label { font-size: 0.75rem; color: var(--color-text-muted); }
+.appearance-quick-choices { display: flex; border: 1px solid var(--oc-gray-4); border-radius: 4px; overflow: hidden; }
+.appearance-quick-choices button {
+  flex: 1;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+  padding: 4px 8px;
+  background: var(--oc-white);
+  color: var(--oc-gray-9);
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.appearance-quick-choices button + button { border-inline-start: 1px solid var(--oc-gray-4); }
+.appearance-quick-choices button[aria-pressed="true"] { background: var(--oc-blue-7); color: var(--oc-white); }
+.appearance-quick-choices button:focus-visible { outline: 2px solid var(--oc-blue-5); outline-offset: -2px; }
+#appearance-switcher a.appearance-more { display: block; padding: 4px 2px; }

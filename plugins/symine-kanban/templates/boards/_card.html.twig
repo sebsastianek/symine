@@ -1,0 +1,39 @@
+{#- One card. Variables: card (BoardView::card), board, card_fields, show_project, manual_order. -#}
+{%- set issue = card.issue -%}
+<article class="kanban-card {{ issue_css_classes(issue) }} {{ card.color }}{% if not card.movable %} kanban-card-fixed{% endif %}" id="kanban-card-{{ issue.id }}"
+  data-issue-id="{{ issue.id }}" data-column="{{ card.column }}" data-lane="{{ card.lane }}" data-moves="{{ card.moves|json_encode|e('html_attr') }}" data-card-url="{{ path('kanban_card_show', {id: board.id, issue_id: issue.id}) }}"{% if card.movable %} data-movable="1"{% endif %}>
+  {% if 'cover' in card_fields and card.badges and card.badges.cover %}
+    <img class="kanban-card-cover" src="{{ path('attachment_thumbnail', {id: card.badges.cover, size: 400}) }}" alt="" loading="lazy" onerror="this.remove()" />
+  {% endif %}
+  <header class="kanban-card-head">
+    <a class="kanban-card-id" href="{{ path('issue_show', {id: issue.id}) }}">{% if 'tracker' in card_fields %}{{ issue.tracker.name }} {% endif %}#{{ issue.id }}</a>
+    {% if show_project %}<span class="kanban-card-project" title="{{ l('field_project') }}">{{ issue.project.name }}</span>{% endif %}
+    {% if issue.isPrivate %}<span class="badge badge-private private">{{ l('field_is_private') }}</span>{% endif %}
+  </header>
+  <a class="kanban-card-subject" href="{{ path('issue_show', {id: issue.id}) }}">{{ issue.subject }}</a>
+  {% set meta %}
+    {%- if 'priority' in card_fields %}<span class="kanban-card-priority" title="{{ l('field_priority') }}">{{ issue.priority.name }}</span>{% endif -%}
+    {%- if 'version' in card_fields and issue.fixedVersion %}<span class="kanban-card-version" title="{{ l('field_fixed_version') }}">{{ issue.fixedVersion.name }}</span>{% endif -%}
+    {%- if 'category' in card_fields and issue.category %}<span class="kanban-card-category" title="{{ l('field_category') }}">{{ issue.category.name }}</span>{% endif -%}
+    {%- if 'due_date' in card_fields and issue.dueDate %}<span class="kanban-card-due{% if issue.isOverdue() %} kanban-card-overdue{% elseif card.due_soon %} kanban-card-due-soon{% endif %}" title="{{ l('field_due_date') }}">{{ format_date(issue.dueDate) }}</span>{% endif -%}
+    {%- if 'estimated_hours' in card_fields and issue.estimatedHours is not null %}<span class="kanban-card-hours" title="{{ l('field_estimated_hours') }}">{{ format_hours(issue.estimatedHours) }} h</span>{% endif -%}
+    {%- if 'updated_on' in card_fields and issue.updatedOn %}<span class="kanban-card-updated" title="{{ l('field_updated_on') }}">{{ format_date(issue.updatedOn) }}</span>{% endif -%}
+  {% endset %}
+  {% set marks %}
+    {%- if 'badges' in card_fields and card.badges %}
+      {%- if issue.description %}<span class="kanban-badge" title="{{ l('field_description') }}">{{ sprite_icon('list') }}</span>{% endif -%}
+      {%- if card.badges.comments %}<span class="kanban-badge kanban-badge-comments" title="{{ l('label_kanban_comment_count', {count: card.badges.comments}) }}">{{ sprite_icon('comment') }}{{ card.badges.comments }}</span>{% endif -%}
+      {%- if card.badges.attachments %}<span class="kanban-badge kanban-badge-files" title="{{ l('label_attachment_plural') }}">{{ sprite_icon('attachment') }}{{ card.badges.attachments }}</span>{% endif -%}
+      {%- if card.badges.subtasks %}<span class="kanban-badge kanban-badge-subtasks{% if card.badges.subtasks == card.badges.subtasks_closed %} kanban-badge-done{% endif %}" title="{{ l('label_subtask_plural') }}">{{ sprite_icon('checked') }}{{ card.badges.subtasks_closed }}/{{ card.badges.subtasks }}</span>{% endif -%}
+    {% endif -%}
+  {% endset %}
+  {% if meta|trim or marks|trim or ('assignee' in card_fields and issue.assignedTo) %}
+  <footer class="kanban-card-foot">
+    <span class="kanban-card-meta">{{ meta }}{% if marks|trim %}<span class="kanban-card-badges">{{ marks }}</span>{% endif %}</span>
+    {% if 'assignee' in card_fields and issue.assignedTo %}<span class="kanban-card-assignee" title="{{ l('field_assigned_to') }}: {{ issue.assignedTo.getName() }}">{{ avatar(issue.assignedTo, 22) }}</span>{% endif %}
+  </footer>
+  {% endif %}
+  {% if 'done_ratio' in card_fields and issue.doneRatio > 0 %}
+    <div class="kanban-card-progress" role="img" aria-label="{{ l('field_done_ratio') }}: {{ issue.doneRatio }}%" title="{{ issue.doneRatio }}%"><i style="inline-size: {{ issue.doneRatio }}%"></i></div>
+  {% endif %}
+</article>

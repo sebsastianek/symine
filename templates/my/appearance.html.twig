@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}{% if current_theme().legacy %}<link rel="stylesheet" href="/assets/appearance.css" media="all" />{% endif %}{% endblock %}
+{% block sidebar %}
+<h3>{{ l('label_my_account') }}</h3>
+<ul>
+  <li><a href="{{ path('my_account') }}">{{ l('label_my_account') }}</a></li>
+  <li><a href="{{ path('my_appearance') }}" class="selected">{{ l('label_appearance') }}</a></li>
+</ul>
+{% endblock %}
+{% block content %}
+<h2>{{ l('label_appearance') }}</h2>
+
+<form action="{{ path('my_appearance') }}" method="post" id="appearance-form" data-appearance-form>{{ csrf_field() }}
+  {% if themes %}
+  <fieldset class="box tabular">
+    <legend>{{ l('label_theme') }}</legend>
+    <p>
+      <label for="appearance_theme">{{ l('label_theme') }}</label>
+      <select name="theme" id="appearance_theme" onchange="this.form.submit()">
+        <option value=""{% if not chosen_theme %} selected{% endif %}>{{ l('label_theme_site_default', {name: site_theme.name}) }}</option>
+        {% for theme in themes %}
+          <option value="{{ theme.id }}"{% if chosen_theme and chosen_theme.id == theme.id %} selected{% endif %}>{{ theme.name }}</option>
+        {% endfor %}
+      </select>
+      {% if active_theme.description %}<em class="info">{{ active_theme.description }}</em>{% endif %}
+    </p>
+  </fieldset>
+  {% endif %}
+
+  {% if user_options %}
+  <input type="hidden" name="options_theme" value="{{ active_theme.id }}" />
+  <fieldset class="box tabular">
+    <legend>{{ l('label_theme_options_of', {name: active_theme.name}) }}</legend>
+    {% for option in user_options %}
+      {% include 'common/_theme_option_field.html.twig' with {option: option, value: values[option.name], site_value: site_values[option.name], theme: active_theme} %}
+    {% endfor %}
+  </fieldset>
+  {% elseif not themes %}
+    <p class="nodata">{{ l('text_theme_no_personal_options') }}</p>
+  {% endif %}
+
+  {% if themes or user_options %}<p><input type="submit" value="{{ l('button_save') }}" /></p>{% endif %}
+</form>
+{% endblock %}

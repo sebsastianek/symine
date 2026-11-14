@@ -16,6 +16,7 @@ use App\Security\Authorization;
 use App\Security\CurrentUser;
 use App\Service\CustomFieldService;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
 
 /** REST API representations of users and groups (users/*.api.rsb, groups/*.api.rsb). */
 final class PrincipalApi
@@ -27,6 +28,45 @@ final class PrincipalApi
         private readonly CurrentUser $currentUser,
         private readonly Authorization $auth,
     ) {
+    }
+
+    /**
+     * The associations asked with "?include=a,b".
+     *
+     * @return list<string>
+     */
+    public static function includes(Request $request): array
+    {
+        return array_values(array_filter(array_map('trim', explode(',', (string) $request->query->get('include', '')))));
+    }
+
+    /**
+     * users/index.api.rsb
+     *
+     * @param list<User>           $users
+     * @param array<string, mixed> $pager
+     * @param list<string>         $includes
+     *
+     * @return array<string, mixed>
+     */
+    public function userList(array $users, int $count, array $pager, array $includes = []): array
+    {
+        return [
+            'users' => array_map(fn (User $u) => $this->userListItem($u, $includes), $users),
+            'total_count' => $count, 'offset' => $pager['offset'], 'limit' => $pager['limit'],
+        ];
+    }
+
+    /**
+     * groups/index.api.rsb
+     *
+     * @param list<Group> $groups
+     *
+     * @return array<string, mixed>
+     */
+    public function groupList(array $groups): array
+    {
+        return ['groups' => array_map(fn (Group $g) => $this->groupListItem($g), $groups)];
     }
 
     /** render_api_custom_values */

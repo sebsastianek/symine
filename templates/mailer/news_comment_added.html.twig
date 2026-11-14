@@ -4,5 +4,5 @@
 
 <p>{{ l('text_user_wrote', {value: comment.author.name}) }}</p>
 
-{{ mail.textilizable(comment.content, news.project)|raw }}
+{{ mail.textilizable(comment.content, news.project, news)|raw }}
 {% endblock %}

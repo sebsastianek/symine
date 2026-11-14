@@ -14,6 +14,7 @@ use App\Entity\WikiContent;
 use App\Entity\WikiPage;
 use App\Event\ContentEvent;
 use App\Event\IssueEvent;
+use App\Import\ImportNotificationSuppressor;
 use App\Service\Settings;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -33,13 +34,12 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 final class NotificationSubscriber implements EventSubscriberInterface
 {
-    /** @var array<int, true> issue ids for which notifications are disabled (Issue#notify = false) */
-    private static array $suppressed = [];
-
     public function __construct(
         private readonly NotificationMailer $mailer,
         private readonly NotificationRecipients $recipients,
         private readonly Settings $settings,
+        /** issues and operations for which notifications are disabled; request-scoped (reset by the kernel between requests) */
+        private readonly ImportNotificationSuppressor $suppressor,
         private readonly ?LoggerInterface $logger = null,
     ) {
     }
@@ -52,15 +52,15 @@ final class NotificationSubscriber implements EventSubscriberInterface
         ];
     }
 
-    /** Disables notifications for an issue (e.g. CSV import without notifications, Issue#notify = false) */
-    public static function suppress(int $issueId): void
+    /** Disables notifications for an issue during the current request (Issue#notify = false) */
+    public function suppress(int $issueId): void
     {
-        self::$suppressed[$issueId] = true;
+        $this->suppressor->suppress($issueId);
     }
 
-    public static function unsuppress(int $issueId): void
+    public function unsuppress(int $issueId): void
     {
-        unset(self::$suppressed[$issueId]);
+        $this->suppressor->unsuppress($issueId);
     }
 
     public function onIssue(IssueEvent $event): void
@@ -73,7 +73,8 @@ final class NotificationSubscriber implements EventSubscriberInterface
         $events = $this->notifiedEvents();
         try {
             if (IssueEvent::CREATED === $event->action) {
-                if (\in_array('issue_added', $events, true)) {
+                // Issue#notify = false (issues created by an import with notifications disabled)
+                if (!$this->suppressor->areCreationsSilent() && \in_array('issue_added', $events, true)) {
                     $this->mailer->deliverIssueAdd($issue);
                 }
             } elseif (IssueEvent::UPDATED === $event->action && null !== $event->journal) {
@@ -89,7 +90,8 @@ final class NotificationSubscriber implements EventSubscriberInterface
 
     public function onContent(ContentEvent $event): void
     {
-        if (false === ($event->context['notify'] ?? true)) {
+        // Mailer.with_deliveries(false) (e.g. project copy without notifications): nothing is sent meanwhile
+        if (false === ($event->context['notify'] ?? true) || $this->suppressor->isActive()) {
             return;
         }
         $this->recipients->reset();
@@ -129,6 +131,10 @@ final class NotificationSubscriber implements EventSubscriberInterface
         }
         // attachments added to a page (no new content version) are not notified
         if ('updated' === $event->action && !\array_key_exists('content', $event->context) && \array_key_exists('attachments', $event->context)) {
+            return;
+        }
+        // WikiContent#send_notification_update: only when the text changed (rename, protect, comment-only edits are not notified)
+        if ('updated' === $event->action && false === ($event->context['text_changed'] ?? true)) {
             return;
         }
         if ('created' === $event->action) {
@@ -202,20 +208,6 @@ final class NotificationSubscriber implements EventSubscriberInterface
 
     private function isSuppressed(int $issueId): bool
     {
-        if (isset(self::$suppressed[$issueId])) {
-            return true;
-        }
-        $importSuppressor = 'App\Import\ImportNotificationSuppressor';
-        if (class_exists($importSuppressor) && method_exists($importSuppressor, 'isSuppressed')) {
-            return (bool) $importSuppressor::isSuppressed($issueId);
-        }
-
-        return false;
-    }
-
-    /** @internal for tests */
-    public static function resetSuppressed(): void
-    {
-        self::$suppressed = [];
+        return $this->suppressor->isSuppressed($issueId);
     }
 }

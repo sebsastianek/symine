@@ -1,6 +1,11 @@
 {% extends 'base.html.twig' %}
 {% block content %}
 <h2>{{ status }}</h2>
-<p id="errorExplanation">{{ message }}</p>
+<p id="errorExplanation">{{ sprite_icon('warning') }}{{ message }}</p>
+{#- common/error.html.erb: @archived_project (set when the access to an archived project is refused) -#}
+{% set archived_project = app.request ? app.request.attributes.get('_archived_project') : null %}
+{% if archived_project and current_user().admin and path_exists('project_unarchive') %}
+  <p><a class="icon icon-unlock" rel="nofollow" data-method="post" href="{{ path('project_unarchive', {id: archived_project.identifier}) }}">{{ sprite_icon('unlock', l('button_unarchive')) }}</a></p>
+{% endif %}
 <p><a href="javascript:history.back()">{{ l('button_back') }}</a></p>
 {% endblock %}

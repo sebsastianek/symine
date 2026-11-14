@@ -56,6 +56,8 @@ final class IssueService
         private readonly CustomFieldService $customFields,
         private readonly Localizer $i18n,
         private readonly EventDispatcherInterface $events,
+        private readonly ?\App\Doctrine\BatchLoader $batch = null,
+        private readonly ?\App\Doctrine\QueryMemo $memo = null,
     ) {
     }
 
@@ -246,7 +248,11 @@ final class IssueService
     /** @return list<Role> roles considered for workflow (Issue#roles_for_workflow) */
     public function rolesForWorkflow(Issue $issue, User $user): array
     {
-        $roles = $user->admin ? $this->em->getRepository(Role::class)->findAll() : $this->auth->rolesForProject($issue->project, $user);
+        // asked for every issue of a board or of a bulk edit
+        $all = fn (): array => null === $this->memo
+            ? $this->em->getRepository(Role::class)->findAll()
+            : $this->memo->get('roles:all', ['roles'], fn (): array => $this->em->getRepository(Role::class)->findAll());
+        $roles = $user->admin ? $all() : $this->auth->rolesForProject($issue->project, $user);
 
         return array_values(array_filter($roles, static fn (Role $r) => $r->considerWorkflow()));
     }
@@ -370,17 +376,20 @@ final class IssueService
     /** Issue#closable?: no open subtasks and not blocked */
     public function isClosable(Issue $issue): bool
     {
+        $this->batch?->descendants($issue, 'children');
         foreach ($issue->getDescendants() as $d) {
             if (!$d->isClosed()) {
                 return false;
             }
         }
+        $this->batch?->collection($issue, 'relationsTo');
 
         return !$issue->isBlocked();
     }
 
     public function closableWarning(Issue $issue): ?string
     {
+        $this->batch?->descendants($issue, 'children');
         foreach ($issue->getDescendants() as $d) {
             if (!$d->isClosed()) {
                 return $this->i18n->l('notice_issue_not_closable_by_open_tasks');
@@ -468,7 +477,8 @@ final class IssueService
     /** @return list<string> */
     public function readOnlyAttributeNames(Issue $issue, ?User $user = null): array
     {
-        return array_keys(array_filter($this->workflowRuleByAttribute($issue, $user), static fn ($r) => 'readonly' === $r));
+        // custom fields are named by their id, which PHP keeps as an integer key: always hand out strings
+        return array_map('strval', array_keys(array_filter($this->workflowRuleByAttribute($issue, $user), static fn ($r) => 'readonly' === $r)));
     }
 
     /** @return list<string> */
@@ -578,6 +588,7 @@ final class IssueService
     {
         $user = $this->auth->user($user);
         $original = $this->originalValues($issue);
+        $this->attributesSetBy[spl_object_id($issue)] = $user;
 
         // project first
         if (\array_key_exists('project_id', $attrs) && $this->isSafeAttribute($issue, 'project_id', $user)) {
@@ -598,7 +609,7 @@ final class IssueService
             $allowed = $this->projects->allowedTargetTrackers($issue->project, $user, $original['tracker_id']);
             foreach ($allowed as $t) {
                 if ($t->id === (int) $attrs['tracker_id']) {
-                    $issue->tracker = $t;
+                    $this->changeTracker($issue, $t);
                     break;
                 }
             }
@@ -646,6 +657,8 @@ final class IssueService
         if (\array_key_exists('assigned_to_id', $attrs) && $this->isSafeAttribute($issue, 'assigned_to_id', $user)) {
             $id = $attrs['assigned_to_id'];
             $issue->assignedTo = ('' === $id || null === $id || 'none' === $id) ? null : ('me' === $id ? $user : $this->em->find(Principal::class, (int) $id));
+            // an id that does not exist is not "nobody": Redmine keeps it and the validation refuses it
+            $this->markUnknownId($issue, 'assigned_to_id', null === $issue->assignedTo && !('' === $id || null === $id || 'none' === $id));
         }
         unset($attrs['assigned_to_id']);
 
@@ -657,18 +670,19 @@ final class IssueService
             match ($name) {
                 'subject' => $issue->subject = trim((string) $value),
                 'description' => $issue->description = null === $value ? null : preg_replace('/\r\n?|\n/', "\r\n", (string) $value),
-                'category_id' => $issue->category = ('' === (string) $value) ? null : $this->em->find(IssueCategory::class, (int) $value),
-                'priority_id' => ($p = $this->em->find(IssuePriority::class, (int) $value)) ? $issue->priority = $p : null,
-                'fixed_version_id' => $issue->fixedVersion = ('' === (string) $value) ? null : $this->em->find(Version::class, (int) $value),
+                'category_id' => $this->markUnknownId($issue, 'category_id', null === ($issue->category = ('' === (string) $value) ? null : $this->em->find(IssueCategory::class, (int) $value)) && '' !== (string) $value),
+                'priority_id' => $this->assignPriority($issue, $value),
+                'fixed_version_id' => $this->markUnknownId($issue, 'fixed_version_id', null === ($issue->fixedVersion = ('' === (string) $value) ? null : $this->em->find(Version::class, (int) $value)) && '' !== (string) $value),
                 'start_date', 'due_date' => $this->assignDate($issue, $name, $value),
                 'done_ratio' => $issue->doneRatio = '' === (string) $value ? 0 : (int) $value,
-                'estimated_hours' => $issue->estimatedHours = self::parseHours($value),
+                'estimated_hours' => $this->assignEstimatedHours($issue, $value),
                 'is_private' => $issue->isPrivate = \in_array($value, [true, 1, '1', 'true'], true),
                 'lock_version' => $issue->lockVersion = (int) $value,
                 default => null,
             };
         }
         if (\in_array('parent_issue_id', $safe, true) && \array_key_exists('parent_issue_id', $attrs)) {
+            $this->parentAssigned[spl_object_id($issue)] = true;
             $s = trim((string) $attrs['parent_issue_id']);
             if ('' === $s) {
                 $issue->parent = null;
@@ -687,6 +701,7 @@ final class IssueService
             $editable = array_map(static fn ($f) => (string) $f->id, $this->editableCustomFields($issue, $user));
             $values = array_filter($attrs['custom_field_values'], static fn ($k) => \in_array((string) $k, $editable, true), \ARRAY_FILTER_USE_KEY);
             $this->pendingCustomValues[spl_object_id($issue)] = $values + ($this->pendingCustomValues[spl_object_id($issue)] ?? []);
+            $this->customValuesChanged[spl_object_id($issue)] = true;
         }
         if (\in_array('notes', $safe, true) && \array_key_exists('notes', $attrs)) {
             $this->pendingNotes[spl_object_id($issue)] = (string) $attrs['notes'];
@@ -712,6 +727,89 @@ final class IssueService
     /** @var array<int, array<string, true>> invalid date strings per issue object (validates :start_date, :due_date, :date => true) */
     private array $invalidDates = [];
 
+    /** @var array<int, string> submitted estimated time of the issues for which it is not a number (validates :estimated_hours, numericality) */
+    private array $invalidHours = [];
+
+    /** @var array<int, true> issues whose submitted priority does not exist (validates_presence_of :priority) */
+    private array $invalidPriority = [];
+
+    /** @var array<int, true> issues whose custom field values were assigned or reassigned (custom_field_values_changed?) */
+    private array $customValuesChanged = [];
+
+    /** @var array<int, array<string, true>> submitted assigned_to_id/category_id/fixed_version_id that do not exist */
+    private array $unknownIds = [];
+
+    /** @var array<int, User> user who assigned the attributes of a new issue (@attributes_set_by) */
+    private array $attributesSetBy = [];
+
+    /** @var array<int, true> issues whose parent_issue_id was submitted (@parent_issue) */
+    private array $parentAssigned = [];
+
+    private function markUnknownId(Issue $issue, string $attribute, bool $unknown): void
+    {
+        if ($unknown) {
+            $this->unknownIds[spl_object_id($issue)][$attribute] = true;
+        } else {
+            unset($this->unknownIds[spl_object_id($issue)][$attribute]);
+        }
+    }
+
+    /** The estimated time as submitted when it is not a number (to display the form again), null otherwise */
+    public function invalidEstimatedHours(Issue $issue): ?string
+    {
+        return $this->invalidHours[spl_object_id($issue)] ?? null;
+    }
+
+    /** Issue#was_closed?: the status the issue has in the database is a closed one */
+    public function wasClosed(Issue $issue): bool
+    {
+        if ($issue->isNew()) {
+            return false;
+        }
+        $closed = $this->em->getConnection()->fetchOne('SELECT s.is_closed FROM issues i INNER JOIN issue_statuses s ON s.id = i.status_id WHERE i.id = ?', [$issue->id]);
+
+        return \in_array($closed, [1, '1', true, 't', 'true'], true);
+    }
+
+    /** Issue#priority_id=: a blank value falls back to the default priority, an unknown id leaves the priority blank */
+    private function assignPriority(Issue $issue, mixed $value): void
+    {
+        $oid = spl_object_id($issue);
+        unset($this->invalidPriority[$oid]);
+        if (null === $value || '' === trim((string) $value)) {
+            if ($p = $this->defaultPriority()) {
+                $issue->priority = $p;
+            }
+
+            return;
+        }
+        $p = ctype_digit((string) $value) ? $this->em->find(IssuePriority::class, (int) $value) : null;
+        if (null !== $p) {
+            $issue->priority = $p;
+        } else {
+            $this->invalidPriority[$oid] = true;
+        }
+    }
+
+    /** Issue#estimated_hours=: String#to_hours, a value that is not a number is kept for the validation error */
+    private function assignEstimatedHours(Issue $issue, mixed $value): void
+    {
+        $oid = spl_object_id($issue);
+        unset($this->invalidHours[$oid]);
+        if (null === $value || (\is_string($value) && '' === trim($value))) {
+            $issue->estimatedHours = null;
+
+            return;
+        }
+        $hours = \is_bool($value) || \is_array($value) ? null : self::parseHours($value);
+        if (null === $hours) {
+            $this->invalidHours[$oid] = \is_scalar($value) ? (string) $value : '';
+
+            return;
+        }
+        $issue->estimatedHours = $hours;
+    }
+
     private function assignDate(Issue $issue, string $name, mixed $value): void
     {
         $date = self::parseDate($value);
@@ -719,6 +817,11 @@ final class IssueService
             $this->invalidDates[spl_object_id($issue)][$name] = true;
         } else {
             unset($this->invalidDates[spl_object_id($issue)][$name]);
+        }
+        // the same day submitted again is not a change (the object is kept, so that Doctrine sees none either)
+        $current = 'start_date' === $name ? $issue->startDate : $issue->dueDate;
+        if (null !== $date && $current?->format('Y-m-d') === $date->format('Y-m-d')) {
+            return;
         }
         if ('start_date' === $name) {
             $issue->startDate = $date;
@@ -762,6 +865,57 @@ final class IssueService
         return $this->pendingNotes[spl_object_id($issue)] ?? '';
     }
 
+    /**
+     * Issue#tracker=: the status becomes the default status of the new tracker when it was the default
+     * status of the previous tracker, or when it is not part of the new tracker's statuses.
+     */
+    public function changeTracker(Issue $issue, Tracker $tracker): void
+    {
+        $was = isset($issue->tracker) ? $issue->tracker : null;
+        $issue->tracker = $tracker;
+        if (null !== $was && $was->id !== $tracker->id && isset($issue->status)) {
+            $reset = ($was->defaultStatus && $was->defaultStatus->id === $issue->status->id)
+                || !\in_array($issue->status->id, $this->trackerStatusIds($tracker), true);
+            if ($reset && $tracker->defaultStatus) {
+                $issue->status = $tracker->defaultStatus;
+            }
+        }
+        $this->workflowRulesCache = [];
+    }
+
+    /**
+     * Issue#clear_disabled_fields (before_validation): core fields disabled for the tracker are blanked,
+     * then the priority and % done fall back to their defaults.
+     */
+    private function clearDisabledFields(Issue $issue): void
+    {
+        if (!isset($issue->tracker)) {
+            return;
+        }
+        foreach ($issue->tracker->getDisabledCoreFields() as $field) {
+            switch ($field) {
+                case 'assigned_to_id': $issue->assignedTo = null; break;
+                case 'category_id': $issue->category = null; break;
+                case 'fixed_version_id': $issue->fixedVersion = null; break;
+                case 'parent_issue_id': $issue->parent = null; unset($this->invalidParent[spl_object_id($issue)]); break;
+                case 'start_date': $issue->startDate = null; unset($this->invalidDates[spl_object_id($issue)]['start_date']); break;
+                case 'due_date': $issue->dueDate = null; unset($this->invalidDates[spl_object_id($issue)]['due_date']); break;
+                case 'estimated_hours': $issue->estimatedHours = null; unset($this->invalidHours[spl_object_id($issue)]); break;
+                case 'done_ratio': $issue->doneRatio = 0; break;
+                case 'description': $issue->description = null; break;
+                case 'priority_id':
+                    unset($this->invalidPriority[spl_object_id($issue)]);
+                    if ($p = $this->defaultPriority()) {
+                        $issue->priority = $p;
+                    }
+                    break;
+            }
+        }
+        if (!isset($issue->priority) && !isset($this->invalidPriority[spl_object_id($issue)]) && ($p = $this->defaultPriority())) {
+            $issue->priority = $p;
+        }
+    }
+
     /** Moves the issue to another project, resetting incompatible attributes (Issue#project=) */
     public function changeProject(Issue $issue, Project $project, bool $keepTracker = false): void
     {
@@ -769,7 +923,7 @@ final class IssueService
         if (!$keepTracker && isset($issue->tracker) && !$project->hasTracker($issue->tracker)) {
             $first = $project->trackers->first();
             if ($first) {
-                $issue->tracker = $first;
+                $this->changeTracker($issue, $first);
             }
         }
         if ($issue->category) {
@@ -916,7 +1070,7 @@ final class IssueService
         } elseif (mb_strlen($issue->subject) > 255) {
             $errors[] = $field('subject').' '.$msg('too_long', ['count' => 255]);
         }
-        if (!isset($issue->priority)) {
+        if (!isset($issue->priority) || isset($this->invalidPriority[spl_object_id($issue)])) {
             $errors[] = $field('priority').' '.$msg('blank');
         }
         if (!isset($issue->status)) {
@@ -925,15 +1079,36 @@ final class IssueService
         if ($issue->doneRatio < 0 || $issue->doneRatio > 100) {
             $errors[] = $field('done_ratio').' '.$msg('inclusion');
         }
-        if (null !== $issue->estimatedHours && $issue->estimatedHours < 0) {
+        if (isset($this->invalidHours[spl_object_id($issue)]) || (null !== $issue->estimatedHours && $issue->estimatedHours < 0)) {
             $errors[] = $field('estimated_hours').' '.$msg('invalid');
         }
-        if ($issue->dueDate && $issue->startDate && $issue->dueDate < $issue->startDate) {
+        // (start_date_changed? || due_date_changed?): dates that were already inconsistent do not block other updates
+        if ($issue->dueDate && $issue->startDate && $issue->dueDate < $issue->startDate
+            && ($issue->isNew() || $issue->startDate->format('Y-m-d') !== substr((string) ($original['snapshot']['start_date'] ?? ''), 0, 10)
+                || $issue->dueDate->format('Y-m-d') !== substr((string) ($original['snapshot']['due_date'] ?? ''), 0, 10))) {
             $errors[] = $field('due_date').' '.$msg('greater_than_start_date');
         }
         if ($issue->startDate && ($soonest = $this->soonestStart($issue)) && $issue->startDate < $soonest
             && ($issue->isNew() || $issue->startDate->format('Y-m-d') !== ($original['start_date'] ?? null))) {
             $errors[] = $field('start_date').' '.$msg('earlier_than_minimum_start_date', ['date' => $this->i18n->formatDate($soonest)]);
+        }
+        $unknown = $this->unknownIds[spl_object_id($issue)] ?? [];
+        if (isset($unknown['fixed_version_id'])) {
+            // fixed_version.nil? with a fixed_version_id
+            $errors[] = $field('fixed_version').' '.$msg('inclusion');
+        }
+        if (isset($unknown['category_id'])) {
+            // project.issue_category_ids.include?(category_id)
+            $errors[] = $field('category').' '.$msg('inclusion');
+        }
+        if (isset($unknown['assigned_to_id'])) {
+            // assignable_users.include?(assigned_to) with an assigned_to_id that does not exist
+            $errors[] = $field('assigned_to').' '.$msg('invalid');
+        }
+        // Issue#validate_permissions: the user who copies an issue must be allowed to add issues with its tracker
+        if ($issue->isNew() && isset($this->copyOptions[spl_object_id($issue)], $this->attributesSetBy[spl_object_id($issue)])
+            && !\in_array($issue->tracker, $this->projects->allowedTargetTrackers($issue->project, $this->attributesSetBy[spl_object_id($issue)]), true)) {
+            $errors[] = $field('tracker').' '.$msg('invalid');
         }
         if ($issue->fixedVersion) {
             if (!\in_array($issue->fixedVersion, $this->assignableVersions($issue), true)
@@ -960,13 +1135,22 @@ final class IssueService
         }
         if (isset($this->invalidParent[spl_object_id($issue)])) {
             $errors[] = $field('parent_issue').' '.$msg('invalid');
-        } elseif ($issue->parent) {
+        } elseif ($issue->parent && ($issue->isNew() || isset($this->parentAssigned[spl_object_id($issue)]) || $issue->parent->id !== ($original['parent_id'] ?? null))) {
+            // @parent_issue: only when the parent was assigned (a save that does not touch it does not validate it again)
             $p = $issue->parent;
-            if ($p->id === $issue->id || (!$issue->isNew() && $p->isDescendantOf($issue)) || !$this->isValidParentProject($issue, $p)) {
+            if (!$this->isValidParentProject($issue, $p)) {
+                $errors[] = $field('parent_issue').' '.$msg('invalid');
+            } elseif ($p->id !== ($original['parent_id'] ?? null) && !$issue->isNew() && $p->id !== $issue->id && !$p->isDescendantOf($issue)
+                && $this->parentWouldCreateSchedulingLoop($issue, $p)) {
+                // the new parent would be rescheduled by this issue, or precedes an issue that reschedules it
                 $errors[] = $field('parent_issue').' '.$msg('invalid');
             } elseif (!$issue->isClosed() && $p->isClosed()) {
+                // cannot attach an open issue to a closed parent
                 $errors[] = $msg('open_issue_with_closed_parent');
-            } elseif ($p->id !== ($original['parent_id'] ?? null) && $this->relationExistsBetween($issue, $p)) {
+            } elseif (!$issue->isNew() && ($p->id === $issue->id || $p->isDescendantOf($issue))) {
+                // move_possible?: an issue cannot be moved under itself or one of its descendants
+                $errors[] = $field('parent_issue').' '.$msg('invalid');
+            } elseif ($issue->isNew() && $p->id === $issue->id) {
                 $errors[] = $field('parent_issue').' '.$msg('invalid');
             }
         }
@@ -996,20 +1180,45 @@ final class IssueService
                     'is_private' => false,
                     default => false,
                 };
+                if ($empty && 'category_id' === $attr && 0 === $issue->project->issueCategories->count()) {
+                    continue; // next if attribute == 'category_id' && project.try(:issue_categories).blank?
+                }
+                if ($empty && 'fixed_version_id' === $attr && [] === $this->assignableVersions($issue)) {
+                    continue; // next if attribute == 'fixed_version_id' && assignable_versions.blank?
+                }
                 if ($empty && $issue->tracker->isCoreFieldEnabled($attr)) {
                     $errors[] = $field(preg_replace('/_id$/', '', $attr) ?? $attr).' '.$msg('blank');
                 }
             }
         }
-        // custom field formats & required
-        $current = $issue->isNew() ? $this->customFields->defaultValues($this->customFields->availableIssueFields($issue)) : $this->customFields->values('Issue', $issue->id);
-        $pending = $this->pendingCustomValues[spl_object_id($issue)] ?? [];
-        foreach ($this->customFields->visibleIssueFields($issue, $user) as $cf) {
-            $value = \array_key_exists($cf->id, $pending) ? $pending[$cf->id] : (\array_key_exists((string) $cf->id, $pending) ? $pending[(string) $cf->id] : ($current[$cf->id] ?? null));
-            array_push($errors, ...$this->customFields->validate($cf, $value, $issue->project));
+        // Issue#validate_custom_field_values: custom field formats & required, only for a new issue or when
+        // custom field values were assigned (or reassigned by a tracker/project change), and only for the
+        // fields the user can edit
+        if ($issue->isNew() || $this->customFieldValuesChanged($issue, $original)) {
+            $current = $issue->isNew() ? $this->customFields->defaultValues($this->customFields->availableIssueFields($issue)) : $this->customFields->values('Issue', $issue->id);
+            $pending = $this->pendingCustomValues[spl_object_id($issue)] ?? [];
+            foreach ($this->editableCustomFields($issue, $issue->isNew() ? ($issue->author ?? $user) : $user) as $cf) {
+                $value = \array_key_exists($cf->id, $pending) ? $pending[$cf->id] : (\array_key_exists((string) $cf->id, $pending) ? $pending[(string) $cf->id] : ($current[$cf->id] ?? null));
+                array_push($errors, ...$this->customFields->validate($cf, $value, $issue->project, $issue->isNew() ? null : ($current[$cf->id] ?? null)));
+            }
         }
 
         return array_values(array_unique($errors));
+    }
+
+    /**
+     * acts_as_customizable custom_field_values_changed?: values were assigned through safe attributes,
+     * or reassigned because the tracker or the project changed.
+     *
+     * @param array<string, mixed> $original
+     */
+    private function customFieldValuesChanged(Issue $issue, array $original): bool
+    {
+        if (isset($this->customValuesChanged[spl_object_id($issue)])) {
+            return true;
+        }
+
+        return !$issue->isNew() && (($original['tracker_id'] ?? null) !== $issue->tracker->id || ($original['project_id'] ?? null) !== $issue->project->id);
     }
 
     /** @param array<string, mixed> $original */
@@ -1023,21 +1232,37 @@ final class IssueService
         return $was && $was->isClosed && !$issue->isClosed();
     }
 
-    private function relationExistsBetween(Issue $a, Issue $b): bool
+    /**
+     * Issue#validate_issue, parent assignment: self.would_reschedule?(parent) or one of the parent's
+     * (self and ancestors) following issues would reschedule this issue.
+     */
+    private function parentWouldCreateSchedulingLoop(Issue $issue, Issue $parent): bool
     {
-        if ($a->isNew()) {
-            return false;
-        }
-        foreach ($a->getRelations() as $r) {
-            if ($r->otherIssue($a)->id === $b->id) {
+        // the relations are followed as they are in the database: the pending parent of $issue is not part of them
+        $pending = $issue->parent;
+        $issue->parent = null !== ($pid = $this->originalValues($issue)['parent_id'] ?? null) ? $this->em->find(Issue::class, $pid) : null;
+        try {
+            if ($this->wouldReschedule($issue, $parent)) {
                 return true;
             }
-        }
+            foreach ([$parent, ...$parent->getAncestors()] as $a) {
+                foreach ($a->relationsFrom as $r) {
+                    if (IssueRelation::TYPE_PRECEDES === $r->relationType && $this->wouldReschedule($r->issueTo, $issue)) {
+                        return true;
+                    }
+                }
+            }
 
-        return false;
+            return false;
+        } finally {
+            $issue->parent = $pending;
+        }
     }
 
-    /** Earliest start date allowed by "precedes" relations (Issue#soonest_start) */
+    /**
+     * Earliest start date allowed by "precedes" relations (Issue#soonest_start); the parent's soonest start
+     * applies too when the dates of parent tasks are derived from their subtasks.
+     */
     public function soonestStart(Issue $issue): ?\DateTimeImmutable
     {
         $dates = [];
@@ -1046,12 +1271,9 @@ final class IssueService
                 $dates[] = $d;
             }
         }
-        foreach ($issue->getAncestors() as $a) {
-            foreach ($a->relationsTo as $rel) {
-                if (IssueRelation::TYPE_PRECEDES === $rel->relationType && ($d = $this->successorSoonestStart($rel))) {
-                    $dates[] = $d;
-                }
-            }
+        if ($issue->parent && 'derived' === $this->settings->string('parent_issue_dates') && !$issue->parent->isDescendantOf($issue)
+            && $issue->parent->id !== $issue->id && ($d = $this->soonestStart($issue->parent))) {
+            $dates[] = $d;
         }
 
         return [] === $dates ? null : max($dates);
@@ -1079,7 +1301,141 @@ final class IssueService
      */
     public function save(Issue $issue, ?User $user = null): array
     {
-        $user = $this->auth->user($user);
+        return $this->performSave($issue, $this->auth->user($user), true);
+    }
+
+    /**
+     * Issue#save without init_journal: the changes are saved but not journalized, hence not notified
+     * (e.g. the parent set by a CSV import callback: child.save!).
+     *
+     * @return list<string> errors (empty on success)
+     */
+    public function saveWithoutJournal(Issue $issue, ?User $user = null): array
+    {
+        return $this->performSave($issue, $this->auth->user($user), false);
+    }
+
+    /** @var list<IssueEvent> events queued until the outermost save/relation change is committed */
+    private array $queuedEvents = [];
+
+    private int $unitDepth = 0;
+
+    /** Starts a unit of work whose notifications/webhooks are sent once everything is committed */
+    private function beginUnit(): void
+    {
+        ++$this->unitDepth;
+    }
+
+    private function endUnit(bool $success): void
+    {
+        if (--$this->unitDepth > 0) {
+            return;
+        }
+        $this->unitDepth = 0;
+        $events = $this->queuedEvents;
+        $this->queuedEvents = [];
+        if ($success) {
+            foreach ($events as $event) {
+                $this->events->dispatch($event);
+            }
+        }
+    }
+
+    private function queueEvent(IssueEvent $event): void
+    {
+        if ($this->unitDepth > 0) {
+            $this->queuedEvents[] = $event;
+        } else {
+            $this->events->dispatch($event);
+        }
+    }
+
+    /**
+     * Journal#save with its callbacks: an empty journal is not saved, private notes submitted with changes are
+     * split (Journal#split_private_notes), the author and the assignee are added as watchers according to
+     * their preferences (Journal#add_watcher) and the notification is queued (Journal#send_notification).
+     *
+     * @param bool $issueSaved false when only the journal is saved (relations): Redmine then sends the
+     *                         e-mail notification but no issue.updated webhook
+     *
+     * @return ?Journal the saved journal (the one holding the notes), null when there was nothing to save
+     */
+    private function storeJournal(Issue $issue, Journal $journal, User $user, bool $issueSaved = true): ?Journal
+    {
+        if ($journal->isEmpty()) {
+            return null;
+        }
+        $changes = null;
+        if ($journal->privateNotes && !$journal->hasNotes()) {
+            // blank notes are never private
+            $journal->privateNotes = false;
+        } elseif ($journal->privateNotes && $journal->details->count() > 0) {
+            // the changes stay visible to everyone, the notes are private
+            $changes = new Journal();
+            $changes->issue = $issue;
+            $changes->user = $journal->user;
+            $changes->notes = null;
+            $changes->privateNotes = false;
+            $changes->createdOn = $journal->createdOn;
+            $changes->updatedOn = $journal->updatedOn;
+            foreach ($journal->details->toArray() as $d) {
+                $journal->details->removeElement($d);
+                $d->journal = $changes;
+                $changes->details->add($d);
+            }
+            $this->em->persist($changes);
+            $issue->journals->add($changes);
+        }
+        $this->em->persist($journal);
+        $issue->journals->add($journal);
+        $this->em->flush();
+
+        // Journal#add_watcher
+        $author = $journal->user;
+        if ($this->autoWatchOn($author, 'issue_contributed_to') && $this->isAutoWatcher($issue, $author)) {
+            $this->addWatcher('Issue', (int) $issue->id, $author);
+            $this->em->flush();
+        }
+        $assignee = $issue->assignedTo;
+        if ($assignee instanceof User && $this->autoWatchOn($assignee, 'issue_assigned_to_me') && $this->isAutoWatcher($issue, $assignee)) {
+            $this->addWatcher('Issue', (int) $issue->id, $assignee);
+            $this->em->flush();
+        }
+
+        if (isset($this->silentJournals[(int) $issue->id])) {
+            return $journal;
+        }
+        if (null !== $changes) {
+            $this->queueEvent(new IssueEvent($issue, IssueEvent::UPDATED, $user, $changes, false));
+        }
+        $this->queueEvent(new IssueEvent($issue, IssueEvent::UPDATED, $user, $journal, $issueSaved));
+
+        return $journal;
+    }
+
+    /** UserPreference#auto_watch_on? */
+    private function autoWatchOn(User $user, string $action): bool
+    {
+        if (!$user->isLogged()) {
+            return false;
+        }
+
+        return \in_array($action, (array) $user->getPref()->get('auto_watch_on', ['issue_created', 'issue_contributed_to']), true);
+    }
+
+    /** Issue#auto_watcher? / Journal#valid_watcher?: active, allowed to add watchers, can see the issue, not watching yet */
+    private function isAutoWatcher(Issue $issue, User $user): bool
+    {
+        if (!$user->isLogged() || !$user->isActive() || !$this->auth->allowedTo('add_issue_watchers', $issue->project, $user) || !$this->isVisible($issue, $user)) {
+            return false;
+        }
+
+        return null === $this->em->getRepository(Watcher::class)->findOneBy(['watchableType' => 'Issue', 'watchableId' => $issue->id, 'user' => $user]);
+    }
+
+    /** @return list<string> */
+    private function performSave(Issue $issue, User $user, bool $journalize): array
+    {
         $oid = spl_object_id($issue);
         // Issue#default_assign (before_validation on create): category assignee, then project default assignee
         if ($issue->isNew() && null === $issue->assignedTo && isset($issue->project)) {
@@ -1091,6 +1447,7 @@ final class IssueService
                 }
             }
         }
+        $this->clearDisabledFields($issue);
         $errors = $this->validate($issue, $user);
         if ([] !== $errors) {
             return $errors;
@@ -1101,8 +1458,14 @@ final class IssueService
         $notes = $this->pendingNotes[$oid] ?? '';
         $privateNotes = $this->pendingPrivateNotes[$oid] ?? false;
         $now = new \DateTimeImmutable();
+        $projectWasId = $isNew ? null : ($original['project_id'] ?? null);
+        $projectChanged = null !== $projectWasId && $projectWasId !== $issue->project->id;
+        $trackerChanged = !$isNew && ($original['tracker_id'] ?? null) !== $issue->tracker->id;
+        $parentWas = $original['parent_id'] ?? null;
+        $journal = null;
 
         $conn = $this->em->getConnection();
+        $this->beginUnit();
         $conn->beginTransaction();
         try {
             // closed_on
@@ -1118,7 +1481,12 @@ final class IssueService
             if ($isNew) {
                 $issue->createdOn = $now;
             }
-            $issue->updatedOn = $now;
+            // Issue#force_updated_on_change: updated_on only moves when something changes. An update that changes
+            // nothing is not written at all, so it does not bump lock_version either (no edit conflict for others).
+            $written = $isNew || $this->hasChanges($issue);
+            if ($written) {
+                $issue->updatedOn = $now;
+            }
             if ($isNew && isset($issue->tracker) && $issue->tracker->privateByDefault && !$this->canSetPrivate($issue, $user)) {
                 $issue->isPrivate = true;
             }
@@ -1129,12 +1497,41 @@ final class IssueService
             $fields = $this->customFields->availableIssueFields($issue);
             $values = $this->pendingCustomValues[$oid] ?? [];
             if ($isNew) {
-                $values += $this->customFields->defaultValues($fields);
+                $defaults = $this->customFields->defaultValues($fields);
+                // Issue#force_default_value_on_noneditable_custom_fields: values the author cannot edit
+                // (e.g. carried over by a copy) are replaced by the default value of the field
+                if ([] !== $values) {
+                    $editableIds = array_map(static fn ($f) => (int) $f->id, $this->editableCustomFields($issue, $issue->author ?? $user));
+                    foreach ($fields as $f) {
+                        if (!\in_array((int) $f->id, $editableIds, true)) {
+                            unset($values[$f->id], $values[(string) $f->id]);
+                        }
+                    }
+                }
+                $values += $defaults;
             }
             $cfChanges = $this->customFields->saveValues('Issue', (int) $issue->id, $fields, $values);
+            if (!$isNew) {
+                // save_custom_field_values runs after every save (acts_as_customizable after_save):
+                // "self.custom_values = target_custom_values" only keeps the values of the custom fields that
+                // are available for the issue. A removed value is journalized when its field stopped applying
+                // because of this change of tracker/project (it was in the journal's snapshot of the values).
+                $removed = $this->pruneCustomValues($issue, $fields);
+                if ([] !== $removed && ($projectChanged || $trackerChanged)) {
+                    $before = new Issue();
+                    $before->project = $this->em->find(Project::class, (int) $projectWasId) ?? $issue->project;
+                    $before->tracker = $this->em->find(Tracker::class, (int) ($original['tracker_id'] ?? 0)) ?? $issue->tracker;
+                    $beforeIds = array_map(static fn ($f) => (int) $f->id, $this->customFields->availableIssueFields($before));
+                    foreach (array_keys($removed) as $fid) {
+                        $old = $oldCustom[$fid] ?? null;
+                        if (\in_array((int) $fid, $beforeIds, true) && [] !== array_filter((array) $old, static fn ($v) => null !== $v && '' !== (string) $v)) {
+                            $cfChanges[$fid] = [$old, \is_array($old) ? [] : null];
+                        }
+                    }
+                }
+            }
 
             // nested set
-            $parentWas = $original['parent_id'] ?? null;
             $parentNow = $issue->parent?->id;
             if ($isNew || $parentWas !== $parentNow) {
                 $this->rebuildIssueTrees(array_filter([$issue->id, $parentWas, $parentNow]));
@@ -1157,8 +1554,7 @@ final class IssueService
             }
 
             // journal
-            $journal = null;
-            if (!$isNew) {
+            if (!$isNew && $journalize) {
                 $journal = new Journal();
                 $journal->issue = $issue;
                 $journal->user = $user;
@@ -1166,14 +1562,7 @@ final class IssueService
                 $journal->privateNotes = $privateNotes;
                 $journal->createdOn = $now;
                 $journal->updatedOn = $now;
-                $snapshot = $original['snapshot'];
-                foreach (self::JOURNALIZED_ATTRIBUTES as $attr) {
-                    $old = $snapshot[$attr] ?? null;
-                    $new = $this->attributeValue($issue, $attr);
-                    if ($this->normalizeForCompare($attr, $old) !== $this->normalizeForCompare($attr, $new)) {
-                        $journal->addDetail('attr', $attr, $this->normalizeForCompare($attr, $old), $this->normalizeForCompare($attr, $new));
-                    }
-                }
+                $this->addAttributeDetails($journal, $issue, $original['snapshot']);
                 foreach ($cfChanges as $fid => [$old, $new]) {
                     if (\is_array($old) || \is_array($new)) {
                         $old = (array) $old;
@@ -1194,93 +1583,271 @@ final class IssueService
                 foreach ($attachmentsDeleted as $a) {
                     $journal->addDetail('attachment', (string) $a->id, $a->filename, null);
                 }
-                if ($journal->isEmpty()) {
-                    $journal = null;
-                } else {
-                    // Journal#split_private_notes: blank notes are never private; private notes with
-                    // changes are split so that the changes stay visible to everyone
-                    if ($journal->privateNotes && !$journal->hasNotes()) {
-                        $journal->privateNotes = false;
-                    } elseif ($journal->privateNotes && $journal->details->count() > 0) {
-                        $changes = new Journal();
-                        $changes->issue = $issue;
-                        $changes->user = $user;
-                        $changes->notes = null;
-                        $changes->privateNotes = false;
-                        $changes->createdOn = $now;
-                        $changes->updatedOn = $now;
-                        foreach ($journal->details->toArray() as $d) {
-                            $journal->details->removeElement($d);
-                            $d->journal = $changes;
-                            $changes->details->add($d);
-                        }
-                        $this->em->persist($changes);
-                        $issue->journals->add($changes);
-                    }
-                    $this->em->persist($journal);
-                    $issue->journals->add($journal);
-                }
+                $journal = $this->storeJournal($issue, $journal, $user);
+            }
+            // notes, attachments and custom values change the issue too (the journal, or acts_as_customizable's touch)
+            if (!$written && (null !== $journal || [] !== $cfChanges || [] !== $attachmentsAdded || [] !== $attachmentsDeleted)) {
+                $issue->updatedOn = $now;
+                $written = true;
             }
 
-            // watchers on creation
             if ($isNew) {
-                foreach ($this->pendingWatchers[$oid] ?? [] as $uid) {
-                    if ($p = $this->em->find(Principal::class, $uid)) {
-                        $this->addWatcher('Issue', (int) $issue->id, $p);
+                // Issue#copy_from assigns the watchers and the attachments of the copied issue before the copy
+                // is saved (so that the "issue added" notification goes to the watchers); the watchers
+                // submitted with the form replace them
+                $copyOptions = $this->copyOptions[$oid] ?? null;
+                $copied = null !== $copyOptions ? $this->em->find(Issue::class, $copyOptions['source']) : null;
+                $watchers = [];
+                if (isset($this->pendingWatchers[$oid])) {
+                    foreach ($this->pendingWatchers[$oid] as $uid) {
+                        if ($p = $this->em->find(Principal::class, $uid)) {
+                            $watchers[] = $p;
+                        }
+                    }
+                } elseif (null !== $copied && false !== ($copyOptions['watchers'] ?? true)) {
+                    // issue.visible_watcher_users.select {|u| u.status == User::STATUS_ACTIVE}
+                    $canView = $this->auth->allowedTo('view_issue_watchers', $copied->project, $user);
+                    foreach ($this->watchers($copied) as $w) {
+                        if ($w->isActive() && ($canView || $w->id === $user->id)) {
+                            $watchers[] = $w;
+                        }
                     }
                 }
-                if ($user->isLogged() && $this->autoWatchOnCreate($user)) {
-                    $this->addWatcher('Issue', (int) $issue->id, $user);
+                foreach ($watchers as $p) {
+                    $this->addWatcher('Issue', (int) $issue->id, $p);
                 }
-            } elseif ($user->isLogged() && null !== $journal && $this->autoWatchOnUpdate($user)) {
-                $this->addWatcher('Issue', (int) $issue->id, $user);
+                if (null !== $copied) {
+                    if (false !== ($copyOptions['attachments'] ?? true)) {
+                        // Attachment#copy: the same file with its author and creation date, downloads excepted
+                        foreach ($this->em->getRepository(Attachment::class)->findBy(['containerType' => 'Issue', 'containerId' => $copied->id], ['id' => 'ASC']) as $a) {
+                            $c = clone $a;
+                            $c->id = null;
+                            $c->containerId = $issue->id;
+                            $c->downloads = 0;
+                            $this->em->persist($c);
+                        }
+                    }
+                    $this->copyOptions[$oid]['saved_with_issue'] = true;
+                }
+                $this->em->flush();
+                $author = $issue->author ?? null;
+                if ($author instanceof User && $this->autoWatchOn($author, 'issue_created') && $this->isAutoWatcher($issue, $author)) {
+                    $this->addWatcher('Issue', (int) $issue->id, $author);
+                    $this->em->flush();
+                }
+                $assignee = $issue->assignedTo;
+                if ($assignee instanceof User && $this->autoWatchOn($assignee, 'issue_assigned_to_me') && $this->isAutoWatcher($issue, $assignee)) {
+                    $this->addWatcher('Issue', (int) $issue->id, $assignee);
+                }
             }
             $this->em->flush();
+
+            // Issue#after_project_change
+            if ($projectChanged) {
+                $moveErrors = $this->afterProjectChange($issue, (int) $projectWasId, $user);
+                if ([] !== $moveErrors) {
+                    $conn->rollBack();
+                    $this->endUnit(false);
+
+                    return $moveErrors;
+                }
+            }
 
             // parent attributes, closing duplicates, rescheduling followers
             foreach (array_unique(array_filter([$parentNow, $parentWas])) as $pid) {
                 $this->recalculateAttributesFor((int) $pid, $user);
             }
             if (!$isNew && $issue->isClosed() && !$wasClosed) {
-                $this->closeDuplicates($issue, $user);
+                $this->closeDuplicates($issue, $user, $journalize ? $notes : '', $journalize && $privateNotes, $journalize);
             }
             if (!$isNew && ($issue->dueDate?->format('Y-m-d') !== ($original['snapshot']['due_date'] ?? null)
                 || $issue->startDate?->format('Y-m-d') !== ($original['snapshot']['start_date'] ?? null))) {
-                $this->rescheduleFollowingIssues($issue, $user);
+                $this->rescheduleFollowingIssues($issue, $user, $journalize);
             }
             $this->em->flush();
             $conn->commit();
         } catch (\Throwable $e) {
-            $conn->rollBack();
+            if ($conn->isTransactionActive()) {
+                $conn->rollBack();
+            }
+            $this->endUnit(false);
             throw $e;
         }
         $this->clearPending($issue);
         $this->auth->reset();
 
-        $this->events->dispatch(new IssueEvent($issue, $isNew ? IssueEvent::CREATED : IssueEvent::UPDATED, $user, $journal));
+        if ($isNew) {
+            $this->queueEvent(new IssueEvent($issue, IssueEvent::CREATED, $user, null));
+        } elseif (null === $journal && $written) {
+            // the issue was saved without a journal: issue.updated webhook, no e-mail
+            $this->queueEvent(new IssueEvent($issue, IssueEvent::UPDATED, $user, null));
+        }
+        // Issue#create_parent_issue_journal (after_commit)
+        if ($isNew || $parentWas !== $parentNow) {
+            $this->journalizeParentChange((int) $issue->id, $isNew ? null : $parentWas, $parentNow, $user);
+        }
+        $this->endUnit(true);
 
         return [];
     }
 
-    private function autoWatchOnCreate(User $user): bool
+    /** ActiveRecord's changed?: whether saving the issue would write anything to its row */
+    private function hasChanges(Issue $issue): bool
     {
-        $v = $user->getPref()->get('auto_watch_on', ['issue_created', 'issue_contributed_to']);
+        if (!$this->em->contains($issue)) {
+            return true;
+        }
+        $meta = $this->em->getClassMetadata(Issue::class);
+        $changed = false;
+        foreach ($this->em->getUnitOfWork()->getOriginalEntityData($issue) as $name => $was) {
+            if (!$meta->hasField($name) && !($meta->hasAssociation($name) && $meta->isSingleValuedAssociation($name))) {
+                continue;
+            }
+            $now = $meta->getFieldValue($issue, $name);
+            if ($was === $now) {
+                continue;
+            }
+            if ($was instanceof \DateTimeInterface && $now instanceof \DateTimeInterface && $was == $now) {
+                // the same moment in another object: put the original back, or Doctrine would write the row
+                $meta->setFieldValue($issue, $name, $was);
+                continue;
+            }
+            if (null === $was && '' === $now) {
+                // an empty field of the form for a value that was never set (an issue created through the API
+                // without a description): nothing the journal would record, so nothing to write either
+                $meta->setFieldValue($issue, $name, null);
+                continue;
+            }
+            $changed = true;
+        }
 
-        return \in_array('issue_created', (array) $v, true);
+        return $changed;
     }
 
-    private function autoWatchOnUpdate(User $user): bool
+    /**
+     * acts_as_customizable#save_custom_field_values, run after every save of an issue: the custom values of the
+     * fields that are not available for the issue (tracker/project) are deleted. The caller flushes.
+     *
+     * @param list<\App\Entity\CustomField>|null $fields the available fields when already known
+     *
+     * @return array<int, true> ids of the custom fields whose values were removed
+     */
+    private function pruneCustomValues(Issue $issue, ?array $fields = null): array
     {
-        $v = $user->getPref()->get('auto_watch_on', ['issue_created', 'issue_contributed_to']);
+        if ($issue->isNew()) {
+            return [];
+        }
+        $ids = array_map(static fn ($f) => (int) $f->id, $fields ?? $this->customFields->availableIssueFields($issue));
+        $removed = [];
+        foreach ($this->em->getRepository(\App\Entity\CustomValue::class)->findBy(['customizedType' => 'Issue', 'customizedId' => $issue->id]) as $cv) {
+            if (!\in_array((int) $cv->customField->id, $ids, true)) {
+                $removed[(int) $cv->customField->id] = true;
+                $this->em->remove($cv);
+            }
+        }
 
-        return \in_array('issue_contributed_to', (array) $v, true);
+        return $removed;
+    }
+
+    /** Adds the "attr" details of the journalized attributes that differ from the snapshot */
+    private function addAttributeDetails(Journal $journal, Issue $issue, array $snapshot, ?array $attributes = null): void
+    {
+        foreach ($attributes ?? self::JOURNALIZED_ATTRIBUTES as $attr) {
+            $old = $snapshot[$attr] ?? null;
+            $new = $this->attributeValue($issue, $attr);
+            if ($this->normalizeForCompare($attr, $old) !== $this->normalizeForCompare($attr, $new)) {
+                $journal->addDetail('attr', $attr, $this->normalizeForCompare($attr, $old), $this->normalizeForCompare($attr, $new));
+            }
+        }
+    }
+
+    /**
+     * Issue#after_project_change: the time entries follow the issue (with the activity of the new project),
+     * the relations are removed unless cross-project relations are allowed and the subtasks that were in
+     * the same project are moved along.
+     *
+     * @return list<string> errors when a subtask cannot be moved (the whole move is then rolled back)
+     */
+    private function afterProjectChange(Issue $issue, int $projectWasId, User $user): array
+    {
+        $conn = $this->em->getConnection();
+        foreach ($conn->fetchFirstColumn('SELECT DISTINCT activity_id FROM time_entries WHERE issue_id = ?', [$issue->id]) as $activityId) {
+            $conn->executeStatement('UPDATE time_entries SET project_id = ?, activity_id = ? WHERE issue_id = ? AND activity_id = ?',
+                [$issue->project->id, $this->activityIdForProject((int) $activityId, $issue->project), $issue->id, (int) $activityId]);
+        }
+        foreach ($this->em->getUnitOfWork()->getIdentityMap()[TimeEntry::class] ?? [] as $entry) {
+            if ($entry->issue?->id === $issue->id) {
+                $this->em->refresh($entry);
+            }
+        }
+
+        if (!$this->settings->bool('cross_project_issue_relations')) {
+            foreach ($issue->getRelations() as $rel) {
+                $rel->issueFrom->relationsFrom->removeElement($rel);
+                $rel->issueTo->relationsTo->removeElement($rel);
+                $this->em->remove($rel);
+            }
+            $this->em->flush();
+        }
+
+        foreach ($issue->children->toArray() as $child) {
+            if ($child->project->id !== $projectWasId) {
+                continue;
+            }
+            // the tracker is kept, the child is saved without a journal like in Redmine
+            $this->changeProject($child, $issue->project, true);
+            $errors = $this->performSave($child, $user, false);
+            if ([] !== $errors) {
+                return [$this->i18n->l('error_move_of_child_not_possible', ['child' => '#'.$child->id, 'errors' => implode(', ', $errors)])];
+            }
+        }
+
+        return [];
+    }
+
+    /** TimeEntryActivity.activity_id_for_project: the project override of the shared activity if any */
+    private function activityIdForProject(int $activityId, Project $project): int
+    {
+        $row = $this->em->getConnection()->fetchAssociative("SELECT id, parent_id FROM enumerations WHERE id = ? AND type = 'TimeEntryActivity'", [$activityId]);
+        if (false === $row) {
+            return $activityId;
+        }
+        $shared = null !== $row['parent_id'] ? (int) $row['parent_id'] : (int) $row['id'];
+        $override = $this->em->getConnection()->fetchOne("SELECT id FROM enumerations WHERE type = 'TimeEntryActivity' AND project_id = ? AND parent_id = ?", [$project->id, $shared]);
+
+        return false !== $override && null !== $override ? (int) $override : $shared;
+    }
+
+    /**
+     * Issue#create_parent_issue_journal: "Subtask #N added/removed" in the history of the former and of the
+     * new parent (when the user can see them).
+     */
+    private function journalizeParentChange(int $childId, ?int $oldParentId, ?int $newParentId, User $user): void
+    {
+        foreach ([[$oldParentId, $childId, null], [$newParentId, null, $childId]] as [$parentId, $old, $new]) {
+            if (null === $parentId) {
+                continue;
+            }
+            $parent = $this->em->find(Issue::class, $parentId);
+            if (null === $parent || !$this->isVisible($parent, $user)) {
+                continue;
+            }
+            $journal = new Journal();
+            $journal->issue = $parent;
+            $journal->user = $user;
+            $journal->addDetail('attr', 'child_id', $old, $new);
+            $parent->updatedOn = new \DateTimeImmutable();
+            $this->pruneCustomValues($parent);
+            $this->storeJournal($parent, $journal, $user);
+        }
     }
 
     private function clearPending(Issue $issue): void
     {
         $oid = spl_object_id($issue);
         unset($this->pendingCustomValues[$oid], $this->pendingNotes[$oid], $this->pendingPrivateNotes[$oid],
-            $this->pendingWatchers[$oid], $this->pendingDeletedAttachments[$oid], $this->pendingAttachments[$oid], $this->invalidParent[$oid], $this->invalidDates[$oid]);
+            $this->pendingWatchers[$oid], $this->pendingDeletedAttachments[$oid], $this->pendingAttachments[$oid], $this->invalidParent[$oid], $this->invalidDates[$oid],
+            $this->invalidHours[$oid], $this->invalidPriority[$oid], $this->customValuesChanged[$oid], $this->unknownIds[$oid], $this->attributesSetBy[$oid], $this->parentAssigned[$oid]);
         $this->workflowRulesCache = [];
     }
 
@@ -1314,7 +1881,8 @@ final class IssueService
 
         return match ($attr) {
             'is_private' => \in_array($v, [true, 1, '1', 't', 'true'], true) ? '1' : '0',
-            'estimated_hours' => (string) (float) $v,
+            // Float#to_s: "2.0", "2.5" (PHP would print "2")
+            'estimated_hours' => var_export((float) $v, true),
             'description' => str_replace("\r\n", "\n", (string) $v),
             'start_date', 'due_date' => substr((string) $v, 0, 10),
             default => (string) $v,
@@ -1357,6 +1925,7 @@ final class IssueService
         $this->em->refresh($p);
         $children = $p->children->toArray();
         $changed = false;
+        $datesChanged = false;
         if ($this->isPriorityDerived($p)) {
             $max = null;
             foreach ($children as $c) {
@@ -1382,6 +1951,7 @@ final class IssueService
                 $p->startDate = $start;
                 $p->dueDate = $due;
                 $changed = true;
+                $datesChanged = true;
             }
         }
         if ($this->isDoneRatioDerived($p) && !($this->useStatusForDoneRatio() && null !== $p->status->defaultDoneRatio) && $children) {
@@ -1401,7 +1971,16 @@ final class IssueService
         }
         if ($changed) {
             $p->updatedOn = new \DateTimeImmutable();
+        }
+        if ([] !== $this->pruneCustomValues($p) || $changed) {
             $this->em->flush();
+        }
+        // the parent is saved without a journal (p.save(:validate => false)): issue.updated webhook, no e-mail
+        $actor = $this->auth->user($user);
+        $this->queueEvent(new IssueEvent($p, IssueEvent::UPDATED, $actor, null));
+        if ($datesChanged) {
+            // Issue#reschedule_following_issues of the parent, without a journal
+            $this->rescheduleFollowingIssues($p, $actor, false);
         }
         if ($p->parent) {
             $this->recalculateAttributesFor((int) $p->parent->id, $user);
@@ -1411,6 +1990,8 @@ final class IssueService
     public function totalEstimatedHours(Issue $issue): float
     {
         $total = (float) ($issue->estimatedHours ?? 0);
+        // asked for every issue of a list or of a version: the subtasks of all of them come in one query
+        $this->batch?->descendants($issue, 'children');
         foreach ($issue->getDescendants() as $d) {
             $total += (float) ($d->estimatedHours ?? 0);
         }
@@ -1420,11 +2001,14 @@ final class IssueService
 
     public function spentHours(Issue $issue): float
     {
-        return (float) $this->em->createQuery('SELECT COALESCE(SUM(t.hours), 0) FROM App\Entity\TimeEntry t WHERE t.issue = :i')->setParameter('i', $issue->id)->getSingleScalarResult();
+        $load = fn (): float => (float) $this->em->createQuery('SELECT COALESCE(SUM(t.hours), 0) FROM App\Entity\TimeEntry t WHERE t.issue = :i')->setParameter('i', $issue->id)->getSingleScalarResult();
+
+        return null === $this->memo || null === $issue->id ? $load() : $this->memo->get('issue_spent_hours:'.$issue->id, ['time_entries'], $load);
     }
 
     public function totalSpentHours(Issue $issue): float
     {
+        $this->batch?->descendants($issue, 'children');
         $ids = [$issue->id, ...array_map(static fn (Issue $d) => $d->id, $issue->getDescendants())];
 
         return (float) $this->em->createQuery('SELECT COALESCE(SUM(t.hours), 0) FROM App\Entity\TimeEntry t WHERE IDENTITY(t.issue) IN (:ids)')->setParameter('ids', $ids)->getSingleScalarResult();
@@ -1455,7 +2039,13 @@ final class IssueService
         }
         foreach (array_keys($roots) as $rootId) {
             $counter = 0;
-            $walk = function (int $id) use (&$walk, &$counter, $conn, $rootId): void {
+            // corrupted data (an issue that is its own ancestor) must not hang the request
+            $visited = [];
+            $walk = function (int $id) use (&$walk, &$counter, &$visited, $conn, $rootId): void {
+                if (isset($visited[$id])) {
+                    return;
+                }
+                $visited[$id] = true;
                 $lft = ++$counter;
                 foreach ($conn->fetchFirstColumn('SELECT id FROM issues WHERE parent_id = ? ORDER BY id', [$id]) as $child) {
                     $walk((int) $child);
@@ -1485,26 +2075,60 @@ final class IssueService
      *
      * @return array{0: ?IssueRelation, 1: list<string>}
      */
-    public function createRelation(Issue $from, Issue|int|null $to, string $type, ?int $delay = null, ?User $user = null): array
+    public function createRelation(Issue $from, Issue|int|null $to, string $type, ?int $delay = null, ?User $user = null, bool $journalize = true): array
     {
         $user = $this->auth->user($user);
         $msg = fn (string $k) => $this->i18n->l('activerecord.errors.messages.'.$k);
+        $issueTo = $this->i18n->l('field_issue_to');
         if (\is_int($to)) {
             $to = $this->em->find(Issue::class, $to);
         }
         if (null === $to || !$this->isVisible($to, $user)) {
-            return [null, [$this->i18n->l('field_issue_to').' '.$msg('invalid')]];
+            return [null, [$issueTo.' '.$msg('invalid')]];
         }
         if (!isset(IssueRelation::TYPES[$type])) {
             return [null, [$this->i18n->l('field_relation_type').' '.$msg('inclusion')]];
         }
+        $exists = static function (Issue $a, Issue $b): bool {
+            foreach ($a->relationsFrom as $r) {
+                if ($r->issueTo->id === $b->id) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+        // validations run on the relation as entered (it is reversed before being saved only)
+        $errors = [];
+        if ($exists($from, $to)) {
+            // validates_uniqueness_of :issue_to_id, :scope => :issue_from_id
+            $errors[] = $issueTo.' '.$msg('taken');
+        }
         if ($from->id === $to->id) {
-            return [null, [$this->i18n->l('field_issue_to').' '.$msg('invalid')]];
+            $errors[] = $issueTo.' '.$msg('invalid');
         }
         if (!$this->settings->bool('cross_project_issue_relations') && $from->project->id !== $to->project->id) {
-            return [null, [$this->i18n->l('field_issue_to').' '.$msg('not_same_project')]];
+            $errors[] = $issueTo.' '.$msg('not_same_project');
         }
-        // normalise reverse types
+        // IssueRelation#circular_dependency?
+        $circular = match ($type) {
+            IssueRelation::TYPE_FOLLOWS => $this->wouldReschedule($from, $to),
+            IssueRelation::TYPE_PRECEDES => $this->wouldReschedule($to, $from),
+            IssueRelation::TYPE_BLOCKED => $this->blocks($from, $to),
+            IssueRelation::TYPE_BLOCKS => $this->blocks($to, $from),
+            IssueRelation::TYPE_RELATES => $exists($to, $from),
+            default => false,
+        };
+        if ($circular) {
+            $errors[] = $msg('circular_dependency');
+        }
+        if ($to->isDescendantOf($from) || $from->isDescendantOf($to)) {
+            $errors[] = $msg('cant_link_an_issue_with_a_descendant');
+        }
+        if ([] !== $errors) {
+            return [null, $errors];
+        }
+        // IssueRelation#reverse_if_needed
         $reverse = IssueRelation::TYPES[$type][3];
         if (\in_array($type, [IssueRelation::TYPE_DUPLICATED, IssueRelation::TYPE_BLOCKED, IssueRelation::TYPE_FOLLOWS, IssueRelation::TYPE_COPIED_FROM], true)) {
             [$from, $to] = [$to, $from];
@@ -1513,38 +2137,48 @@ final class IssueService
         if (IssueRelation::TYPE_RELATES === $type && $from->id > $to->id) {
             [$from, $to] = [$to, $from];
         }
-        // IssueRelation#circular_dependency? is reported before the (reverse) uniqueness of the pair
-        if (\in_array($type, [IssueRelation::TYPE_PRECEDES, IssueRelation::TYPE_BLOCKS], true) && $this->wouldCreateCycle($from, $to, $type)) {
-            return [null, [$this->i18n->l('activerecord.errors.messages.circular_dependency')]];
-        }
-        foreach ($from->getRelations() as $r) {
-            if ($r->otherIssue($from)->id === $to->id) {
-                return [null, [$this->i18n->l('field_issue_to').' '.$this->i18n->l('activerecord.errors.messages.taken')]];
-            }
-        }
-        if ($to->isDescendantOf($from) || $from->isDescendantOf($to)) {
-            return [null, [$this->i18n->l('activerecord.errors.messages.cant_link_an_issue_with_a_descendant')]];
+        if ($exists($from, $to)) {
+            // unique index on (issue_from_id, issue_to_id): ActiveRecord::RecordNotUnique
+            return [null, [$msg('taken')]];
         }
         $rel = new IssueRelation();
         $rel->issueFrom = $from;
         $rel->issueTo = $to;
         $rel->relationType = $type;
         $rel->delay = IssueRelation::TYPE_PRECEDES === $type ? ($delay ?? 0) : null;
-        $this->em->persist($rel);
-        $from->relationsFrom->add($rel);
-        $to->relationsTo->add($rel);
-        // journal both issues
-        foreach ([[$from, $type, $to], [$to, IssueRelation::TYPES[$type][3] ?? $type, $from]] as [$issue, $t, $other]) {
-            $j = new Journal();
-            $j->issue = $issue;
-            $j->user = $user;
-            $j->addDetail('relation', $t, null, (string) $other->id);
-            $this->em->persist($j);
+
+        $this->beginUnit();
+        try {
+            $this->em->persist($rel);
+            $from->relationsFrom->add($rel);
+            $to->relationsTo->add($rel);
+            $this->em->flush();
+            if ($journalize) {
+                // one journal per issue (IssueRelation#init_journals); the journal of the following issue also
+                // holds its new dates when it is rescheduled (IssueRelation#set_issue_to_dates)
+                $journals = [];
+                foreach ([$from, $to] as $issue) {
+                    $j = new Journal();
+                    $j->issue = $issue;
+                    $j->user = $user;
+                    $journals[$issue->id] = $j;
+                }
+                $rescheduled = IssueRelation::TYPE_PRECEDES === $type && $this->setIssueToDates($rel, $user, true, $journals[$to->id]);
+                $journals[$from->id]->addDetail('relation', $type, null, (string) $to->id);
+                $journals[$to->id]->addDetail('relation', IssueRelation::TYPES[$type][3] ?? $type, null, (string) $from->id);
+                $this->storeJournal($from, $journals[$from->id], $user, false);
+                $this->storeJournal($to, $journals[$to->id], $user, $rescheduled);
+            } elseif (IssueRelation::TYPE_PRECEDES === $type) {
+                // a relation saved without init_journals (issue import): the following issue is rescheduled
+                // without a journal
+                $this->setIssueToDates($rel, $user, false);
+            }
+            $this->em->flush();
+        } catch (\Throwable $e) {
+            $this->endUnit(false);
+            throw $e;
         }
-        $this->em->flush();
-        if (IssueRelation::TYPE_PRECEDES === $type) {
-            $this->setIssueToDates($rel, $user);
-        }
+        $this->endUnit(true);
 
         return [$rel, []];
     }
@@ -1552,106 +2186,209 @@ final class IssueService
     public function deleteRelation(IssueRelation $rel, ?User $user = null): void
     {
         $user = $this->auth->user($user);
-        foreach ([[$rel->issueFrom, $rel->relationType, $rel->issueTo], [$rel->issueTo, IssueRelation::TYPES[$rel->relationType][3] ?? $rel->relationType, $rel->issueFrom]] as [$issue, $t, $other]) {
-            $j = new Journal();
-            $j->issue = $issue;
-            $j->user = $user;
-            $j->addDetail('relation', $t, (string) $other->id, null);
-            $this->em->persist($j);
+        $this->beginUnit();
+        try {
+            $from = $rel->issueFrom;
+            $to = $rel->issueTo;
+            $type = $rel->relationType;
+            $from->relationsFrom->removeElement($rel);
+            $to->relationsTo->removeElement($rel);
+            $this->em->remove($rel);
+            $this->em->flush();
+            foreach ([[$from, $type, $to], [$to, IssueRelation::TYPES[$type][3] ?? $type, $from]] as [$issue, $t, $other]) {
+                $j = new Journal();
+                $j->issue = $issue;
+                $j->user = $user;
+                $j->addDetail('relation', $t, (string) $other->id, null);
+                $this->storeJournal($issue, $j, $user, false);
+            }
+            $this->em->flush();
+        } catch (\Throwable $e) {
+            $this->endUnit(false);
+            throw $e;
         }
-        $rel->issueFrom->relationsFrom->removeElement($rel);
-        $rel->issueTo->relationsTo->removeElement($rel);
-        $this->em->remove($rel);
-        $this->em->flush();
+        $this->endUnit(true);
     }
 
-    private function wouldCreateCycle(Issue $from, Issue $to, string $type): bool
+    /** Issue#blocks?: does $issue (transitively) block $other? */
+    private function blocks(Issue $issue, Issue $other): bool
     {
-        // does "to" already (transitively) precede/block "from"?
-        $seen = [];
-        $stack = [$to];
-        while ($stack) {
-            $i = array_pop($stack);
-            if ($i->id === $from->id) {
-                return true;
-            }
-            if (isset($seen[$i->id])) {
-                continue;
-            }
-            $seen[$i->id] = true;
-            foreach ($i->relationsFrom as $r) {
-                if ($r->relationType === $type) {
-                    $stack[] = $r->issueTo;
+        $all = [$issue->id => true];
+        $last = [$issue];
+        while ([] !== $last) {
+            $current = [];
+            foreach ($last as $i) {
+                foreach ($i->relationsFrom as $r) {
+                    if (IssueRelation::TYPE_BLOCKS === $r->relationType && !isset($all[$r->issueTo->id])) {
+                        $current[$r->issueTo->id] = $r->issueTo;
+                    }
                 }
             }
+            if (isset($current[$other->id])) {
+                return true;
+            }
+            $all += array_fill_keys(array_keys($current), true);
+            $last = array_values($current);
         }
 
         return false;
     }
 
-    /** Reschedules the following issue of a "precedes" relation (IssueRelation#set_issue_to_dates) */
-    private function setIssueToDates(IssueRelation $rel, User $user): void
+    /** Issue#would_reschedule?: might $other be rescheduled when the dates of $issue change? */
+    private function wouldReschedule(Issue $issue, Issue $other): bool
     {
+        $all = [$issue->id => true];
+        $last = [$issue];
+        while ([] !== $last) {
+            $current = [];
+            foreach ($last as $i) {
+                $candidates = [];
+                foreach ([$i, ...$i->getAncestors()] as $source) {
+                    foreach ($source->relationsFrom as $r) {
+                        if (IssueRelation::TYPE_PRECEDES === $r->relationType) {
+                            $candidates[] = $r->issueTo;
+                        }
+                    }
+                }
+                array_push($candidates, ...$this->leaves($i));
+                foreach ($candidates as $c) {
+                    if (!isset($all[$c->id])) {
+                        $current[$c->id] = $c;
+                    }
+                }
+            }
+            if (isset($current[$other->id])) {
+                return true;
+            }
+            $all += array_fill_keys(array_keys($current), true);
+            $last = array_values($current);
+        }
+
+        return false;
+    }
+
+    /** @return list<Issue> descendants without children */
+    private function leaves(Issue $issue): array
+    {
+        return array_values(array_filter($issue->getDescendants(), static fn (Issue $d) => $d->isLeaf()));
+    }
+
+    /**
+     * IssueRelation#set_issue_to_dates: reschedules the following issue of a "precedes" relation.
+     *
+     * @return bool true when the following issue itself was changed
+     */
+    private function setIssueToDates(IssueRelation $rel, User $user, bool $journalize, ?Journal $into = null): bool
+    {
+        if (IssueRelation::TYPE_PRECEDES !== $rel->relationType) {
+            return false;
+        }
         $soonest = $this->successorSoonestStart($rel);
         if (null === $soonest) {
+            return false;
+        }
+
+        return $this->rescheduleOn($rel->issueTo, $soonest, $user, $journalize, $into);
+    }
+
+    /**
+     * Issue#reschedule_on!: moves the issue on the given date (or the next working day) keeping its working
+     * duration; a parent task with derived dates is rescheduled through its subtasks. An issue that starts
+     * later than the date is moved back, but not before its soonest start date.
+     *
+     * @param ?Journal $into journal receiving the date changes (it is saved by the caller)
+     *
+     * @return bool true when the issue itself was changed
+     */
+    private function rescheduleOn(Issue $issue, \DateTimeImmutable $date, User $user, bool $journalize, ?Journal $into = null): bool
+    {
+        if (!$issue->isLeaf() && $this->isDatesDerived($issue)) {
+            foreach ($this->leaves($issue) as $leaf) {
+                // only move a subtask that starts at the same date as the parent or before the given date
+                if (null === $leaf->startDate || $issue->startDate == $leaf->startDate || $date > $leaf->startDate) {
+                    $this->rescheduleOn($leaf, $date, $user, false);
+                }
+            }
+
+            return false;
+        }
+        if (null !== $issue->startDate && $issue->startDate == $date) {
+            return false;
+        }
+        if (null !== $issue->startDate && $issue->startDate > $date) {
+            // the issue can not be moved earlier than its soonest start date
+            $soonest = $this->soonestStart($issue);
+            if (null !== $soonest && $soonest > $date) {
+                $date = $soonest;
+            }
+        }
+        // Issue#reschedule_on
+        $duration = null !== $issue->startDate && null !== $issue->dueDate ? $this->workingDuration($this->nextWorkingDate($issue->startDate), $issue->dueDate) : 0;
+        $start = $this->nextWorkingDate($date);
+        $due = $this->addWorkingDays($start, $duration);
+        $snapshot = $this->originalValues($issue)['snapshot'];
+        // Issue#save: before_validation callbacks and validations run like for any save, the issue is left
+        // untouched when it would not be valid (required field, start date before a preceding issue...)
+        $memento = [$issue->assignedTo, $issue->category, $issue->fixedVersion, $issue->parent, $issue->startDate, $issue->dueDate,
+            $issue->estimatedHours, $issue->doneRatio, $issue->description, $issue->priority];
+        $issue->startDate = $start;
+        $issue->dueDate = $due;
+        $this->clearDisabledFields($issue);
+        if ([] !== $this->validate($issue, $user)) {
+            [$issue->assignedTo, $issue->category, $issue->fixedVersion, $issue->parent, $issue->startDate, $issue->dueDate,
+                $issue->estimatedHours, $issue->doneRatio, $issue->description, $issue->priority] = $memento;
+
+            return false;
+        }
+        $changes = new Journal();
+        $this->addAttributeDetails($changes, $issue, $snapshot);
+        if (0 === $changes->details->count()) {
+            return false;
+        }
+        $parentWasId = isset($snapshot['parent_id']) ? (int) $snapshot['parent_id'] : null;
+        $issue->updatedOn = new \DateTimeImmutable();
+        $this->pruneCustomValues($issue);
+        $this->em->flush();
+        if ($parentWasId !== $issue->parent?->id) {
+            $this->rebuildIssueTrees(array_filter([$issue->id, $parentWasId, $issue->parent?->id]));
+        }
+        if (null !== $into) {
+            $this->addAttributeDetails($into, $issue, $snapshot);
+        } elseif ($journalize) {
+            $journal = new Journal();
+            $journal->issue = $issue;
+            $journal->user = $user;
+            $this->addAttributeDetails($journal, $issue, $snapshot);
+            $this->storeJournal($issue, $journal, $user);
+        } else {
+            $this->queueEvent(new IssueEvent($issue, IssueEvent::UPDATED, $user, null));
+        }
+        $this->rescheduleFollowingIssues($issue, $user, $journalize);
+        foreach (array_unique(array_filter([$issue->parent?->id, $parentWasId])) as $pid) {
+            $this->recalculateAttributesFor((int) $pid, $user);
+        }
+
+        return true;
+    }
+
+    /** Issue#reschedule_following_issues */
+    private function rescheduleFollowingIssues(Issue $issue, User $user, bool $journalize = true): void
+    {
+        foreach ($issue->relationsFrom->toArray() as $rel) {
+            $this->setIssueToDates($rel, $user, $journalize);
+        }
+    }
+
+    /**
+     * Issue#close_duplicates: when the issue is closed and Setting.close_duplicate_issues is on, its open
+     * duplicates get the same status, by the same user and with the same notes.
+     */
+    private function closeDuplicates(Issue $issue, User $user, string $notes = '', bool $privateNotes = false, bool $journalize = true): void
+    {
+        if (!$this->settings->bool('close_duplicate_issues')) {
             return;
         }
-        $this->rescheduleOn($rel->issueTo, $soonest, $user);
-    }
-
-    private function rescheduleOn(Issue $issue, \DateTimeImmutable $date, User $user): void
-    {
-        if ($issue->isLeaf()) {
-            if (null === $issue->startDate || $issue->startDate < $date) {
-                $original = $this->originalValues($issue);
-                if (null !== $issue->startDate && null !== $issue->dueDate) {
-                    $duration = $this->workingDuration($issue->startDate, $issue->dueDate);
-                    $issue->startDate = $date;
-                    $issue->dueDate = $this->addWorkingDays($date, $duration);
-                } else {
-                    $issue->startDate = $date;
-                    if ($issue->dueDate && $issue->dueDate < $date) {
-                        $issue->dueDate = $date;
-                    }
-                }
-                $j = new Journal();
-                $j->issue = $issue;
-                $j->user = $user;
-                foreach (['start_date', 'due_date'] as $attr) {
-                    $old = $original['snapshot'][$attr] ?? null;
-                    $new = $this->attributeValue($issue, $attr);
-                    if ($old !== $new) {
-                        $j->addDetail('attr', $attr, $old, $new);
-                    }
-                }
-                if (!$j->isEmpty()) {
-                    $this->em->persist($j);
-                }
-                $this->em->flush();
-                $this->rescheduleFollowingIssues($issue, $user);
-                if ($issue->parent) {
-                    $this->recalculateAttributesFor((int) $issue->parent->id, $user);
-                }
-            }
-        } else {
-            foreach ($issue->children as $child) {
-                $this->rescheduleOn($child, $date, $user);
-            }
-        }
-    }
-
-    private function rescheduleFollowingIssues(Issue $issue, User $user): void
-    {
-        foreach ($issue->relationsFrom as $rel) {
-            if (IssueRelation::TYPE_PRECEDES === $rel->relationType) {
-                $this->setIssueToDates($rel, $user);
-            }
-        }
-    }
-
-    private function closeDuplicates(Issue $issue, User $user): void
-    {
-        foreach ($issue->relationsTo as $rel) {
+        foreach ($issue->relationsTo->toArray() as $rel) {
             if (IssueRelation::TYPE_DUPLICATES !== $rel->relationType) {
                 continue;
             }
@@ -1659,16 +2396,33 @@ final class IssueService
             if ($dup->isClosed()) {
                 continue;
             }
-            $original = $this->originalValues($dup);
+            $snapshot = $this->originalValues($dup)['snapshot'];
+            $now = new \DateTimeImmutable();
             $dup->status = $issue->status;
-            $dup->closedOn = new \DateTimeImmutable();
-            $j = new Journal();
-            $j->issue = $dup;
-            $j->user = $user;
-            $j->addDetail('attr', 'status_id', (string) $original['status_id'], (string) $dup->status->id);
-            $this->em->persist($j);
+            $dup->closedOn = $now;
+            $dup->updatedOn = $now;
+            if ($this->useStatusForDoneRatio() && null !== $dup->status->defaultDoneRatio) {
+                $dup->doneRatio = $dup->status->defaultDoneRatio;
+            }
+            $this->pruneCustomValues($dup);
             $this->em->flush();
-            $this->closeDuplicates($dup, $user);
+            $stored = null;
+            if ($journalize) {
+                $j = new Journal();
+                $j->issue = $dup;
+                $j->user = $user;
+                $j->notes = $notes;
+                $j->privateNotes = $privateNotes;
+                $this->addAttributeDetails($j, $dup, $snapshot, ['status_id', 'done_ratio']);
+                $stored = $this->storeJournal($dup, $j, $user);
+            }
+            if (null === $stored) {
+                $this->queueEvent(new IssueEvent($dup, IssueEvent::UPDATED, $user, null));
+            }
+            $this->closeDuplicates($dup, $user, $notes, $privateNotes, $journalize);
+            if ($dup->parent) {
+                $this->recalculateAttributesFor((int) $dup->parent->id, $user);
+            }
         }
     }
 
@@ -1677,15 +2431,28 @@ final class IssueService
     /** @return list<int> ISO day numbers */
     private function nonWorkingDays(): array
     {
-        return array_map('intval', $this->settings->array('non_working_week_days'));
+        $days = array_map('intval', $this->settings->array('non_working_week_days'));
+
+        return \count($days) < 7 ? $days : [];
+    }
+
+    /** Redmine::Utils::DateCalculation#next_working_date: the first working day on or after the date */
+    public function nextWorkingDate(\DateTimeImmutable $date): \DateTimeImmutable
+    {
+        $nonWorking = $this->nonWorkingDays();
+        while (\in_array((int) $date->format('N'), $nonWorking, true)) {
+            $date = $date->modify('+1 day');
+        }
+
+        return $date;
     }
 
     public function addWorkingDays(\DateTimeImmutable $date, int $days): \DateTimeImmutable
     {
-        $nonWorking = $this->nonWorkingDays();
-        if (\count($nonWorking) >= 7) {
-            return $date->modify("+$days days");
+        if ($days <= 0) {
+            return $date;
         }
+        $nonWorking = $this->nonWorkingDays();
         $d = $date;
         $added = 0;
         while ($added < $days) {
@@ -1721,22 +2488,28 @@ final class IssueService
     // ------------------------------------------------------------------------------------------
 
     /**
-     * Copies an issue (Issue#copy_from) into a new unsaved issue.
+     * Copies an issue (Issue#copy_from) into a new unsaved issue. Like in Redmine the parent, the status
+     * (unless keep_status), the % done and the closing date are not copied; attachments, watchers, subtasks
+     * and the "copied to" relation are handled by afterCopy() unless the option is false.
      *
-     * @param array{attachments?: bool, subtasks?: bool, watchers?: bool, link?: bool} $options
+     * @param array{attachments?: bool, subtasks?: bool, watchers?: bool, link?: bool, keep_status?: bool} $options
      */
     public function copyFrom(Issue $source, ?User $user = null, array $options = []): Issue
     {
         $user = $this->auth->user($user);
         $copy = new Issue();
-        foreach (['project', 'tracker', 'subject', 'description', 'category', 'status', 'assignedTo', 'priority', 'fixedVersion', 'startDate', 'dueDate', 'doneRatio', 'estimatedHours', 'isPrivate', 'parent'] as $p) {
+        foreach (['project', 'tracker', 'subject', 'description', 'category', 'assignedTo', 'priority', 'fixedVersion', 'startDate', 'dueDate', 'estimatedHours', 'isPrivate'] as $p) {
             $copy->{$p} = $source->{$p};
         }
-        $copy->author = $user;
-        if ($source->status && $source->tracker->defaultStatus && !$this->settings->bool('copy_issue_keep_status') && false) {
-            $copy->status = $source->tracker->defaultStatus;
+        if ($options['keep_status'] ?? false) {
+            $copy->status = $source->status;
+            $copy->doneRatio = $source->doneRatio;
+        } else {
+            $copy->status = $source->tracker->defaultStatus ?? $source->status;
         }
+        $copy->author = $user;
         $this->pendingCustomValues[spl_object_id($copy)] = $this->customFields->values('Issue', $source->id);
+        $this->customValuesChanged[spl_object_id($copy)] = true;
         $this->copyOptions[spl_object_id($copy)] = ['source' => $source->id] + $options;
 
         return $copy;
@@ -1745,7 +2518,10 @@ final class IssueService
     /** @var array<int, array<string, mixed>> */
     private array $copyOptions = [];
 
-    /** Post-save actions of a copy: link, attachments, subtasks, watchers */
+    /** @var array<int, true> issues whose journals are not notified (Journal#notify = false for a record being created) */
+    private array $silentJournals = [];
+
+    /** Post-save actions of a copy (Issue#after_create_from_copy): link, attachments, watchers, subtasks */
     public function afterCopy(Issue $copy, ?User $user = null): void
     {
         $user = $this->auth->user($user);
@@ -1753,43 +2529,68 @@ final class IssueService
         if (null === $opts) {
             return;
         }
+        unset($this->copyOptions[spl_object_id($copy)]);
         $source = $this->em->find(Issue::class, $opts['source']);
         if (!$source) {
             return;
         }
-        if (($opts['link'] ?? false) && $this->settings->string('link_copied_issue') !== 'no') {
-            $this->createRelation($source, $copy, IssueRelation::TYPE_COPIED_TO, null, $user);
-        }
-        if ($opts['attachments'] ?? false) {
-            foreach ($this->em->getRepository(Attachment::class)->findBy(['containerType' => 'Issue', 'containerId' => $source->id]) as $a) {
-                $c = clone $a;
-                $c->id = null;
-                $c->containerId = $copy->id;
-                $c->author = $user;
-                $c->createdOn = new \DateTimeImmutable();
-                $this->em->persist($c);
-            }
-        }
-        if ($opts['watchers'] ?? false) {
-            foreach ($this->watchers($source) as $w) {
-                $this->addWatcher('Issue', (int) $copy->id, $w);
-            }
-        }
-        $this->em->flush();
-        if (($opts['subtasks'] ?? false) && !$source->isLeaf()) {
-            foreach ($source->children as $child) {
-                if ($child->id === $copy->id) {
-                    continue;
+        $this->beginUnit();
+        try {
+            if (false !== ($opts['link'] ?? true)
+                && ($source->project->id === $copy->project->id || $this->settings->bool('cross_project_issue_relations'))) {
+                // the "copied from" journal of the issue that was just created is not notified
+                $this->silentJournals[(int) $copy->id] = true;
+                try {
+                    $this->createRelation($source, $copy, IssueRelation::TYPE_COPIED_TO, null, $user);
+                } finally {
+                    unset($this->silentJournals[(int) $copy->id]);
                 }
-                $c = $this->copyFrom($child, $user, ['attachments' => $opts['attachments'] ?? false, 'subtasks' => true, 'watchers' => $opts['watchers'] ?? false]);
-                $c->project = $copy->project;
-                $c->parent = $copy;
-                if ([] === $this->save($c, $user)) {
+            }
+            // the attachments and the watchers were copied when the copy was saved (see performSave)
+            $this->em->flush();
+            if (false !== ($opts['subtasks'] ?? true) && !$source->isLeaf()) {
+                $childOptions = ['subtasks' => false] + $opts;
+                unset($childOptions['source'], $childOptions['saved_with_issue']);
+                $copies = [(int) $source->id => $copy];
+                foreach ($source->getDescendants() as $child) {
+                    // do not copy self when copying an issue as a descendant of the copied issue
+                    if ($child->id === $copy->id) {
+                        continue;
+                    }
+                    // do not copy subtasks of issues that were not copied
+                    $parentCopy = null !== $child->parent ? ($copies[(int) $child->parent->id] ?? null) : null;
+                    if (null === $parentCopy) {
+                        continue;
+                    }
+                    // do not copy subtasks that are not visible, to avoid disclosing private data
+                    if (!$this->isVisible($child, $user)) {
+                        continue;
+                    }
+                    $c = $this->copyFrom($child, $user, $childOptions);
+                    $c->author = $copy->author;
+                    if ($c->project->id !== $copy->project->id) {
+                        $this->changeProject($c, $copy->project);
+                    }
+                    $c->parent = $parentCopy;
+                    if (null === $child->fixedVersion || !$child->fixedVersion->isOpen()) {
+                        $c->fixedVersion = null;
+                    }
+                    if (null === $child->assignedTo || !$child->assignedTo->isActive()) {
+                        $c->assignedTo = null;
+                    }
+                    if ([] !== $this->performSave($c, $user, true)) {
+                        unset($this->copyOptions[spl_object_id($c)]);
+                        continue;
+                    }
                     $this->afterCopy($c, $user);
+                    $copies[(int) $child->id] = $c;
                 }
             }
+        } catch (\Throwable $e) {
+            $this->endUnit(false);
+            throw $e;
         }
-        unset($this->copyOptions[spl_object_id($copy)]);
+        $this->endUnit(true);
     }
 
     /**
@@ -1812,10 +2613,30 @@ final class IssueService
             return;
         }
         $parents = array_values(array_unique(array_filter(array_map(static fn (Issue $i) => $i->parent?->id, $issues))));
-        // after_destroy_commit webhooks are built from the in-memory issue: build them while it is still
-        // loaded (its custom values, journals... are deleted below and the EntityManager is cleared)
+        // children removed from a surviving parent (Issue#create_parent_issue_journal)
+        $removedChildren = [];
         foreach ($issues as $issue) {
-            $this->events->dispatch(new IssueEvent($issue, IssueEvent::DELETED, $user, null));
+            if (null !== $issue->parent && !\in_array($issue->parent->id, $ids, true)) {
+                $removedChildren[(int) $issue->id] = (int) $issue->parent->id;
+            }
+        }
+        // after_destroy_commit webhooks are built from the in-memory issue: build them while it is still
+        // loaded (its custom values, journals... are deleted below and the EntityManager is cleared).
+        // The subtasks destroyed with their parent trigger issue.deleted too.
+        $notified = [];
+        foreach ($issues as $issue) {
+            foreach ([$issue, ...$issue->getDescendants()] as $destroyed) {
+                if (!isset($notified[$destroyed->id])) {
+                    $notified[$destroyed->id] = true;
+                    $this->events->dispatch(new IssueEvent($destroyed, IssueEvent::DELETED, $user, null));
+                }
+            }
+        }
+        if (!\in_array($timeEntriesAction, ['nullify', 'reassign'], true)) {
+            // has_many :time_entries, dependent: :destroy: the entries destroyed with the issues trigger time_entry.deleted
+            foreach ($this->em->getRepository(TimeEntry::class)->findBy(['issue' => $ids]) as $entry) {
+                $this->events->dispatch(new \App\Event\ContentEvent('time_entry', 'deleted', $entry, $user));
+            }
         }
         $conn = $this->em->getConnection();
         $conn->beginTransaction();
@@ -1845,11 +2666,18 @@ final class IssueService
             throw $e;
         }
         $this->em->clear();
+        $actor = null !== $user->id ? ($this->em->find(User::class, $user->id) ?? $user) : $user;
         foreach ($parents as $pid) {
             if (!\in_array($pid, $ids, true)) {
                 $this->rebuildIssueTrees([$pid]);
-                $this->recalculateAttributesFor($pid, $this->em->find(User::class, $user->id));
+                $this->recalculateAttributesFor($pid, $actor);
             }
+        }
+        if ($actor->isLogged() || null !== $actor->id) {
+            foreach ($removedChildren as $childId => $pid) {
+                $this->journalizeParentChange($childId, $pid, null, $actor);
+            }
+            $this->em->flush();
         }
     }
 
@@ -1876,12 +2704,20 @@ final class IssueService
         if ('' === $value) {
             return null;
         }
+        // DateValidator: yyyy-mm-dd of an existing day (createFromFormat alone would roll 2026-13-45 over)
+        if (1 !== preg_match('/\A(\d{4}-\d{2}-\d{2})( 00:00:00)?\z/', $value, $m)) {
+            return null;
+        }
+        $value = $m[1];
         $d = \DateTimeImmutable::createFromFormat('!Y-m-d', $value);
 
-        return false === $d ? null : $d;
+        return false === $d || $d->format('Y-m-d') !== $value ? null : $d;
     }
 
-    /** Parses "1.5", "1,5", "1h30", "1:30", "90m" into hours (Redmine String#to_hours) */
+    /**
+     * Redmine String#to_hours: "1.5", "1,5", "2h", "1:30", "2h30", "2h30m", "2 hours 30 min", "30m" => hours;
+     * null when the string is not a number.
+     */
     public static function parseHours(mixed $value): ?float
     {
         if (null === $value) {
@@ -1890,19 +2726,25 @@ final class IssueService
         if (\is_int($value) || \is_float($value)) {
             return (float) $value;
         }
-        $s = strtolower(trim((string) $value));
-        if ('' === $s) {
-            return null;
+        $s = trim((string) $value);
+        if (preg_match('/^(\d+([.,]\d+)?)h?$/', $s, $m)) {
+            $s = $m[1];
+        } else {
+            // 2:30 => 2.5
+            // (returns at once: in Ruby the result is a float string such as "2.0", which the next pattern cannot
+            // match, while PHP would print "2" and read it again as 2 minutes)
+            if (preg_match('/^(\d+):(\d+)$/', $s, $m)) {
+                return (int) $m[1] + (int) $m[2] / 60;
+            }
+            // 2h30, 2h, 30m => 2.5, 2, 0.5
+            if (preg_match('/^((\d+)\s*(h|hours?))?\s*((\d+)\s*(m|min)?)?$/i', $s, $m) && ('' !== ($m[1] ?? '') || '' !== ($m[4] ?? ''))) {
+                return (int) ($m[2] ?? 0) + (int) ($m[5] ?? 0) / 60;
+            }
         }
         $s = str_replace(',', '.', $s);
-        if (preg_match('/^(\d+)?:(\d+)$/', $s, $m)) {
-            return (int) $m[1] + (int) $m[2] / 60;
-        }
-        if (preg_match('/^((\d+(\.\d+)?)\s*h(ours?)?)?\s*((\d+)\s*m(in)?)?$/', $s, $m) && ('' !== ($m[1] ?? '') || '' !== ($m[5] ?? ''))) {
-            return (float) ($m[2] ?? 0) + (int) ($m[6] ?? 0) / 60;
-        }
 
-        return is_numeric($s) ? (float) $s : null;
+        // Kernel.Float(s, exception: false)
+        return 1 === preg_match('/^[+-]?(\d+(\.\d+)?|\.\d+)([eE][+-]?\d+)?$/', $s) ? (float) $s : null;
     }
 
     /** Label for a journal detail (port of IssuesHelper#show_detail, text version) */

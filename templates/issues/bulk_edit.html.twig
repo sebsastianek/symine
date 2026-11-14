@@ -5,7 +5,12 @@
 {% if unsaved_issues|length > 0 %}
 <div id="errorExplanation">
   {{ sprite_icon('warning', null, 18, false, 'notice-icon') }}
-  <span>{{ l('notice_failed_to_save_issues', {count: unsaved_issues|length, total: (saved_issues|length + unsaved_issues|length), ids: unsaved_issues|map(i => '#' ~ i.id)|join(', ')}) }}</span>
+  <span>{{ l('notice_failed_to_save_issues', {count: unsaved_issues|length, total: bulk_total ?? (saved_issues|length + unsaved_issues|length), ids: unsaved_issues|map(i => '#' ~ i.id)|join(', ')}) }}</span>
+  <ul>
+  {% for message in bulk_error_messages ?? [] %}
+    <li>{{ message }}</li>
+  {% endfor %}
+  </ul>
 </div>
 {% endif %}
 
@@ -53,21 +58,21 @@
 {% if 'assigned_to_id' in safe %}
 <p>
   <label for="issue_assigned_to_id">{{ l('field_assigned_to') }}</label>
-  <select name="issue[assigned_to_id]" id="issue_assigned_to_id"><option value="">{{ l('label_no_change_option') }}</option><option value="none"{% if (issue_params.assigned_to_id ?? '') == 'none' %} selected="selected"{% endif %}>{{ l('label_nobody') }}</option>{{ issue_principals_options(assignables) }}</select>
+  <select name="issue[assigned_to_id]" id="issue_assigned_to_id"><option value="">{{ l('label_no_change_option') }}</option><option value="none"{% if (issue_params.assigned_to_id ?? '') == 'none' %} selected="selected"{% endif %}>{{ l('label_nobody') }}</option>{{ issue_principals_options(assignables, (assignables|filter(a => a.id ~ '' == (issue_params.assigned_to_id ?? ''))|first) ?: null) }}</select>
 </p>
 {% endif %}
 
 {% if 'category_id' in safe %}
 <p>
   <label for="issue_category_id">{{ l('field_category') }}</label>
-  <select name="issue[category_id]" id="issue_category_id"><option value="">{{ l('label_no_change_option') }}</option><option value="none"{% if (issue_params.category_id ?? '') == 'none' %} selected="selected"{% endif %}>{{ l('label_none') }}</option>{% for c in categories %}<option value="{{ c.id }}">{{ c.name }}</option>{% endfor %}</select>
+  <select name="issue[category_id]" id="issue_category_id"><option value="">{{ l('label_no_change_option') }}</option><option value="none"{% if (issue_params.category_id ?? '') == 'none' %} selected="selected"{% endif %}>{{ l('label_none') }}</option>{% for c in categories %}<option value="{{ c.id }}"{% if (issue_params.category_id ?? '') == c.id ~ '' %} selected="selected"{% endif %}>{{ c.name }}</option>{% endfor %}</select>
 </p>
 {% endif %}
 
 {% if 'fixed_version_id' in safe %}
 <p>
   <label for="issue_fixed_version_id">{{ l('field_fixed_version') }}</label>
-  <select name="issue[fixed_version_id]" id="issue_fixed_version_id"><option value="">{{ l('label_no_change_option') }}</option><option value="none"{% if (issue_params.fixed_version_id ?? '') == 'none' %} selected="selected"{% endif %}>{{ l('label_none') }}</option>{{ issue_version_options(versions) }}</select>
+  <select name="issue[fixed_version_id]" id="issue_fixed_version_id"><option value="">{{ l('label_no_change_option') }}</option><option value="none"{% if (issue_params.fixed_version_id ?? '') == 'none' %} selected="selected"{% endif %}>{{ l('label_none') }}</option>{{ issue_version_options(versions, (versions|filter(v => v.id ~ '' == (issue_params.fixed_version_id ?? ''))|first) ?: null) }}</select>
 </p>
 {% endif %}
 
@@ -177,6 +182,7 @@
 </p>
 </form>
 
+{% include 'common/_mention_data_source.html.twig' with {object_type: 'issue', object_id: issues|map(i => i.id)} only %}
 <script>
 $(window).on('load', function(){
   $(document).on('change', 'input[data-disables]', function(){

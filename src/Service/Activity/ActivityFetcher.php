@@ -38,6 +38,7 @@ final class ActivityFetcher
         private readonly IssueService $issues,
         private readonly EventBuilder $builder,
         private readonly ?ActivityProviderRegistry $providers = null,
+        private readonly ?\App\Doctrine\BatchLoader $batch = null,
     ) {
     }
 
@@ -84,6 +85,7 @@ final class ActivityFetcher
         if (null === $project) {
             return $types;
         }
+        $this->batch?->descendants($project, 'children');
         $projects = $project->getSelfAndDescendants();
 
         return array_values(array_filter($types, function (string $type) use ($user, $projects, $available): bool {
@@ -363,10 +365,41 @@ final class ActivityFetcher
                 'date' => $date,
                 'today' => $date->format('Y-m-d') === $today->format('Y-m-d'),
                 'non_working' => \in_array((int) $date->format('N'), $nonWorking, true),
-                'events' => \App\Controller\ActivitiesController::sortEvents($dayEvents),
+                'events' => self::sortEvents($dayEvents),
             ];
         }
 
         return $days;
+    }
+
+    /**
+     * ActivitiesHelper#sort_activity_events: events grouped by event_group, most recent first.
+     *
+     * @param list<ActivityEvent> $events
+     *
+     * @return list<array{event: ActivityEvent, grouped: bool}>
+     */
+    public static function sortEvents(array $events): array
+    {
+        $byGroup = [];
+        foreach ($events as $e) {
+            $byGroup[$e->group][] = $e;
+        }
+        $sorted = $events;
+        usort($sorted, static fn (ActivityEvent $a, ActivityEvent $b) => $b->datetime <=> $a->datetime);
+        $out = [];
+        foreach ($sorted as $e) {
+            if (!isset($byGroup[$e->group])) {
+                continue;
+            }
+            $group = $byGroup[$e->group];
+            unset($byGroup[$e->group]);
+            usort($group, static fn (ActivityEvent $a, ActivityEvent $b) => $b->datetime <=> $a->datetime);
+            foreach ($group as $i => $g) {
+                $out[] = ['event' => $g, 'grouped' => $i > 0];
+            }
+        }
+
+        return $out;
     }
 }

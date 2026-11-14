@@ -29,6 +29,7 @@ final class ProjectsExtension extends AbstractExtension
         private readonly TextFormatter $formatter,
         private readonly AppExtension $app,
         private readonly \App\Service\CustomFieldService $customFields,
+        private readonly ?\App\Doctrine\BatchLoader $batch = null,
     ) {
     }
 
@@ -69,6 +70,8 @@ final class ProjectsExtension extends AbstractExtension
     {
         $s = 'project';
         $s .= null === $p->parent ? ' root' : ' child';
+        // asked for every project of the list: one query for all of them
+        $this->batch?->collection($p, 'children');
         $s .= 0 === $p->children->count() ? ' leaf' : ' parent';
         if ($p->isPublic) {
             $s .= ' public';

@@ -1,14 +1,40 @@
-{#- members/_members.html.erb (project settings members tab). Needs project, members, members_manager -#}
+{#- members/_members.html.erb: members list of the project settings tab and of MembersController#index.
+    Needs project and the variables of MembersManager::listView() (members, members_manager, member_count,
+    member_pager, member_list_params, member_list_query, member_filters, member_role_options, members_route,
+    members_route_params). -#}
 {% if current_user().admin and path_exists('users_index') %}
   <div class="contextual"><a class="icon icon-settings" href="{{ path('users_index') }}">{{ sprite_icon('settings', l('label_administration')) }}</a></div>
 {% endif %}
 
 {% set can_manage = allowed_to('manage_members', project) %}
+{% set list_params = member_list_params|default({}) %}
+{% set list_url = path(members_route, members_route_params) %}
 {% if can_manage %}
-<p><a class="icon icon-add" data-remote="true" href="{{ path('member_new', {project_id: project.identifier}) }}">{{ sprite_icon('add', l('label_member_new')) }}</a></p>
+<p><a class="icon icon-add" data-remote="true" href="{{ path('member_new', {project_id: project.identifier}|merge(list_params)) }}">{{ sprite_icon('add', l('label_member_new')) }}</a></p>
 {% endif %}
 
-{% if members|length > 0 %}
+<form id="members-filter-form" action="{{ list_url }}" accept-charset="UTF-8" method="get">
+<fieldset><legend>{{ l('label_filter_plural') }}</legend>
+<label for='member_name'>{{ l('label_user') }} / {{ l('label_group') }}:</label>
+<input type="text" name="member_name" id="member_name" value="{{ member_filters.member_name }}" size="20" />
+<label for='member_role_id'>{{ l('label_role') }}:</label>
+<select name="member_role_id" id="member_role_id" onchange="this.form.submit(); return false;"><option value="">{{ l('label_all') }}</option>
+{% for role in member_role_options %}<option{% if member_filters.member_role_id == role.id ~ '' %} selected="selected"{% endif %} value="{{ role.id }}">{{ role.name }}</option>
+{% endfor %}</select>
+{% if can_manage %}
+<label for='member_status'>{{ l('field_status') }}:</label>
+<select name="member_status" id="member_status" onchange="this.form.submit(); return false;"><option value="">{{ l('label_all') }}</option>
+<option{% if member_filters.member_status == '1' %} selected="selected"{% endif %} value="1">{{ l('status_active') }}</option>
+<option{% if member_filters.member_status == '3' %} selected="selected"{% endif %} value="3">{{ l('status_locked') }}</option></select>
+{% endif %}
+<input type="submit" value="{{ l('button_apply') }}" class="small" data-disable-with="{{ l('button_apply') }}" />
+<a class="icon icon-reload" href="{{ list_url }}">{{ sprite_icon('reload', l('button_clear')) }}</a>
+</fieldset>
+</form>
+&nbsp;
+
+{% if member_count > 0 %}
+<div class="autoscroll">
 <table class="list members">
   <thead>
     <tr>
@@ -22,7 +48,7 @@
   <tr id="member-{{ member.id }}" class="member">
   <td class="name">
     <span class="icon">
-      {% if member.principal.isGroup() %}{% if path_exists('group_show') %}<a class="group" href="{{ path('group_show', {id: member.principal.id}) }}">{{ sprite_icon('group') }}{{ member.principal.getName() }}</a>{% else %}{{ member.principal.getName() }}{% endif %}{% else %}{{ link_to_user(member.principal) }}{% endif %}
+      {% if member.principal.isGroup() %}{% if path_exists('group_show') %}<a class="group" href="{{ path('group_show', {id: member.principal.id}) }}">{{ sprite_icon('group') }}{{ members_manager.principalName(member.principal) }}</a>{% else %}{{ members_manager.principalName(member.principal) }}{% endif %}{% else %}{{ link_to_user(member.principal) }}{% endif %}
     </span>
   </td>
   <td class="roles">
@@ -31,9 +57,9 @@
   </td>
   {% if can_manage %}
   <td class="buttons">
-      <a class="icon icon-edit" data-remote="true" href="{{ path('member_edit', {id: member.id}) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>
+      <a class="icon icon-edit" data-remote="true" href="{{ path('member_edit', {id: member.id}|merge(list_params)) }}">{{ sprite_icon('edit', l('button_edit')) }}</a>
       {% if members_manager.isDeletable(member) %}
-      <a class="icon icon-link-break" data-remote="true" rel="nofollow" data-method="delete"{% if not current_user().admin and members_manager.includes(member, current_user()) %} data-confirm="{{ l('text_own_membership_delete_confirmation') }}"{% endif %} href="{{ path('member_destroy', {id: member.id}) }}">{{ sprite_icon('link-break', l('button_remove')) }}</a>
+      <a class="icon icon-link-break" data-remote="true" rel="nofollow" data-method="delete"{% if not current_user().admin and members_manager.includes(member, current_user()) %} data-confirm="{{ l('text_own_membership_delete_confirmation') }}"{% endif %} href="{{ path('member_destroy', {id: member.id}|merge(list_params)) }}">{{ sprite_icon('link-break', l('button_remove')) }}</a>
       {% endif %}
   </td>
   {% endif %}
@@ -41,6 +67,36 @@
   {% endfor %}
   </tbody>
 </table>
+</div>
+{% set pager = member_pager %}
+{% set q = member_list_query|default({}) %}
+<span class="pagination"><ul class="pages">
+{% if pager.page > 1 %}<li class="previous page"><a accesskey="p" href="{{ path(members_route, members_route_params|merge(q)|merge({members_page: pager.page - 1})) }}">« {{ l('label_previous') }}</a></li>{% endif %}
+{% for p in 1..pager.pages %}
+  {% if p == 1 or p == pager.pages or (p >= pager.page - 2 and p <= pager.page + 2) %}
+    {% if p == pager.page %}<li class="current"><span>{{ p }}</span></li>{% else %}<li><a href="{{ path(members_route, members_route_params|merge(q)|merge({members_page: p})) }}">{{ p }}</a></li>{% endif %}
+  {% elseif p == pager.page - 3 or p == pager.page + 3 %}<li class="spacer"><span>…</span></li>{% endif %}
+{% endfor %}
+{% if pager.page < pager.pages %}<li class="next page"><a accesskey="n" href="{{ path(members_route, members_route_params|merge(q)|merge({members_page: pager.page + 1})) }}">{{ l('label_next') }} »</a></li>{% endif %}
+</ul><span><span class="items">({{ pager.offset + 1 }}-{{ min(pager.offset + pager.limit, pager.count) }}/{{ pager.count }})</span>
+<span class="per-page">{{ l('label_display_per_page', {value: ''}) }}{% for n in pager.per_page_options %}{% if n == pager.limit %}<span class="selected">{{ n }}</span>{% else %}<a href="{{ path(members_route, members_route_params|merge(q)|merge({per_page: n})) }}">{{ n }}</a>{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}</span></span></span>
+{% if can_manage %}
+<p class="other-formats hide-when-print">{{ l('label_export_to') }}
+  <span><a class="csv" rel="nofollow" onclick="showModal('csv-export-options', '330px'); return false;" href="{{ path('project_memberships_csv', {project_id: project.identifier}) }}">CSV</a></span>
+</p>
+<div id="csv-export-options" style="display: none;">
+  <h3 class="title">{{ l('label_export_options', {export_format: 'CSV'}) }}</h3>
+  <form id="csv-export-form" action="{{ path('project_memberships_csv', {project_id: project.identifier}) }}" accept-charset="UTF-8" method="get">
+  {%- set csv_encoding = l('general_csv_encoding') -%}
+  {% if csv_encoding|upper != 'UTF-8' %}<p><label>{{ l('label_encoding') }} <select name="encoding" id="encoding"><option selected="selected" value="UTF-8">UTF-8</option>
+<option value="{{ csv_encoding }}">{{ csv_encoding }}</option></select></label></p>{% endif %}
+  <p class="buttons">
+    <input type="submit" value="{{ l('button_export') }}" onclick="hideModal(this);" />
+    <a href="#" onclick="hideModal(this);; return false;">{{ l('button_cancel') }}</a>
+  </p>
+  </form>
+</div>
+{% endif %}
 {% else %}
 <p class="nodata">{{ l('label_no_data') }}</p>
 {% endif %}

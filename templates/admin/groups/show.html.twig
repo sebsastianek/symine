@@ -9,7 +9,7 @@
 {% if custom_values|length > 0 %}
   <ul>
     {% for cv in custom_values %}
-      <li><span class="label">{{ cv.field.name }}:</span> {{ cv.value }}</li>
+      <li><span class="label">{{ cv.field.name }}:</span> {{ issue_cf_value_html(cv.field, cv.raw, null, group ?? null) }}</li>
     {% endfor %}
   </ul>
 {% endif %}

@@ -1,7 +1,7 @@
 {% extends 'admin/layout.html.twig' %}
 {% import 'admin/workflows/_macros.html.twig' as h %}
 {% block content %}
-{% if error_html %}<div class="flash error" id="flash_error">{{ error_html|raw }}</div>{% endif %}
+{% if error_html %}<div class="flash error" id="flash_error">{{ sprite_icon('warning') }}{{ error_html|raw }}</div>{% endif %}
 <div class="contextual">
 <a class="icon icon-add" href="{{ path('tracker_new') }}">{{ sprite_icon('add', l('label_tracker_new')) }}</a>
 <a class="icon icon-summary" href="{{ path('trackers_fields') }}">{{ sprite_icon('summary', l('field_summary')) }}</a>

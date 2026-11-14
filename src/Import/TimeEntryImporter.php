@@ -15,6 +15,7 @@ use App\Entity\TimeEntryCustomField;
 use App\Entity\User;
 use App\Event\ContentEvent;
 use App\Service\IssueService;
+use App\Service\TimeEntryService;
 use Psr\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -255,7 +256,8 @@ final class TimeEntryImporter extends AbstractImporter
         if (null === $hoursRaw) {
             $errors[] = $this->error('field_hours', 'blank');
         } else {
-            $hours = IssueService::parseHours($hoursRaw);
+            // TimeEntry#hours=: String#to_hours ("2h30", "1:30", "90m", "1,5"...)
+            $hours = TimeEntryService::toHours($hoursRaw);
             if (null === $hours) {
                 $errors[] = $this->error('field_hours', 'invalid');
             }
@@ -311,7 +313,7 @@ final class TimeEntryImporter extends AbstractImporter
         $fields = $this->mappableCustomFields($import);
         $cfValues = $this->customFieldValues($import, $row, $fields, $project);
         foreach ($fields as $cf) {
-            $v = $cfValues[(string) $cf->id] ?? $cf->defaultValue;
+            $v = $cfValues[(string) $cf->id] ?? $this->customFields->defaultValue($cf);
             array_push($errors, ...$this->customFields->validate($cf, $this->customFields->normalize($cf, $v), $project));
         }
 

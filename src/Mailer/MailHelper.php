@@ -57,9 +57,10 @@ final class MailHelper
     }
 
     /** Wiki formatting with absolute links/images (textilizable :only_path => false) */
-    public function textilizable(?string $text, ?Project $project = null): string
+    public function textilizable(?string $text, ?Project $project = null, ?object $object = null): string
     {
-        $html = $this->formatter->format($text, $project);
+        // the object gives its attachments to inline images, attachment: links and {{thumbnail}}
+        $html = $this->formatter->format($text, $project, null === $object ? [] : ["object" => $object]);
 
         return $this->absolutize($html);
     }

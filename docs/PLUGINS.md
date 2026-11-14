@@ -9,6 +9,10 @@ A complete working example lives in [`plugins/symine-hello/`](../plugins/symine-
 project module with a permission, a project menu tab, a plugin setting, view hooks, an activity provider,
 a search provider, a custom field format, a migration and a stylesheet. Its tests are in `tests/Plugin/`.
 
+For a full-size plugin built on the same API, see [`plugins/symine-kanban/`](../plugins/symine-kanban/README.md)
+(Kanban boards: three tables, a project module with permissions, project and application menu entries, plugin
+settings, a targeted argument resolver, form and view services, assets, tests in `tests/Plugin/Kanban/`).
+
 ## Contents
 
 1. [Plugin = Symfony bundle](#1-plugin--symfony-bundle)
@@ -23,7 +27,8 @@ a search provider, a custom field format, a migration and a stylesheet. Its test
 10. [Migrations](#10-migrations)
 11. [Assets, templates, translations](#11-assets-templates-translations)
 12. [Commands](#12-commands)
-13. [Differences from Redmine and what is missing](#13-differences-from-redmine-and-what-is-missing)
+13. [Decorating core services](#13-decorating-core-services)
+14. [Differences from Redmine and what is missing](#14-differences-from-redmine-and-what-is-missing)
 
 ## 1. Plugin = Symfony bundle
 
@@ -431,6 +436,15 @@ Plugin code should tolerate a missing table until the migrations have been run (
 `HelloSchema::isInstalled()` in its providers and hooks), because e.g. the global search queries every
 registered provider.
 
+Ask `App\Plugin\PluginSchema::hasTables('<plugin id>', ['table', ...])` rather than the schema manager: menus and
+hooks ask on every request, and looking at the schema costs two queries each time. `PluginSchema` remembers a
+"yes" for a few minutes (pool `cache.plugin_schema`), per database, and never a "no"; `symine:plugins:migrate`
+forgets the answer of the plugin it migrates, up or down. The tables can still disappear some other way (a
+rollback run on another server, a database replaced by a copy): code that runs inside core pages (hooks,
+activity and search providers) should treat a `TableNotFoundException` as "not installed" and report it with
+`PluginSchema::missing()`, as `HelloSchema::whenInstalled()` does; for everything else `PluginSchemaHealer`
+drops the remembered answers when such an error reaches the kernel, so that only one request fails.
+
 ## 11. Assets, templates, translations
 
 - **Assets**: `<plugin>/assets/**` is published to `public/plugin_assets/<id>/` (relative symlink, or copy)
@@ -454,16 +468,67 @@ registered provider.
 | `symine:plugins:migrate [id] [--target=V] [--status]` | plugin migrations (`rake redmine:plugins:migrate`) |
 | `symine:plugins:assets [--copy]` | publish assets to `public/plugin_assets` |
 
-## 13. Differences from Redmine and what is missing
+## 13. Decorating core services
+
+Where a Redmine plugin patches a core class (`prepend`, `alias_method_chain`), a Symine plugin *decorates* a
+service: it registers a service of its own that implements the same interface, receives the service it replaces
+and calls it for whatever it does not handle. Everything that asked for the interface gets the decorator.
+
+Most core services are `final` classes asked for by their class name: those cannot be decorated, on purpose
+(their public methods are not a stable contract). The services below are asked for by an interface and are the
+supported seams:
+
+| Interface | What it does | Why a plugin wraps it |
+|---|---|---|
+| `App\Service\Text\MarkupConverterInterface` | converts Textile / CommonMark text to HTML (the conversion alone) | additions to the markup: shortcodes, another flavour (Redmine `wiki_format_provider`, formatter patches) |
+| `App\Service\Avatar\AvatarRendererInterface` | the picture next to a user or group name (`avatar()` in templates) | pictures of your own: uploaded photos, a company directory (Redmine `AvatarsHelper` patches) |
+| `Symfony\Contracts\HttpClient\HttpClientInterface` | outgoing HTTP: webhook deliveries | retries, a proxy, logging (or configure `framework.http_client`: Symfony ships these decorators) |
+| `Symfony\Component\Mailer\MailerInterface` | every e-mail Symine sends | extra headers, an audit trail, a redirection in staging (or listen to Symfony's `MessageEvent`) |
+
+The example plugin teaches the converter a shortcode
+([`plugins/symine-hello/src/Text/WaveMarkup.php`](../plugins/symine-hello/src/Text/WaveMarkup.php), tested in
+`tests/Plugin/DecorationTest.php`):
+
+```php
+#[AsDecorator(decorates: MarkupConverterInterface::class)]
+final class WaveMarkup implements MarkupConverterInterface
+{
+    public function __construct(#[AutowireDecorated] private readonly MarkupConverterInterface $inner)
+    {
+    }
+
+    public function toHtml(string $formatting, string $text): string
+    {
+        return $this->inner->toHtml($formatting, str_replace(':hello:', '&#128075;', $text));
+    }
+}
+```
+
+Nothing else is needed: the classes in `src/` of a plugin are autoconfigured, the attribute does the wiring.
+
+- Keep the contract of the interface. `MarkupConverterInterface::toHtml()` must depend on its two arguments
+  only: its result is cached when the setting "Cache formatted text" is on (the core's own decorator,
+  `CachedMarkupConverter`, sits outside yours), and it is the same for every reader. What depends on the reader or
+  on the project — sanitisation, attachments, macros, links — is done by `TextFormatter` afterwards, on your
+  output too: return markup, do not rely on unsafe HTML surviving.
+- Several plugins may decorate the same service; `priority` orders them (the higher is applied first, i.e. sits
+  closer to the core service).
+- A service that is not in the table needs an interface first: ask for it (or send a patch extracting one)
+  rather than copying the class. Hooks, events (`IssueEvent`, `ContentEvent`) and Doctrine listeners cover most
+  of what Redmine plugins patch models for.
+
+## 14. Differences from Redmine and what is missing
 
 - Ruby monkey-patching of core classes (`Issue.send(:include, ...)`, `prepend`) has no equivalent: extend
-  through hooks/events, Symfony service decoration (`#[AsDecorator]`) or Doctrine event listeners.
+  through hooks/events, service decoration ([section 13](#13-decorating-core-services)) or Doctrine event
+  listeners.
 - Menu `before`/`after` positions are resolved against the items visible for the current user; Redmine
   resolves them against all registered items.
 - The `:form` (Rails form builder) context key of view hooks is `null`.
 - Plugin custom field formats are edited with a text field (Redmine `FieldFormat::Base#edit_tag`); there is
   no API yet for custom edit tags, format option partials in the custom field form, or query filter types.
-- Not ported: `wiki_format_provider` (text formatters), `attachment_object_type`, `Redmine::MyPage` block
+- Not ported: `wiki_format_provider` (registering a text formatter of its own name; additions to Textile and
+  CommonMark go through `MarkupConverterInterface`, section 13), `attachment_object_type`, `Redmine::MyPage` block
   registration, `Redmine::Views::ApiTemplateHandler` hooks, `helper_*` hooks
   (`helper_issues_show_detail_after_setting`, `helper_queries_column_content/value`), the "Check for
   updates" link of the plugins page.

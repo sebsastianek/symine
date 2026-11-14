@@ -8,21 +8,7 @@
   <p><label for="document_description">{{ l('field_description') }}</label>{% include ['issues/_wiki_textarea.html.twig', 'content/_textarea.html.twig'] with {name: 'document[description]', id: 'document_description', value: document.description, rows: 15, cols: 60} %}</p>
 
   {% for cv in custom_field_values %}
-    {% set f = cv.field %}
-    {% set fid = 'document_custom_field_values_' ~ f.id %}
-    <p><label for="{{ fid }}">{{ f.name }}{% if f.isRequired %}<span class="required"> *</span>{% endif %}</label>
-    {% if f.fieldFormat in ['list', 'bool', 'enumeration', 'user', 'version'] %}
-      {% set selected = cv.value is iterable ? cv.value : [cv.value] %}
-      <select name="document[custom_field_values][{{ f.id }}]{{ f.isMultiple() ? '[]' : '' }}" id="{{ fid }}" class="{{ f.fieldFormat }}_cf"{% if f.isMultiple() %} multiple="multiple"{% endif %}>
-        {% if not f.isMultiple() %}<option value="">{% if not f.isRequired %}&nbsp;{% else %}--- {{ l('actionview_instancetag_blank_option') }} ---{% endif %}</option>{% endif %}
-        {% for opt in cv.options %}<option value="{{ opt[0] }}"{% if opt[0] in selected %} selected="selected"{% endif %}>{{ opt[1] }}</option>{% endfor %}
-      </select>
-    {% elseif f.fieldFormat == 'text' %}
-      <textarea rows="3" class="text_cf wiki-edit" name="document[custom_field_values][{{ f.id }}]" id="{{ fid }}">{{ cv.value }}</textarea>
-    {% else %}
-      <input type="text" value="{{ cv.value }}" name="document[custom_field_values][{{ f.id }}]" id="{{ fid }}" class="{{ f.fieldFormat }}_cf" />
-    {% endif %}
-    </p>
+    <p>{{ issue_cf_tag('document', cv.field, cv.value, document.project ?? null) }}</p>
   {% endfor %}
 
   {% if document.id is null %}

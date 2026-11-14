@@ -41,6 +41,7 @@ final class ScmTwigExtension extends AbstractExtension
             new TwigFunction('changeset_identifier', RepositoryService::identifier(...)),
             new TwigFunction('changeset_short_comments', static fn (Changeset $c) => RepositoryService::splitComments($c->comments)[0]),
             new TwigFunction('format_changeset_comments', $this->formatChangesetComments(...), $safe),
+            new TwigFunction('changeset_has_filechanges', $this->repositories->hasFilechanges(...)),
             new TwigFunction('truncate_at_line_break', self::truncateAtLineBreak(...)),
             new TwigFunction('scm_change_icon', $this->scmChangeIcon(...), $safe),
             new TwigFunction('scm_file_icon', $this->fileIcon(...), $safe),
@@ -149,8 +150,10 @@ final class ScmTwigExtension extends AbstractExtension
         if ($this->settings->bool('commit_logs_formatting')) {
             return $this->formatter->format($text, $c->repository->project);
         }
+        // textilizable(..., :formatting => false): the text is only escaped, but #123 and the other Redmine links still apply
+        $html = $this->formatter->format($text, $c->repository->project, ['formatting' => false]);
 
-        return '<p>'.nl2br(htmlspecialchars($text), false).'</p>';
+        return '' === $html ? '' : '<p>'.$html.'</p>';
     }
 
     public static function truncateAtLineBreak(?string $text, int $length = 255): string

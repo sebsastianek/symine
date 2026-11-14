@@ -6,6 +6,7 @@ namespace App\Plugin\Migration;
 
 use App\Plugin\PluginDefinition;
 use App\Plugin\PluginRegistry;
+use App\Plugin\PluginSchema;
 use Doctrine\DBAL\Connection;
 use Doctrine\Migrations\Configuration\Connection\ExistingConnection;
 use Doctrine\Migrations\Configuration\Migration\ConfigurationArray;
@@ -27,6 +28,7 @@ final class PluginMigrator
     public function __construct(
         private readonly Connection $connection,
         private readonly PluginRegistry $plugins,
+        private readonly ?PluginSchema $schema = null,
     ) {
     }
 
@@ -48,7 +50,12 @@ final class PluginMigrator
         if (0 === \count($plan)) {
             return [];
         }
-        $df->getMigrator()->migrate($plan, new MigratorConfiguration());
+        try {
+            $df->getMigrator()->migrate($plan, new MigratorConfiguration());
+        } finally {
+            // its tables appeared or went away: what was remembered about them no longer holds
+            $this->schema?->forget($plugin->id);
+        }
 
         return array_map(static fn ($item) => (string) $item->getVersion(), $plan->getItems());
     }

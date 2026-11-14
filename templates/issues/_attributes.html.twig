@@ -4,8 +4,33 @@
 <p>
   <label for="issue_status_id">{{ l('field_status') }}<span class="required"> *</span></label><select onchange="updateIssueFrom('{{ form_update_url|e('js') }}', this)"{% if issue.status.description %} title="{{ issue.status.description }}"{% endif %} name="issue[status_id]" id="issue_status_id">{% for s in allowed_statuses %}<option{% if s.id == issue.status.id %} selected="selected"{% endif %} value="{{ s.id }}">{{ s.name }}</option>
 {% endfor %}</select>
+  {% if allowed_statuses|filter(st => st.description is not empty)|length > 0 %}<a class="icon-only icon-help" title="{{ l('label_open_issue_statuses_description') }}" onclick="showModal('issue_statuses_description', '500px'); return false;" href="#">{{ sprite_icon('help', l('label_open_issue_statuses_description')) }}</a>{% endif %}
   {% if transition_warning %}<span class="icon-only icon-warning" title="{{ transition_warning }}">{{ sprite_icon('warning', transition_warning) }}</span>{% endif %}
 </p>
+{% if allowed_statuses|filter(st => st.description is not empty)|length > 0 %}
+  <div class="modal" id="issue_statuses_description">
+    <h3 class="title">{{ l('label_issue_statuses_description') }}</h3>
+      <dl>
+      {% for st in allowed_statuses %}
+        {% if st.description is not empty %}
+          <dt><a onclick="selectIssueStatus('{{ st.id }}'); return false;" href="#" title="{{ l('text_select_apply_issue_status') }}">{{ st.name }}</a></dt>
+          <dd>{{ st.description }}</dd>
+        {% endif %}
+      {% endfor %}
+      </dl>
+  </div>
+{% endif %}
+<script>
+//<![CDATA[
+  function selectIssueStatus(id) {
+    var target = $('#issue_status_id');
+    target.attr("selected", false);
+    target.find('option[value="' + id + '"]').prop('selected', true);
+    target.trigger('change');
+    hideModal('#issue_statuses_description h3');
+  }
+//]]>
+</script>
 {% if is_default_status %}<input type="hidden" name="was_default_status" value="{{ issue.status.id }}" autocomplete="off" />{% endif %}
 {% else %}
 <p><label>{{ l('field_status') }}</label> {{ issue.status.name }}</p>
@@ -62,7 +87,7 @@
 {% endif %}
 
 {% if 'estimated_hours' in safe %}
-<p><label for="issue_estimated_hours">{{ l('field_estimated_hours') }}{% include 'issues/_req.html.twig' with {req: 'estimated_hours' in required_attrs} %}</label><input placeholder="h:mm" size="6" value="{{ issue.estimatedHours is not null ? format_hours(issue.estimatedHours) : '' }}" type="text" name="issue[estimated_hours]" id="issue_estimated_hours" /> {{ l('field_hours') }}</p>
+<p><label for="issue_estimated_hours">{{ l('field_estimated_hours') }}{% include 'issues/_req.html.twig' with {req: 'estimated_hours' in required_attrs} %}</label><input placeholder="h:mm" size="6" value="{{ (estimated_hours_input ?? null) is not null ? estimated_hours_input : (issue.estimatedHours is not null ? format_hours(issue.estimatedHours) : '') }}" type="text" name="issue[estimated_hours]" id="issue_estimated_hours" /> {{ l('field_hours') }}</p>
 {% endif %}
 
 {% if 'done_ratio' in safe and use_field_for_done_ratio %}

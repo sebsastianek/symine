@@ -46,10 +46,15 @@ final class HelloViewListener extends ViewListener
             return '';
         }
 
+        $count = $this->schema->whenInstalled(fn (): int => $this->count($issue->project), null);
+        if (null === $count) {
+            return '';
+        }
+
         return $this->render('@HelloPlugin/hooks/_issue_details.html.twig', [
             'issue' => $issue,
             'greeting_word' => (string) ($settings['greeting'] ?? 'Hello'),
-            'greetings_count' => $this->count($issue->project),
+            'greetings_count' => $count,
         ]);
     }
 
@@ -60,8 +65,12 @@ final class HelloViewListener extends ViewListener
         if (!$project instanceof Project || !$this->schema->isInstalled() || !$this->auth->allowedTo('view_hello_greetings', $project)) {
             return [];
         }
-        $context['greetings'] = $this->em->createQuery('SELECT g FROM Symine\Hello\Entity\Greeting g WHERE g.project = :p ORDER BY g.createdOn DESC, g.id DESC')
-            ->setParameter('p', $project)->setMaxResults(5)->getResult();
+        $greetings = $this->schema->whenInstalled(fn (): array => $this->em->createQuery('SELECT g FROM Symine\Hello\Entity\Greeting g WHERE g.project = :p ORDER BY g.createdOn DESC, g.id DESC')
+            ->setParameter('p', $project)->setMaxResults(5)->getResult(), null);
+        if (null === $greetings) {
+            return [];
+        }
+        $context['greetings'] = $greetings;
 
         return parent::renderOn($hook, $context);
     }

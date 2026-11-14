@@ -17,14 +17,12 @@ use Doctrine\ORM\EntityManagerInterface;
 /** Project related domain logic (port of parts of Redmine's Project model). */
 final class ProjectService
 {
-    /** @var array<string, bool> */
-    private array $cache = [];
-
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly Authorization $auth,
         private readonly CurrentUser $currentUser,
         private readonly Settings $settings,
+        private readonly ?\App\Doctrine\QueryMemo $memo = null,
     ) {
     }
 
@@ -52,15 +50,8 @@ final class ProjectService
 
     public function anyVisibleWithModule(string $module): bool
     {
-        $key = 'mod:'.$module;
-        if (!isset($this->cache[$key])) {
-            $ids = $this->auth->visibleProjectIds();
-            $this->cache[$key] = [] !== $ids && (int) $this->em->createQuery(
-                'SELECT COUNT(m.id) FROM App\Entity\EnabledModule m WHERE m.name = :n AND IDENTITY(m.project) IN (:ids)'
-            )->setParameters(['n' => $module, 'ids' => $ids])->getSingleScalarResult() > 0;
-        }
-
-        return $this->cache[$key];
+        // the authorization already knows the modules of every project: no query per menu item
+        return $this->auth->anyVisibleProjectWithModule($module);
     }
 
     /** @return list<Tracker> Issue.allowed_target_trackers */
@@ -150,6 +141,17 @@ final class ProjectService
         if (null === $project->id) {
             return $this->em->createQuery("SELECT v, p FROM App\Entity\Version v JOIN v.project p WHERE p.status <> 9 AND v.sharing = 'system'")->getResult();
         }
+        if (null !== $this->memo) {
+            // the menu, the issue form and the sidebar of a page ask for the versions of the same project
+            return $this->memo->get('shared_versions:'.$project->id, ['versions', 'projects'], fn (): array => $this->loadSharedVersions($project));
+        }
+
+        return $this->loadSharedVersions($project);
+    }
+
+    /** @return list<Version> */
+    private function loadSharedVersions(Project $project): array
+    {
         $root = $project->getRoot();
         $dql = "SELECT v, p FROM App\Entity\Version v JOIN v.project p WHERE p.id = :id OR (p.status <> 9 AND (
                   v.sharing = 'system'

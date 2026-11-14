@@ -38,6 +38,7 @@ final class QueryContext
         public readonly IssueService $issues,
         public readonly CustomFieldService $customFields,
         public readonly ?\App\Service\Activity\SearchService $search = null,
+        public readonly ?\App\Doctrine\BatchLoader $batch = null,
     ) {
     }
 

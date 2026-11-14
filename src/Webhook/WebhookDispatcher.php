@@ -71,7 +71,7 @@ final class WebhookDispatcher implements EventSubscriberInterface
             IssueEvent::DELETED => 'deleted',
             default => null,
         };
-        if (null !== $action) {
+        if (null !== $action && $event->webhook) {
             $this->trigger('issue.'.$action, $event->issue, $event->journal);
         }
     }

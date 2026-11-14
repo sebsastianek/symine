@@ -24,7 +24,7 @@
     {% include 'projects/_list.html.twig' %}
   {% endif %}
 {% else %}
-  <div id="errorExplanation"><ul>{% for e in query.errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+  <div id="errorExplanation">{{ sprite_icon('warning') }}<ul>{% for e in query.errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
 {% endif %}
 
 {% if current_user().isLogged() %}

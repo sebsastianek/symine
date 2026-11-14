@@ -20,6 +20,8 @@ final class IssueEvent
         public readonly string $action,
         public readonly User $user,
         public readonly ?Journal $journal = null,
+        /** false when only a journal was saved, not the issue (relation added/removed, split private notes): e-mail but no webhook */
+        public readonly bool $webhook = true,
     ) {
     }
 }

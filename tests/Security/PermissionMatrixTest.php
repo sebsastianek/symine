@@ -199,8 +199,9 @@ final class PermissionMatrixTest extends SecurityWebTestCase
     public function testAdminPage(string $url): void
     {
         if ('/projects/new?parent_id=' === $url) {
-            // add_project is a global permission: denied unless a role grants it
-            $this->rolePermissions(self::ROLE_MANAGER, [], ['add_project']);
+            // projects#new belongs to the add_project and add_subprojects permissions (authorize_global):
+            // denied unless a role grants one of them
+            $this->rolePermissions(self::ROLE_MANAGER, [], ['add_project', 'add_subprojects']);
             $this->rolePermissions(self::ROLE_NON_MEMBER, [], ['add_project']);
         }
         $actual = [];

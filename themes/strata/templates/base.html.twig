@@ -1,0 +1,32 @@
+{#- Strata layout: the application layout with its header rebuilt as a navigation rail.
+    Brand first (logo or the Strata mark, then the name), then where you are, the search and the menu.
+    The ids Redmine's scripts rely on (#header, #quick-search, #main-menu) are kept. -#}
+{% extends '@Symine/base.html.twig' %}
+
+{% block layout_header %}
+<div id="header">
+    <a href="#" class="mobile-toggle-button js-flyout-menu-toggle-button"></a>
+
+    {%- set _logo = theme_option_image('logo') -%}
+    {%- set _brand = theme_option('brand_name') ?: settings.appTitle() -%}
+    <a class="st-brand" href="{{ path('home') }}">
+      {% if _logo %}
+        <img class="st-brand-logo" src="{{ _logo }}" alt="" />
+      {% else %}
+        <svg class="st-brand-mark" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5h13M8 12h13M3 17.5h13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+      {% endif %}
+      <span class="st-brand-name">{{ _brand }}</span>
+    </a>
+
+    {#- the page title only repeats the brand outside projects and the administration: it is then kept for assistive
+        technologies and not shown -#}
+    {%- set _title -%}{{ block('layout_page_title') }}{%- endset -%}
+    <div class="st-context{% if _title|striptags|trim == settings.appTitle() %} st-context-is-brand{% endif %}">
+      {{ _title|raw }}
+    </div>
+
+    {{ block('layout_quick_search') }}
+
+    {{ main_menu_html|raw }}
+</div>
+{% endblock %}

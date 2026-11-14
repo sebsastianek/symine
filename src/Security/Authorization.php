@@ -10,13 +10,15 @@ use App\Entity\Member;
 use App\Entity\Project;
 use App\Entity\Role;
 use App\Entity\User;
+use App\Doctrine\BatchLoader;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Contracts\Service\ResetInterface;
 
 /**
  * Port of Redmine's authorization logic (User#allowed_to?, User#roles_for_project,
  * Project#allows_to?, Project.allowed_to_condition).
  */
-final class Authorization
+final class Authorization implements ResetInterface
 {
     /** @var array<int, array<int, Member>> userId => projectId => Member */
     private array $memberships = [];
@@ -35,6 +37,7 @@ final class Authorization
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly CurrentUser $currentUser,
+        private readonly BatchLoader $batch,
     ) {
         $this->oauthScopes = new \WeakMap();
     }
@@ -154,17 +157,39 @@ final class Authorization
         return [];
     }
 
-    /** All roles the user has in any project, plus builtin role */
+    /**
+     * User#roles | [builtin_role] (User#allowed_to? with :global => true): the roles of the user's memberships
+     * in non archived projects or, when there is none, the roles given to the user's built-in group
+     * (Anonymous / Non member users) on public projects; plus the built-in role.
+     *
+     * @return list<Role>
+     */
     public function allRoles(?User $user = null): array
     {
         $user = $this->user($user);
         $roles = [];
         foreach ($this->membershipsOf($user) as $m) {
+            if ($m->project->isArchived()) {
+                continue;
+            }
             foreach ($m->getRoles() as $r) {
                 $roles[$r->id] = $r;
             }
         }
         $b = $this->builtinRole($user);
+        if ([] === $roles) {
+            $info = $this->projectInfo();
+            $this->overrideRoles(new Project(), $b);
+            $class = Role::BUILTIN_ANONYMOUS === $b->builtin ? GroupAnonymous::class : GroupNonMember::class;
+            foreach ($this->overrideRoles[$class] ?? [] as $projectId => $groupRoles) {
+                if (!($info[$projectId]['public'] ?? false) || Project::STATUS_ARCHIVED === ($info[$projectId]['status'] ?? null)) {
+                    continue;
+                }
+                foreach ($groupRoles as $r) {
+                    $roles[$r->id] = $r;
+                }
+            }
+        }
         $roles[$b->id] = $b;
 
         return array_values($roles);
@@ -191,8 +216,13 @@ final class Authorization
             return false;
         }
         $module = AccessControl::moduleOf($permission);
+        if (null === $module) {
+            return true;
+        }
+        // a page checks permissions on every project it lists: their modules are loaded together
+        $this->batch->collection($project, 'enabledModules');
 
-        return null === $module || $project->isModuleEnabled($module);
+        return $project->isModuleEnabled($module);
     }
 
     /**
@@ -394,6 +424,19 @@ final class Authorization
         $memberships = $this->membershipsOf($user);
 
         return array_values(array_filter($eligible, static fn (int $id) => $info[$id]['public'] || isset($memberships[$id])));
+    }
+
+    /** Whether one of the projects the user can see has the module enabled (application menu) */
+    public function anyVisibleProjectWithModule(string $module, ?User $user = null): bool
+    {
+        $info = $this->projectInfo();
+        foreach ($this->visibleProjectIds($user) as $id) {
+            if (\in_array($module, $info[$id]['modules'], true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function isProjectVisible(Project $project, ?User $user = null): bool

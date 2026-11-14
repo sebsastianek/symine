@@ -1,0 +1,74 @@
+{% extends 'admin/layout.html.twig' %}
+{% block header_tags %}{% if current_theme().legacy %}<link rel="stylesheet" href="/assets/appearance.css" media="all" />{% endif %}{% endblock %}
+{% block content %}
+<h2>{{ l('label_theme_plural') }}</h2>
+
+{% if theme_errors %}
+<div class="flash warning" id="theme-errors">
+  <strong>{{ l('text_theme_load_errors') }}</strong>
+  <ul>
+    {% for id, errors in theme_errors %}
+      <li><code>{{ id }}</code>: {{ errors|join('; ') }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
+
+<ul class="theme-cards">
+{% for theme in themes %}
+  {%- set is_site = theme.id == site_theme.id -%}
+  <li class="theme-card{% if is_site %} theme-card-active{% endif %}" id="theme-{{ theme.id }}">
+    <div class="theme-card-preview" aria-hidden="true">
+      {% if theme.preview %}
+        <img src="{{ path('theme_asset', {id: theme.id, path: theme.preview}) }}" alt="" loading="lazy" />
+      {% else %}
+        {#- themes without a manifest cannot describe themselves: the colours of the ones that ship with Redmine are known -#}
+        {%- set redmine_swatches = {default: ['#234761', '#3a78a3', '#ffffff', '#f1f3f5'], classic: ['#2c4056', '#467aa7', '#ffffff', '#eeeeee'], alternate: ['#628db6', '#759fcf', '#ffffff', '#eeeeee']} -%}
+        {%- set swatch = theme.swatch ?: (redmine_swatches[theme.id] ?? ['#868e96', '#ced4da', '#ffffff', '#f1f3f5']) -%}
+        <span class="theme-card-swatch">{% for color in swatch %}<i style="background:{{ color }}"></i>{% endfor %}</span>
+      {% endif %}
+    </div>
+    <div class="theme-card-body">
+      <h3>{{ theme.name }}{% if is_site %} <span class="badge badge-status-open">{{ l('label_theme_in_use') }}</span>{% endif %}{% if previewed and previewed.id == theme.id %} <span class="badge">{{ l('label_preview') }}</span>{% endif %}</h3>
+      <p class="theme-card-description">{{ theme.description ?: (theme.legacy ? l('text_theme_redmine') : '') }}</p>
+      <p class="theme-card-meta">
+        {%- set meta = [] -%}
+        {%- if theme.version %}{% set meta = meta|merge([l('label_theme_version', {value: theme.version})]) %}{% endif -%}
+        {%- if theme.author %}{% set meta = meta|merge([theme.author]) %}{% endif -%}
+        {%- if theme.parent %}{% set meta = meta|merge([l('label_theme_based_on', {name: themes[theme.parent].name ?? theme.parent})]) %}{% endif -%}
+        {%- if theme.colorSchemes|length > 1 %}{% set meta = meta|merge([l('label_theme_scheme_count', {count: theme.colorSchemes|length})]) %}{% endif -%}
+        {{ meta|join(', ') }}
+      </p>
+      <div class="theme-card-actions">
+        {% if not is_site %}
+          <form action="{{ path('admin_themes_activate', {id: theme.id}) }}" method="post">{{ csrf_field() }}<input type="submit" value="{{ l('button_theme_use') }}" /></form>
+          <form action="{{ path('admin_themes_preview', {id: theme.id}) }}" method="post">{{ csrf_field() }}<input type="submit" name="preview" value="{{ l('label_preview') }}" /></form>
+        {% endif %}
+        {% if theme.allOptions() or not theme.legacy %}
+          <a class="icon icon-settings" href="{{ path('admin_themes_edit', {id: theme.id}) }}">{{ sprite_icon('settings', l('button_theme_customize')) }}</a>
+        {% endif %}
+      </div>
+    </div>
+  </li>
+{% endfor %}
+</ul>
+
+<form action="{{ path('admin_themes_permissions') }}" method="post" id="theme-permissions">{{ csrf_field() }}
+  <fieldset class="box tabular">
+    <legend>{{ l('label_theme_user_permissions') }}</legend>
+    <p>
+      <label for="user_options">{{ l('setting_theme_user_options') }}</label>
+      <input type="checkbox" name="user_options" id="user_options" value="1"{% if user_options %} checked{% endif %} />
+      <em class="info">{{ l('text_theme_user_options') }}</em>
+    </p>
+    <p>
+      <label for="user_theme">{{ l('setting_theme_user_theme') }}</label>
+      <input type="checkbox" name="user_theme" id="user_theme" value="1"{% if user_theme %} checked{% endif %} />
+      <em class="info">{{ l('text_theme_user_theme') }}</em>
+    </p>
+  </fieldset>
+  <p><input type="submit" value="{{ l('button_save') }}" /></p>
+</form>
+
+<p class="theme-help"><em class="info">{{ l('text_theme_install') }}</em></p>
+{% endblock %}

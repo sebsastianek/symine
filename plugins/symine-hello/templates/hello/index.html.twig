@@ -9,7 +9,7 @@
 <h2>{{ l('label_hello_greeting_plural') }}</h2>
 
 {% if errors|length > 0 %}
-<div id="errorExplanation"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+<div id="errorExplanation">{{ sprite_icon('warning') }}<ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
 {% endif %}
 
 {% if allowed_to('add_hello_greetings', project) %}

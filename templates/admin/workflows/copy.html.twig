@@ -1,7 +1,7 @@
 {% extends 'admin/layout.html.twig' %}
 {% import 'admin/workflows/_macros.html.twig' as h %}
 {% block content %}
-{% if error %}<div class="flash error" id="flash_error">{{ error }}</div>{% endif %}
+{% if error %}<div class="flash error" id="flash_error">{{ sprite_icon('warning') }}{{ error }}</div>{% endif %}
 <h2><a href="{{ path('workflows_edit') }}">{{ l('label_workflow') }}</a> &#187; {{ l('button_copy') }}</h2>
 
 <form id="workflow_copy_form" action="{{ path('workflows_duplicate') }}" accept-charset="UTF-8" method="post">

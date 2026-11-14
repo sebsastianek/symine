@@ -1,0 +1,70 @@
+{#- One option of a theme as a form field. Variables: option (ThemeOption), value, theme, site_value (personal forms: marks
+    the choice the site uses), image_url. Every control carries data-appearance-* so appearance.js applies changes at once. -#}
+{%- set label = theme_text(option.label, option.name) -%}
+{%- set field = 'options[' ~ option.name ~ ']' -%}
+{%- set fid = 'theme_option_' ~ option.name -%}
+{%- set live = ' data-appearance-live="' ~ option.name ~ '"' ~ (option.attribute ? ' data-appearance-attribute="' ~ option.attribute ~ '"' : '') ~ (option.token ? ' data-appearance-token="' ~ option.token ~ '"' : '') -%}
+<p class="appearance-field appearance-field-{{ option.type }}{% if rejected[option.name] is defined %} appearance-field-error{% endif %}">
+  <label{% if option.type in ['length', 'number', 'text', 'toggle'] %} for="{{ fid }}"{% endif %}>{{ label }}</label>
+  {% if option.type == 'choice' %}
+    {% if option.choices|length <= 6 %}
+      <span class="appearance-choices" role="radiogroup" aria-label="{{ label }}">
+        {% for id, choice in option.choices %}
+          <label class="appearance-choice">
+            <input type="radio" name="{{ field }}" value="{{ id }}"{% if value == id %} checked{% endif %}{{ live|raw }} />
+            <span>{% if choice.swatch %}<i class="appearance-swatch" style="background:{{ choice.swatch }}"></i>{% endif %}{{ theme_text(choice.label, id) }}{% if site_value is defined and site_value == id %} <em class="appearance-site-default">{{ l('label_theme_site_value') }}</em>{% endif %}</span>
+          </label>
+        {% endfor %}
+      </span>
+    {% else %}
+      <select name="{{ field }}" id="{{ fid }}"{{ live|raw }}>
+        {% for id, choice in option.choices %}
+          <option value="{{ id }}"{% if value == id %} selected{% endif %}>{{ theme_text(choice.label, id) }}{% if site_value is defined and site_value == id %} ({{ l('label_theme_site_value') }}){% endif %}</option>
+        {% endfor %}
+      </select>
+    {% endif %}
+  {% elseif option.type == 'toggle' %}
+    <input type="hidden" name="{{ field }}" value="0" />
+    <input type="checkbox" name="{{ field }}" id="{{ fid }}" value="1"{% if value == '1' %} checked{% endif %}{{ live|raw }} />
+  {% elseif option.type == 'color' %}
+    {%- set is_preset = option.presets[value] is defined -%}
+    <span class="appearance-choices appearance-colors" role="radiogroup" aria-label="{{ label }}">
+      {% for id, preset in option.presets %}
+        <label class="appearance-choice" title="{{ theme_text(preset.label, id) }}">
+          <input type="radio" name="{{ field }}" value="{{ id }}"{% if value == id %} checked{% endif %}{{ live|raw }} data-appearance-color="{{ preset.value }}" />
+          <span><i class="appearance-swatch" style="background:{{ preset.value }}"></i>{{ theme_text(preset.label, id) }}</span>
+        </label>
+      {% endfor %}
+      <label class="appearance-choice appearance-custom-color">
+        {% if option.presets %}<input type="radio" name="{{ field }}" value="custom"{% if not is_preset %} checked{% endif %}{{ live|raw }} />{% else %}<input type="hidden" name="{{ field }}" value="custom" />{% endif %}
+        <span>
+          <input type="color" name="options_custom[{{ option.name }}]" value="{{ is_preset ? option.presets[value].value : value }}" aria-label="{{ l('label_theme_custom_color') }}"{{ live|raw }} data-appearance-custom="1" />
+          {{ l('label_theme_custom_color') }}
+        </span>
+      </label>
+    </span>
+  {% elseif option.type == 'length' %}
+    {%- set unit = value|replace({'-': ''})|trim('0123456789.', 'left') -%}
+    <input type="number" name="{{ field }}" id="{{ fid }}" value="{{ value|slice(0, value|length - unit|length) }}"{% if option.min is not null %} min="{{ option.min }}"{% endif %}{% if option.max is not null %} max="{{ option.max }}"{% endif %} step="{{ option.step ?? 'any' }}" size="6"{{ live|raw }} data-appearance-unit="{{ unit ?: option.units[0] }}" />
+    <span class="appearance-unit">{{ unit ?: option.units[0] }}</span>
+  {% elseif option.type == 'number' %}
+    <input type="number" name="{{ field }}" id="{{ fid }}" value="{{ value }}"{% if option.min is not null %} min="{{ option.min }}"{% endif %}{% if option.max is not null %} max="{{ option.max }}"{% endif %} step="{{ option.step ?? 'any' }}" size="6"{{ live|raw }} />
+  {% elseif option.type == 'text' %}
+    <input type="text" name="{{ field }}" id="{{ fid }}" value="{{ value }}" size="40" maxlength="255" />
+  {% elseif option.type == 'image' %}
+    {% if image_url is defined and image_url %}
+      <span class="appearance-image"><img src="{{ image_url }}" alt="" /></span>
+    {% endif %}
+    <input type="file" name="images[{{ option.name }}]" accept=".png,.jpg,.jpeg,.gif,.webp" />
+    {% if value %}
+      <label class="inline"><input type="checkbox" name="remove_image[{{ option.name }}]" value="1" /> {{ l('button_delete') }}</label>
+    {% endif %}
+    {% if option.default and value != option.default %}
+      <label class="inline"><input type="checkbox" name="default_image[{{ option.name }}]" value="1" /> {{ l('label_default') }}</label>
+    {% endif %}
+    <em class="info">{{ l('text_theme_image_info', {max_size: number_to_human_size(max_image_size ?? 1048576)}) }}</em>
+  {% endif %}
+  {% if personal_mark ?? false %}<span class="appearance-personal" title="{{ l('text_theme_option_personal') }}">{{ sprite_icon('user', l('text_theme_option_personal'), 18, true) }}</span>{% endif %}
+  {% if rejected[option.name] is defined %}<em class="info error">{{ l('text_theme_invalid_value', {value: rejected[option.name]}) }}</em>{% endif %}
+  {% if option.description %}<em class="info">{{ theme_text(option.description) }}</em>{% endif %}
+</p>

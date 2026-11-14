@@ -79,7 +79,7 @@ final class QueryExtension extends AbstractExtension
     {
         $delim = $thousandsDelimiter ? $this->i18n->l('number.format.delimiter') : '';
         if (\is_array($object) && isset($object['custom_field']) && $object['custom_field'] instanceof CustomField) {
-            return $this->formatCustomValue($object['custom_field'], $object['value'], $html);
+            return $this->formatCustomValue($object['custom_field'], $object['value'], $html, $object['customized'] ?? null);
         }
         if (\is_array($object)) {
             $parts = array_map(fn ($o) => $this->formatObject($o, $html, $thousandsDelimiter), $object);
@@ -110,11 +110,15 @@ final class QueryExtension extends AbstractExtension
         return '00:00:00.000000' !== $d->format('H:i:s.u');
     }
 
-    private function formatCustomValue(CustomField $cf, mixed $value, bool $html): string
+    private function formatCustomValue(CustomField $cf, mixed $value, bool $html, ?object $customized = null): string
     {
         $values = array_values(array_filter((array) $value, static fn ($v) => null !== $v && '' !== (string) $v));
         if ([] === $values) {
             return '';
+        }
+        // FieldFormat#formatted_value (html): values of fields with a URL pattern and link fields are links
+        if ($html && null !== ($links = $this->ctx->customFields->linkedValueHtml($cf, $values, $customized))) {
+            return $links;
         }
         if (\count($values) > 1) {
             sort($values);
@@ -323,6 +327,11 @@ final class QueryExtension extends AbstractExtension
             case 'watcher_users':
                 return $value instanceof Principal ? '<li>'.$this->formatObject($value).'</li>' : '';
             default:
+                if (\is_array($value) && isset($value['custom_field'])) {
+                    // the listed object is the customized object of the value (URL pattern tokens)
+                    $value['customized'] ??= $item;
+                }
+
                 return $this->formatObject($value);
         }
     }

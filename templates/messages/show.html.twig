@@ -25,7 +25,7 @@
     </div>
     <p><span class="author">{{ authoring(topic.createdOn, topic.author) }}</span></p>
     <div id="message_topic_wiki" class="wiki" data-quote-reply-target="content">
-      {{ textilizable(topic.content, project) }}
+      {{ textilizable(topic.content, project, {object: topic}) }}
     </div>
     {% include 'content/_attachments_links.html.twig' with {attachments: attachments_for('Message', topic.id), author: false, thumbnails: true} %}
   </div>
@@ -62,7 +62,7 @@
           </span>
         </h4>
         <div class="wiki journal-content" data-quote-reply-target="content">
-          {{ textilizable(m.content, project) }}
+          {{ textilizable(m.content, project, {object: m}) }}
         </div>
         {% include 'content/_attachments_links.html.twig' with {attachments: attachments_for('Message', m.id), author: false, thumbnails: true} %}
       </div>

@@ -7,7 +7,7 @@
 {% for item in mail.issueAttributes(issue, user) %}<li><strong>{{ item.label }}: </strong>{{ item.value }}</li>
 {% endfor %}</ul>
 
-{{ mail.textilizable(issue.description, issue.project)|raw }}
+{{ mail.textilizable(issue.description, issue.project, issue)|raw }}
 
 {% set attachments = mail.attachmentsOf('Issue', issue.id) %}
 {% if attachments is not empty %}

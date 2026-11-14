@@ -4,49 +4,82 @@ declare(strict_types=1);
 
 namespace App\Import;
 
+use Symfony\Contracts\Service\ResetInterface;
+
 /**
- * Equivalent of Redmine's Issue#notify = false for issues created by a CSV import with
- * notifications disabled. IssueEvent has no "notify" flag, so the mailer subscriber asks
- * this registry whether an issue event must be ignored.
+ * Equivalent of Redmine's Issue#notify = false (issues created by a CSV import with notifications
+ * disabled) and of Mailer.with_deliveries(false) (project copy). IssueEvent has no "notify" flag, so
+ * the mailer subscriber asks this registry whether an event must be ignored.
  *
- * While an import runs with notifications off, every issue event is suppressed (begin/end);
- * the ids of the issues created are also remembered (suppress) for later events of the same request.
+ * While a copy runs with notifications off, every notification is suppressed (begin/end); an import with
+ * notifications off only silences the creation of its issues (beginSilentCreations/endSilentCreations);
+ * suppress() disables the notifications of one issue for the rest of the request.
+ *
+ * The state belongs to the current request: this is a regular service, reset by the kernel between two
+ * requests (kernel.reset), so nothing leaks into the next request of a long-running worker.
  */
-final class ImportNotificationSuppressor
+final class ImportNotificationSuppressor implements ResetInterface
 {
     /** @var array<int, true> */
-    private static array $issueIds = [];
-    private static int $depth = 0;
+    private array $issueIds = [];
+    private int $depth = 0;
+    private int $silentCreations = 0;
 
-    public static function suppress(int $issueId): void
+    public function suppress(int $issueId): void
     {
-        self::$issueIds[$issueId] = true;
+        $this->issueIds[$issueId] = true;
     }
 
-    public static function isSuppressed(int $issueId): bool
+    public function unsuppress(int $issueId): void
     {
-        return self::$depth > 0 || isset(self::$issueIds[$issueId]);
+        unset($this->issueIds[$issueId]);
     }
 
-    /** True while an import without notifications is running (all issue notifications suppressed) */
-    public static function isActive(): bool
+    public function isSuppressed(int $issueId): bool
     {
-        return self::$depth > 0;
+        return $this->depth > 0 || isset($this->issueIds[$issueId]);
     }
 
-    public static function begin(): void
+    /** True while an import or a copy without notifications is running (all notifications suppressed) */
+    public function isActive(): bool
     {
-        ++self::$depth;
+        return $this->depth > 0;
     }
 
-    public static function end(): void
+    public function begin(): void
     {
-        self::$depth = max(0, self::$depth - 1);
+        ++$this->depth;
     }
 
-    public static function reset(): void
+    public function end(): void
     {
-        self::$issueIds = [];
-        self::$depth = 0;
+        $this->depth = max(0, $this->depth - 1);
+    }
+
+    /**
+     * Issue#notify = false for the issues created meanwhile (CSV import with notifications disabled): their
+     * "issue added" notification is skipped. Like in Redmine nothing else is: the journals written on other
+     * issues during the import (e.g. "Subtask added" on a parent) are notified as usual.
+     */
+    public function beginSilentCreations(): void
+    {
+        ++$this->silentCreations;
+    }
+
+    public function endSilentCreations(): void
+    {
+        $this->silentCreations = max(0, $this->silentCreations - 1);
+    }
+
+    public function areCreationsSilent(): bool
+    {
+        return $this->silentCreations > 0;
+    }
+
+    public function reset(): void
+    {
+        $this->issueIds = [];
+        $this->depth = 0;
+        $this->silentCreations = 0;
     }
 }

@@ -17,3 +17,23 @@ framework:
         # Namespaced pools use the above "app" backend by default
         #pools:
             #my.dedicated.cache: null
+
+        pools:
+            # App\Plugin\PluginSchema: "the tables of this plugin exist", remembered for a few minutes
+            cache.plugin_schema:
+                adapter: cache.app
+                default_lifetime: 300
+            # App\Service\Text\CachedMarkupConverter: converted markup (setting "Cache formatted text")
+            cache.formatted_text:
+                adapter: cache.app
+                default_lifetime: 604800
+
+when@test:
+    framework:
+        cache:
+            pools:
+                # every test starts on a fresh database: nothing learnt from the previous one may be remembered
+                cache.plugin_schema:
+                    adapter: cache.adapter.array
+                cache.formatted_text:
+                    adapter: cache.adapter.array

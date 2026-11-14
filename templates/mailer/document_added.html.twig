@@ -2,5 +2,5 @@
 {% block content %}
 <a href="{{ document_url }}">{{ document.title }}</a> ({{ document.category.name }})<br />
 <br />
-{{ mail.textilizable(document.description, document.project)|raw }}
+{{ mail.textilizable(document.description, document.project, document)|raw }}
 {% endblock %}

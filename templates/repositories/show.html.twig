@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 {% block header_tags %}{% include 'repositories/_header_tags.html.twig' %}
-{% if can_view_changesets and supports_history %}<link rel="alternate" type="application/atom+xml" title="ATOM" href="{{ repo_url('revisions', repository) }}.atom" />{% endif %}
+{% if can_view_changesets and supports_history %}<link rel="alternate" type="application/atom+xml" title="ATOM" href="{{ repo_url('revisions', repository) }}.atom{% if atom_key|default(null) %}?key={{ atom_key }}{% endif %}" />{% endif %}
 {% endblock %}
 {% block content %}
 <div class="contextual">
@@ -33,7 +33,7 @@
   </p>
   {% if supports_history %}
   <p class="other-formats hide-when-print">{{ l('label_export_to') }}
-  <span><a class="atom" rel="nofollow" href="{{ repo_url('revisions', repository) }}.atom">Atom</a></span>
+  <span><a class="atom" rel="nofollow" href="{{ repo_url('revisions', repository) }}.atom{% if atom_key|default(null) %}?key={{ atom_key }}{% endif %}">Atom</a></span>
   </p>
   {% endif %}
 {% endif %}

@@ -26,6 +26,10 @@
         </div>
         </div>
         <p><label for="time_entry_comments">{{ l('field_comments') }}</label><input size="60" maxlength="1024" type="text" value="{{ time_entry.comments ?? '' }}" name="time_entry[comments]" id="time_entry_comments" /></p>
+        {% import 'my/_macros.html.twig' as cfm %}
+        {% for field in time_entry_custom_fields ?? [] %}
+        <p>{{ issue_cf_tag('time_entry', field, time_entry_custom_values[field.id] ?? null, issue.project) }}</p>
+        {% endfor %}
     </fieldset>
     {% endif %}
     {% if notes_addable %}
@@ -36,6 +40,9 @@
       {% endif %}
       {{ call_hook('view_issues_edit_notes_bottom', {issue: issue, notes: notes ?? '', form: null}) }}
       </fieldset>
+    {% endif %}
+    {% if not attributes_editable and allowed_to('add_issue_watchers', issue.project) %}
+    {% include 'common/_mention_data_source.html.twig' with {object_type: 'issue', object_id: issue.id, project: issue.project} only %}
     {% endif %}
     {% if attachments_addable %}
       <fieldset id="add_attachments"><legend>{{ l('label_attachment_plural') }}</legend>

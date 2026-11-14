@@ -1,0 +1,5 @@
+services:
+    # asked for by the menu conditions of the plugin definition (KanbanPlugin::register)
+    Symine\Kanban\Board\BoardAccess:
+        public: true
+        autowire: true

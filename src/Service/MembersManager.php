@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\Group;
+use App\Entity\GroupAnonymous;
+use App\Entity\GroupNonMember;
 use App\Entity\Member;
 use App\Entity\MemberRole;
 use App\Entity\Principal;
 use App\Entity\Project;
 use App\Entity\Role;
 use App\Entity\User;
+use App\I18n\Localizer;
 use App\Security\Authorization;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -21,7 +24,37 @@ final class MembersManager
         private readonly EntityManagerInterface $em,
         private readonly Authorization $auth,
         private readonly MembershipService $memberships,
+        private readonly ?Localizer $i18n = null,
     ) {
+    }
+
+    /**
+     * Principal#name: the built-in groups (GroupAnonymous, GroupNonMember) are named by a label
+     * (label_group_anonymous / label_group_non_member), in the language of the current user.
+     */
+    public function principalName(Principal $principal): string
+    {
+        if (null !== $this->i18n) {
+            if ($principal instanceof GroupAnonymous) {
+                return $this->i18n->l('label_group_anonymous');
+            }
+            if ($principal instanceof GroupNonMember) {
+                return $this->i18n->l('label_group_non_member');
+            }
+        }
+
+        return (string) $principal->getName();
+    }
+
+    /** Principal.fields_for_order_statement ("type DESC"): users, then the built-in groups, then the groups */
+    public static function principalTypeRank(Principal $principal): int
+    {
+        return match (true) {
+            $principal instanceof GroupNonMember => 1,
+            $principal instanceof GroupAnonymous => 2,
+            $principal instanceof Group => 3,
+            default => 0,
+        };
     }
 
     /** @return list<Role> Role.givable sorted */
@@ -173,7 +206,9 @@ final class MembersManager
         }
         foreach ($principalIds as $pid) {
             $principal = null !== $pid && '' !== (string) $pid ? $this->em->find(Principal::class, (int) $pid) : null;
-            if (null === $principal || (!$principal instanceof User && !$principal instanceof Group) || $principal instanceof \App\Entity\GroupBuiltin) {
+            // any principal can be a member, including the built-in groups (their roles replace the
+            // Anonymous / Non member role on the project); the anonymous user itself is not a principal to add
+            if (null === $principal || (!$principal instanceof User && !$principal instanceof Group) || $principal instanceof \App\Entity\AnonymousUser) {
                 $errors[] = $l ? $l('field_principal').' '.$l('activerecord.errors.messages.blank') : 'User or Group cannot be blank';
                 continue;
             }
@@ -190,6 +225,69 @@ final class MembersManager
         }
 
         return ['members' => $members, 'errors' => array_values(array_unique($errors))];
+    }
+
+    /**
+     * MembersController#create from params[:membership] (user_ids or user_id, role_ids). Nothing is attempted
+     * for a form posted without membership; an API request always is, so that it gets its validation errors.
+     *
+     * @param array<string, mixed> $data
+     *
+     * @return array{members: list<Member>, errors: list<string>}
+     */
+    public function createFromParams(Project $project, array $data, bool $api, ?callable $l = null): array
+    {
+        $userIds = $data['user_ids'] ?? $data['user_id'] ?? [];
+        $userIds = \is_array($userIds) ? array_values(array_filter($userIds, static fn ($v) => '' !== (string) $v)) : [$userIds];
+        $roleIds = (array) ($data['role_ids'] ?? []);
+        if (!$api && [] === $data) {
+            return ['members' => [], 'errors' => []];
+        }
+
+        return $this->create($project, $userIds, $roleIds, null, $l);
+    }
+
+    /**
+     * MembersController#update from params[:membership]: replaces the roles the user may manage. A membership
+     * cannot be left without any role, unless it still has inherited ones.
+     *
+     * @param array<string, mixed> $data
+     *
+     * @return list<string> errors (empty when saved, or when no role_ids were submitted)
+     */
+    public function updateRoles(Member $member, array $data, ?callable $l = null): array
+    {
+        if (!\array_key_exists('role_ids', $data)) {
+            return [];
+        }
+        $roles = $this->editableRoleIds($member, $member->project, (array) $data['role_ids']);
+        $hasInherited = false;
+        foreach ($member->memberRoles as $mr) {
+            $hasInherited = $hasInherited || null !== $mr->inheritedFrom;
+        }
+        if ([] === $roles && !$hasInherited) {
+            return [$l ? $l('field_role').' '.$l('activerecord.errors.messages.empty') : 'Role cannot be empty'];
+        }
+        $this->memberships->setRoles($member, $roles);
+
+        return [];
+    }
+
+    /** MembersController#destroy: removes the membership when Member#deletable?, tells whether it was removed */
+    public function destroyIfDeletable(Member $member): bool
+    {
+        if (!$this->isDeletable($member)) {
+            return false;
+        }
+        $this->destroy($member);
+
+        return true;
+    }
+
+    /** @return list<Member> project.memberships in the order of the REST API and of the CSV export (by id) */
+    public function memberships(Project $project): array
+    {
+        return $this->em->createQuery('SELECT m FROM App\Entity\Member m WHERE m.project = :p ORDER BY m.id')->setParameter('p', $project)->getResult();
     }
 
     /** Member#destroy with before_destroy callbacks */
@@ -218,7 +316,7 @@ final class MembersManager
     {
         $user = $this->auth->user($user);
         $dql = 'FROM App\Entity\Principal pr WHERE pr.status = 1 AND (pr INSTANCE OF App\Entity\User OR pr INSTANCE OF App\Entity\Group)
-                AND pr NOT INSTANCE OF App\Entity\AnonymousUser AND pr NOT INSTANCE OF App\Entity\GroupBuiltin
+                AND pr NOT INSTANCE OF App\Entity\AnonymousUser
                 AND pr.id NOT IN (SELECT IDENTITY(m.principal) FROM App\Entity\Member m WHERE m.project = :p)';
         $params = ['p' => $project->id];
         if (!$user->admin) {
@@ -229,7 +327,8 @@ final class MembersManager
             }
             if (!$all) {
                 $visible = $this->auth->visibleProjectIds($user);
-                $dql .= ' AND (pr INSTANCE OF App\Entity\Group OR pr.id = :me OR pr.id IN (SELECT IDENTITY(m2.principal) FROM App\Entity\Member m2 WHERE '.Authorization::in('IDENTITY(m2.project)', $visible).'))';
+                // Principal.visible: oneself and the members (users and groups alike) of the visible projects
+                $dql .= ' AND (pr.id = :me OR pr.id IN (SELECT IDENTITY(m2.principal) FROM App\Entity\Member m2 WHERE '.Authorization::in('IDENTITY(m2.project)', $visible).'))';
                 $params['me'] = (int) $user->id;
             }
         }
@@ -250,26 +349,184 @@ final class MembersManager
         }
         $count = (int) $this->em->createQuery('SELECT COUNT(pr.id) '.$dql)->setParameters($params)->getSingleScalarResult();
         $list = $this->em->createQuery('SELECT pr '.$dql)->setParameters($params)->getResult();
-        usort($list, static fn (Principal $a, Principal $b) => [$a instanceof Group ? 1 : 0, mb_strtolower($a->getName())] <=> [$b instanceof Group ? 1 : 0, mb_strtolower($b->getName())]);
+        usort($list, fn (Principal $a, Principal $b) => [self::principalTypeRank($a), mb_strtolower($this->principalName($a)), $a->id] <=> [self::principalTypeRank($b), mb_strtolower($this->principalName($b)), $b->id]);
 
         return [\array_slice($list, $offset, $limit), $count];
     }
 
-    /** @return list<Member> project memberships sorted like Member.sorted (first role position, then principal) */
+    /**
+     * Project memberships (project.memberships: users, groups and built-in groups) sorted like Member.sorted
+     * (first role position, then principal).
+     *
+     * @return list<Member>
+     */
     public function projectMembers(Project $project, bool $activeOnly = true): array
     {
-        $dql = 'SELECT m, mr, r, pr FROM App\Entity\Member m JOIN m.memberRoles mr JOIN mr.role r JOIN m.principal pr WHERE m.project = :p AND pr NOT INSTANCE OF App\Entity\GroupBuiltin';
+        $dql = 'SELECT m, mr, r, pr FROM App\Entity\Member m JOIN m.memberRoles mr JOIN mr.role r JOIN m.principal pr WHERE m.project = :p';
         if ($activeOnly) {
             $dql .= ' AND pr.status = 1';
         }
         $members = $this->em->createQuery($dql)->setParameter('p', $project)->getResult();
-        usort($members, static function (Member $a, Member $b) {
+        usort($members, function (Member $a, Member $b) {
             $ra = $a->getRoles()[0]->position ?? 0;
             $rb = $b->getRoles()[0]->position ?? 0;
 
-            return [$ra, $a->principal instanceof Group ? 1 : 0, mb_strtolower($a->principal->getName())] <=> [$rb, $b->principal instanceof Group ? 1 : 0, mb_strtolower($b->principal->getName())];
+            return [$ra, self::principalTypeRank($a->principal), mb_strtolower($this->principalName($a->principal)), $a->id]
+                <=> [$rb, self::principalTypeRank($b->principal), mb_strtolower($this->principalName($b->principal)), $b->id];
         });
 
         return $members;
+    }
+
+    // --- members list (MembersHelper) ---------------------------------------------------------
+
+    public const array LIST_PARAMS = ['members_page', 'member_name', 'member_role_id', 'member_status'];
+
+    /**
+     * MembersHelper#members_list_params: the params that define the members list currently displayed
+     * (pagination and filters), preserved across the member creation, edition and deletion requests.
+     *
+     * @param array<string, mixed> $params
+     *
+     * @return array<string, string>
+     */
+    public static function listParams(array $params): array
+    {
+        $out = [];
+        foreach (self::LIST_PARAMS as $name) {
+            $value = $params[$name] ?? null;
+            if (\is_scalar($value) && '' !== trim((string) $value)) {
+                $out[$name] = (string) $value;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * MembersHelper#members_scope: memberships of the project matching the filters of the request, sorted
+     * like Member.sorted. Users who cannot manage the members only see the active ones.
+     *
+     * @param array<string, mixed> $params member_name, member_role_id, member_status
+     *
+     * @return list<Member>
+     */
+    public function filteredMembers(Project $project, array $params, ?User $user = null): array
+    {
+        $params = self::listParams($params);
+        $canManage = $this->auth->allowedTo('manage_members', $project, $user);
+        $status = $canManage ? ($params['member_status'] ?? '') : (string) Principal::STATUS_ACTIVE;
+        $name = trim($params['member_name'] ?? '');
+        $roleId = (int) ($params['member_role_id'] ?? 0);
+        $tokens = '' === $name ? [] : array_values(array_filter(preg_split('/\s+/', mb_strtolower($name)) ?: [], static fn ($t) => '' !== $t));
+
+        return array_values(array_filter($this->projectMembers($project, false), static function (Member $m) use ($status, $name, $roleId, $tokens) {
+            $principal = $m->principal;
+            if ('' !== $status && 'all' !== $status && $principal->status !== (int) $status) {
+                return false;
+            }
+            if ($roleId > 0 && [] === array_filter($m->getRoles(), static fn (Role $r) => $r->id === $roleId)) {
+                return false;
+            }
+            if ('' === $name) {
+                return true;
+            }
+            // Principal.like: login or e-mail address containing the string, or every word found in the names
+            $needle = mb_strtolower($name);
+            if (str_contains(mb_strtolower((string) $principal->login), $needle)) {
+                return true;
+            }
+            if ($principal instanceof User) {
+                foreach ($principal->emailAddresses as $address) {
+                    if (str_contains(mb_strtolower((string) $address->address), $needle)) {
+                        return true;
+                    }
+                }
+            }
+            foreach ($tokens as $token) {
+                if (!str_contains(mb_strtolower((string) $principal->firstname), $token) && !str_contains(mb_strtolower((string) $principal->lastname), $token)) {
+                    return false;
+                }
+            }
+
+            return [] !== $tokens;
+        }));
+    }
+
+    /**
+     * Variables of members/_members.html.twig: MembersHelper#paginate_members(members_scope(project)).
+     *
+     * @param array<string, mixed> $params         request parameters (filters, members_page, per_page)
+     * @param list<int>            $perPageOptions Setting.per_page_options_array
+     * @param bool                 $indexPage      true on MembersController#index, false in the project settings
+     *
+     * @return array<string, mixed>
+     */
+    public function listView(Project $project, array $params, array $perPageOptions, bool $indexPage = false, ?User $user = null): array
+    {
+        $listParams = self::listParams($params);
+        $canManage = $this->auth->allowedTo('manage_members', $project, $user);
+        if (!$canManage) {
+            unset($listParams['member_status']);
+        }
+        $all = $this->filteredMembers($project, $listParams, $user);
+        $count = \count($all);
+        $perPage = (int) (\is_scalar($params['per_page'] ?? null) ? $params['per_page'] : 0);
+        $perPageGiven = \in_array($perPage, $perPageOptions, true);
+        if (!$perPageGiven) {
+            $perPage = $perPageOptions[0] ?? 25;
+        }
+        $pages = max(1, (int) ceil($count / $perPage));
+        $page = max(1, min($pages, (int) ($listParams['members_page'] ?? 1)));
+        $offset = ($page - 1) * $perPage;
+        $query = $listParams;
+        unset($query['members_page']);
+        if ($perPageGiven) {
+            $query['per_page'] = (string) $perPage;
+        }
+
+        return [
+            'members' => \array_slice($all, $offset, $perPage),
+            'members_manager' => $this,
+            'member_count' => $count,
+            'member_pager' => ['page' => $page, 'pages' => $pages, 'count' => $count, 'limit' => $perPage, 'offset' => $offset, 'per_page_options' => $perPageOptions],
+            // members_list_params: added to the new/edit/delete links
+            'member_list_params' => $listParams,
+            // query of the list links (filters and per_page, without the page)
+            'member_list_query' => $query,
+            'member_filters' => [
+                'member_name' => $listParams['member_name'] ?? '',
+                'member_role_id' => $listParams['member_role_id'] ?? '',
+                'member_status' => $listParams['member_status'] ?? '',
+            ],
+            'member_role_options' => $this->givableRoles(),
+            'members_route' => $indexPage ? 'project_members' : 'project_settings',
+            'members_route_params' => $indexPage ? ['project_id' => $project->identifier] : ['id' => $project->identifier, 'tab' => 'members'],
+        ];
+    }
+
+    /**
+     * MembersHelper#members_to_csv rows: one line per role of every membership of the project.
+     *
+     * @param callable(string): string $l translator
+     *
+     * @return list<list<string>>
+     */
+    public function csvRows(Project $project, callable $l): array
+    {
+        $rows = [[$l('field_principal'), $l('field_type'), $l('label_role'), $l('label_project')]];
+        $members = $this->em->createQuery('SELECT m FROM App\Entity\Member m WHERE m.project = :p ORDER BY m.id')->setParameter('p', $project)->getResult();
+        foreach ($members as $member) {
+            foreach ($member->getRoles() as $role) {
+                $rows[] = [
+                    $this->principalName($member->principal),
+                    $member->principal instanceof Group ? $l('label_group') : $l('label_user'),
+                    (string) $role->name,
+                    (string) $member->project->name,
+                ];
+            }
+        }
+
+        return $rows;
     }
 }

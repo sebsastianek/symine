@@ -69,6 +69,24 @@ final class WorkflowRestrictionsTest extends IssuesWebTestCase
         self::assertSame('Renamed', $issue->subject);
     }
 
+    /** Custom fields are named by their id in the workflow rules: a read-only one is not on the form and keeps its value */
+    public function testReadOnlyCustomFieldIsNotEditable(): void
+    {
+        // Developer / Bug / In Progress (#13, Database = PostgreSQL)
+        $this->addFieldRule('1', 'readonly', 4, 1, 2);
+        $value = fn (): string => (string) $this->em->getConnection()->fetchOne("SELECT value FROM custom_values WHERE customized_type = 'Issue' AND customized_id = 13 AND custom_field_id = 1");
+        $before = $value();
+        self::assertNotSame('Oracle', $before);
+
+        $this->login('dlopper');
+        $crawler = $this->client->request('GET', '/issues/13/edit');
+        self::assertCount(0, $crawler->filter('#issue_custom_field_values_1'), 'read-only custom field is not rendered');
+        self::assertCount(1, $crawler->filter('#issue_custom_field_values_2'), 'a custom field without a rule stays');
+
+        $this->updateIssue(13, ['custom_field_values' => ['1' => 'Oracle'], 'notes' => 'trying to change the database']);
+        self::assertSame($before, $value());
+    }
+
     public function testNotesOnlyUserCannotChangeAttributes(): void
     {
         $this->login('rhill');

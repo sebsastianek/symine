@@ -14,7 +14,7 @@
     <li>{{ l('field_mail') }}: {% for e in emails %}<a href="mailto:{{ e }}">{{ e }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</li>
   {% endif %}
   {% for cv in custom_values %}
-    <li class="cf_{{ cv.field.id }}">{{ cv.field.name }}: {{ cv.value }}</li>
+    <li class="cf_{{ cv.field.id }}">{{ cv.field.name }}: {{ issue_cf_value_html(cv.field, cv.raw, null, edited_user) }}</li>
   {% endfor %}
     <li>{{ l('label_registered_on') }}: {{ format_date(edited_user.createdOn) }}</li>
   {% if edited_user.lastLoginOn %}

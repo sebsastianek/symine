@@ -1,0 +1,5 @@
+{% extends '@Symine/base.html.twig' %}
+{% block theme_head_tags %}<meta name="fx-theme" content="{{ current_theme().id }}" />{% endblock %}
+{% block layout_footer %}
+<div id="footer" class="fx-footer">Fixture footer: {{ theme_option('tagline') }} / {{ theme_option('density') }}{% include 'common/_fx_partial.html.twig' %}</div>
+{% endblock %}

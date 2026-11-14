@@ -30,7 +30,7 @@
   <p>{% if news.summary is not empty %}<em>{{ news.summary }}</em><br />{% endif %}
   <span class="author">{{ authoring(news.createdOn, news.author) }}</span></p>
   <div class="wiki">
-  {{ textilizable(news.description, project) }}
+  {{ textilizable(news.description, project, {object: news}) }}
   </div>
   {% include 'content/_attachments_links.html.twig' with {attachments: attachments, deletable: allowed_to('manage_news', project), author: true} %}
 </div>

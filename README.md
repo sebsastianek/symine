@@ -4,7 +4,7 @@ Symine is a rewrite of [Redmine](https://www.redmine.org) (7.0) on **Symfony 7.4
 
 It aims for functional parity with Redmine:
 - the **same database schema** (column for column), so an existing Redmine database can be migrated 1:1;
-- the **same URLs, HTML markup and CSS/JS**, so it looks and behaves like Redmine;
+- the **same URLs, HTML markup and CSS/JS**, so it looks and behaves like Redmine (a modern theme is available as an option);
 - the **same REST API** (JSON/XML), so existing API clients and `rdm-mailhandler` keep working.
 
 The original Redmine source is used as the reference implementation. Clone it into `reference/redmine` to verify behaviour or re-sync assets and locales:
@@ -63,6 +63,16 @@ docker compose -f docker-compose.yml exec symine bin/console symine:install --la
 ```
 Attachments are stored in the `files` volume (`/srv/symine/var/files`), the database in the `db` volume.
 
+Performance of the stack:
+- **PHP**: OPcache never revalidates files and preloads the classes of the compiled container when php-fpm starts
+  (`opcache.preload`, `config/preload.php`). Restart the `symine` container after anything that changes the code or
+  the container: installing a plugin, `bin/console cache:clear`.
+- **Static files** (`/assets`, `/plugin_assets`) are sent with `Cache-Control: public, max-age=3600`: their URLs
+  carry no version, so browsers keep them for an hour and then revalidate (304). After an upgrade a browser may
+  therefore use the previous stylesheets and scripts for up to an hour (a forced reload fixes it at once).
+- **Cache formatted text** (*Administration → Settings → General*, off by default as in Redmine) keeps the HTML
+  conversion of texts longer than 2 KB (wiki pages, long descriptions) in the application cache (`cache.app`,
+  the filesystem by default; see `config/packages/cache.yaml` to use Redis).
 Migrating an existing Redmine into the stack: the migration reads any database that the `symine` container can reach.
 The following was tested with a PostgreSQL copy of a Redmine 7.0 database in the stack's `db` service:
 ```
@@ -84,6 +94,25 @@ The migration replaces the data of the Symine database, so you can run it right 
 keep their passwords. Background jobs to schedule with cron in the `symine` container: `symine:receive-imap` or
 `symine:receive-pop3` (incoming e-mail), `symine:send-reminders`, and `symine:fetch-changesets`.
 
+## Themes
+Symine keeps Redmine's interface as the default theme and adds **Strata**, a modern one (side navigation, light and
+dark modes, accent colours, density, logo), switchable in *Administration → Themes*. Each person can set the
+personal options of the theme in *My account → Appearance* or from the switcher in the top menu.
+
+Themes are directories in `themes/`. Redmine themes work unchanged; Symine themes add a `theme.yaml` with colour
+schemes, typed options, inheritance and Twig template overrides. See [docs/THEMES.md](docs/THEMES.md).
+
+## Plugins
+Optional features are plugins in `plugins/`: Symfony bundles using Symine's port of Redmine's plugin API
+([docs/PLUGINS.md](docs/PLUGINS.md)). The core works the same with or without them.
+
+- **Kanban** ([plugins/symine-kanban](plugins/symine-kanban/README.md)): Trello-like boards over the issues of one
+  or several projects. Issue statuses are mapped to columns (a status that is neither mapped nor hidden on purpose
+  shows in an "Unmapped" column, so nothing is lost), cards are dragged within what the workflow allows, with
+  swimlanes, work-in-progress limits and manual ordering. Install: `bin/console symine:plugins:migrate symine_kanban`,
+  then enable the *Kanban* module on a project.
+- **Hello** (`plugins/symine-hello`, dev and test only): the example plugin of the API documentation.
+
 ## Console commands
 | Command | Purpose |
 |---|---|
@@ -93,14 +122,15 @@ keep their passwords. Background jobs to schedule with cron in the `symine` cont
 | `symine:send-reminders` | due-date reminder e-mails |
 | `symine:user:create`, `symine:user:password` | user administration |
 | `symine:locales:import` | regenerate `translations/` from Redmine locales |
+| `symine:themes:list`, `symine:themes:lint`, `symine:themes:create`, `symine:themes:use` | installed themes, manifest checks, scaffolding, site theme |
 
 ## Development
 - Architecture and conventions: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Tests (see [docs/TEST_COVERAGE.md](docs/TEST_COVERAGE.md) for the mapping to Redmine's own test suite):
-  - `bin/test`: PHPUnit, 1704 tests (unit/integration/functional, REST API in JSON and XML, security matrix, CSRF, private-data leaks).
+  - `bin/test`: PHPUnit, 2272 tests (unit/integration/functional, REST API in JSON and XML, security matrix, CSRF, private-data leaks).
   - Parity tests compare Symine with behaviour recorded from a real Redmine on the same data: `tests/Integration/RedmineParityTest.php`, `tests/Query/IssueQueryParityTest.php`, `tests/Parity/`. To regenerate the recorded data, run `tests/fixtures/seed_redmine.rb` and `tests/fixtures/redmine_expectations.rb` inside a Redmine container.
   - `SYMINE_REFERENCE_URL=http://localhost:3300 bin/test --differential`: live API comparison against a running Redmine.
-  - `bin/test-e2e`: Playwright end-to-end suite, 306 browser tests driving Google Chrome (see [e2e/README.md](e2e/README.md)).
+  - `bin/test-e2e`: Playwright end-to-end suite, 408 browser tests driving Google Chrome, from single screens to multi-user scenarios (see [e2e/README.md](e2e/README.md)).
   - `bin/test-real-services [--e2e]`: LDAP, IMAP/POP3, SMTP and webhook tests against real servers started in Docker.
 - Frontend assets come from Redmine: `bin/sync-redmine-assets`.
 
@@ -113,6 +143,13 @@ keep their passwords. Background jobs to schedule with cron in the `symine` cont
   - Member and group dialogs are full pages rather than modals.
   - The Gantt PNG uses DejaVu Sans only, so CJK subjects don't render.
   - File-format issue custom fields have no upload widget.
+  - *Administration → Workflow* opens the editor for the first role and tracker at once and reloads it when
+    another one is selected; Redmine shows an empty page until *Edit* is pressed.
+  - The account menu has an *Appearance* entry: people may pick their own theme unless an administrator turns
+    that off in *Administration → Themes*. Redmine has one theme for everybody.
+- **Text formatting:** Textile is rendered by a PHP Textile parser with Redmine's rules on top, not by a port of Redmine's RedCloth3, so some edge cases differ (image alignment, the language of `@|lang|code@`). PDF thumbnails and pandoc previews of attachments are not available.
+- **Login:** failed logins are throttled (10 attempts per 5 minutes), which Redmine does not do.
+- **Project deletion** runs in the request instead of a background job.
 - **Repositories:** need `SYMINE_SCM_<NAME>_PATH_REGEXP` to be set before an SCM can be used (like Redmine 7's `scm_*_path_regexp`).
 
 ## License

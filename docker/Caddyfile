@@ -1,6 +1,18 @@
 :80 {
     root * /srv/symine/public
     encode zstd gzip
+
+    # Files of the core (/assets) and of the plugins (/plugin_assets). Their URLs carry no version, so they cannot
+    # be kept "forever": a browser reuses them for an hour without asking, then asks again with the ETag of the
+    # file and gets a 304 when it has not changed. The price is that, after an upgrade, a browser may run the
+    # stylesheets and scripts of the previous version for up to an hour. Only files that exist get the header:
+    # everything else goes to PHP, which sets its own.
+    @static {
+        path /assets/* /plugin_assets/*
+        file
+    }
+    header @static Cache-Control "public, max-age=3600"
+
     php_fastcgi symine:9000
     file_server
 }

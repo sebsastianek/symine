@@ -13,7 +13,7 @@ security:
 
     firewalls:
         dev:
-            pattern: ^/(_profiler|_wdt|assets|build|favicon\.ico)
+            pattern: ^/(_profiler|_wdt|assets|build|favicon\.ico|themes/)
             security: false
         api:
             request_matcher: App\Security\ApiRequestMatcher
@@ -41,9 +41,11 @@ security:
                 csrf_token_id: authenticate
                 default_target_path: my_page
                 use_referer: false
+            # Redmine autologin ("Stay logged in"): tokens of the tokens table (action "autologin"), issued and
+            # accepted only while the "autologin" setting is enabled, valid for that number of days and deleted
+            # on logout (App\Security\AutologinHandler)
             remember_me:
-                secret: '%kernel.secret%'
-                lifetime: 31536000
+                service: App\Security\AutologinHandler
                 remember_me_parameter: autologin
                 name: autologin
                 path: /

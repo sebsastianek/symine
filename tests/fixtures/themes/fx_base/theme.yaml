@@ -1,0 +1,68 @@
+# Test fixture: a theme using every feature of the manifest.
+name: Fixture base
+description: Fixture theme.
+version: 2.1.0
+author: Tests
+swatch: ['#112233', '#ffffff']
+body_classes: [fx]
+stylesheets:
+  - stylesheets/application.css
+javascripts:
+  - javascripts/theme.js
+tokens:
+  fx-gap: 12px
+  oc-gray-4: '#445566'
+color_schemes:
+  light:
+    label: {en: Light, pl: Jasny}
+    tokens: {fx-paper: '#ffffff'}
+  dark:
+    label: Dark
+    dark: true
+    tokens: {fx-paper: '#101010'}
+options:
+  accent:
+    type: color
+    label: {en: Accent, pl: Akcent}
+    token: fx-accent
+    default: teal
+    user: true
+    presets:
+      teal: {label: Teal, value: '#0e7566', schemes: {dark: '#5fd4bd'}}
+      blue: '#2456c9'
+  density:
+    type: choice
+    group: Layout
+    default: comfortable
+    user: true
+    quick: true
+    choices:
+      comfortable: Comfortable
+      compact:
+        label: Compact
+        tokens: {fx-gap: 4px}
+        schemes:
+          dark: {fx-paper: '#000000'}
+  wide:
+    type: toggle
+    user: true
+    tokens: {fx-max: none}
+  radius:
+    type: length
+    token: fx-radius
+    default: 4px
+    min: 0
+    max: 10
+    units: [px, rem]
+  columns:
+    type: number
+    token: fx-columns
+    default: 2
+    min: 1
+    max: 4
+  tagline:
+    type: text
+    token: fx-tagline
+  logo:
+    type: image
+    token: fx-logo

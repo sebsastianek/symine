@@ -2,7 +2,7 @@
 {% block header_tags %}
 <link rel="alternate" type="application/atom+xml" title="{{ issue.project.name }} - {{ issue.tracker.name }} #{{ issue.id }}: {{ issue.subject }}" href="{{ path('issue_show', {id: issue.id, _format: 'atom'}) }}" />
 <script src="/assets/context_menu.js"></script>
-<link rel="stylesheet" href="/assets/context_menu.css" media="screen" />
+<link rel="stylesheet" href="{{ stylesheet_path('context_menu') }}" media="screen" />
 <script src="/assets/attachments.js"></script>
 {% endblock %}
 {% block content %}
@@ -107,7 +107,7 @@
 
   <p><strong>{{ l('field_description') }}</strong></p>
   <div id="issue_description_wiki" class="wiki" data-quote-reply-target="content">
-  {{ textilizable(issue.description, issue.project) }}
+  {{ textilizable(issue.description, issue.project, {object: issue}) }}
   </div>
 </div>
 {% endif %}
@@ -117,7 +117,7 @@
   {% include 'attachments/_links.html.twig' with {container_type: 'issues', container_id: issue.id, attachments: attachments, editable: is_editable and attachments_deletable, deletable: attachments_deletable, author: true, thumbnails: true, journals: journals_by_attachment} %}
 {% endif %}
 
-{% for cv in full_custom_values %}{% set v = issue_cf_value_html(cv.field, cv.value, issue.project) %}{% if v %}<div class="{{ cv.field.fieldFormat }}_cf cf_{{ cv.field.id }} attribute"><hr /><p><strong>{{ cv.field.name }}</strong></p><div class="value">{{ v }}</div></div>{% endif %}{% endfor %}
+{% for cv in full_custom_values %}{% set v = issue_cf_value_html(cv.field, cv.value, issue.project) %}{% if v %}<div class="{{ cv.field.fieldFormat }}_cf cf_{{ cv.field.id }} attribute"><hr /><p><strong>{{ cv.field.name }}</strong></p><div class="value">{{ v|raw }}</div></div>{% endif %}{% endfor %}
 
 {{ call_hook('view_issues_show_description_bottom', {issue: issue}) }}
 

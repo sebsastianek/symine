@@ -1,0 +1,16 @@
+{
+    "name": "symine/kanban-plugin",
+    "description": "Kanban boards for Symine: Trello-like boards over the issues of one or several projects, with issue statuses mapped to columns",
+    "type": "symine-plugin",
+    "license": "GPL-2.0-or-later",
+    "autoload": {
+        "psr-4": {
+            "Symine\\Kanban\\": "src/"
+        }
+    },
+    "extra": {
+        "symine": {
+            "bundle": "Symine\\Kanban\\KanbanPlugin"
+        }
+    }
+}

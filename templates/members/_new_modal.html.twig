@@ -1,6 +1,6 @@
 <h3 class="title">{{ l('label_member_new') }}</h3>
 
-<form class="new_membership" id="new_membership" action="{{ path('member_create', {project_id: project.identifier}) }}" data-remote="true" method="post">{{ csrf_field() }}
+<form class="new_membership" id="new_membership" action="{{ path('member_create', {project_id: project.identifier}|merge(member_list_params|default({}))) }}" data-remote="true" method="post">{{ csrf_field() }}
   {% include 'members/_new_form.html.twig' %}
   <p class="buttons">
     <input type="submit" name="commit" value="{{ l('button_add') }}" id="member-add-submit" data-disable-with="{{ l('button_add') }}" />

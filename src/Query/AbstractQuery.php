@@ -1067,7 +1067,7 @@ abstract class AbstractQuery
         if (isset($this->memo['issue_custom_fields'])) {
             return $this->memo['issue_custom_fields'];
         }
-        $all = $this->ctx->em->getRepository(IssueCustomField::class)->findBy([], ['position' => 'ASC']);
+        $all = $this->ctx->customFields->fieldsOf(IssueCustomField::class);
         if (null !== $this->project) {
             $ids = array_map('intval', $this->ctx->conn()->fetchFirstColumn(
                 'SELECT DISTINCT cfp.custom_field_id FROM custom_fields_projects cfp JOIN projects p ON p.id = cfp.project_id WHERE p.lft >= ? AND p.rgt <= ?',

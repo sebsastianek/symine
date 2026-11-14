@@ -1,7 +1,7 @@
 {#- projects/_form.html.erb. Needs form_project and the variables of ProjectsController::formVars -#}
 {%- set p = form_project -%}
 {% if errors is defined and errors|length > 0 %}
-<div id="errorExplanation"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+<div id="errorExplanation">{{ sprite_icon('warning') }}<ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
 {% endif %}
 
 <div class="box tabular">

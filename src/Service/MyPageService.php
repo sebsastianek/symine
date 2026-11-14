@@ -222,6 +222,21 @@ final class MyPageService
         $user->getPref()->set('my_page_settings', $all);
     }
 
+    /**
+     * MyController#update_page: merges the submitted settings into those of each block, then saves.
+     *
+     * @param array<array-key, mixed> $settings block => settings (anything that is not a hash is ignored)
+     */
+    public function updateBlocksSettings(User $user, array $settings): void
+    {
+        foreach ($settings as $block => $s) {
+            if (\is_array($s)) {
+                $this->updateBlockSettings($user, (string) $block, $s);
+            }
+        }
+        $this->save($user);
+    }
+
     /** UserPreference#clear_unused_block_settings + save */
     public function save(User $user): void
     {

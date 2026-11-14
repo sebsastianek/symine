@@ -58,7 +58,7 @@
         {%- set last_activity = (last_activity_dates ?? {})[entry.id] ?? null -%}
         {%- if last_activity %}<a href="{{ path('project_activity', {id: entry.identifier, from: last_activity.date}) }}">{{ format_time(last_activity.time) }}</a>{% endif -%}
       {%- elseif column starts with 'cf_' -%}
-        {%- for f in custom_fields -%}{% if 'cf_' ~ f.id == column %}{{ format_custom_value(f, custom_values[entry.id][f.id] ?? null) }}{% endif %}{%- endfor -%}
+        {%- for f in custom_fields -%}{% if 'cf_' ~ f.id == column %}{{ issue_cf_value_html(f, custom_values[entry.id][f.id] ?? null, entry, entry) }}{% endif %}{%- endfor -%}
       {%- endif -%}
     </td>
     {% endif %}{% endfor %}

@@ -1,0 +1,1 @@
+window.fxRedmine = true;

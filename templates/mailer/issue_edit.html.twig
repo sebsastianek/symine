@@ -12,7 +12,7 @@
 {% endfor %}
 </ul>
 
-{{ mail.textilizable(journal.notes, issue.project)|raw }}
+{{ mail.textilizable(journal.notes, issue.project, journal)|raw }}
 <hr />
 {% include 'mailer/_issue.html.twig' %}
 {% endblock %}

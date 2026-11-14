@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 {% block content %}
-{% if error %}<div class="flash error" id="flash_error">{{ error }}</div>{% endif %}
+{% if error %}<div class="flash error" id="flash_error">{{ sprite_icon('warning') }}{{ error }}</div>{% endif %}
 {{ call_hook('view_account_login_top') }}
 
 <div id="login-form">

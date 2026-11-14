@@ -1,0 +1,52 @@
+{% extends 'admin/layout.html.twig' %}
+{% block header_tags %}{% if current_theme().legacy %}<link rel="stylesheet" href="/assets/appearance.css" media="all" />{% endif %}{% endblock %}
+{% block content %}
+<div class="contextual">
+  {% if not is_site_theme %}
+    <form action="{{ path('admin_themes_activate', {id: edited_theme.id}) }}" method="post" style="display:inline">{{ csrf_field() }}<input type="submit" value="{{ l('button_theme_use') }}" /></form>
+  {% endif %}
+</div>
+{#- the title takes the focus: Redmine otherwise focuses the first text field of a page, which is far down this one
+    (Branding), and the page opened scrolled past its first options -#}
+<h2 tabindex="-1" autofocus style="outline:0"><a href="{{ path('admin_themes') }}">{{ l('label_theme_plural') }}</a> &#187; {{ edited_theme.name }}</h2>
+
+{% if not is_site_theme %}
+  <p class="nodata" id="theme-not-in-use">{{ l('text_theme_not_in_use', {name: edited_theme.name}) }}</p>
+{% endif %}
+
+{%- set options = edited_theme.allOptions() -%}
+<form action="{{ path('admin_themes_edit', {id: edited_theme.id}) }}" method="post" enctype="multipart/form-data" id="theme-options-form" data-appearance-form>{{ csrf_field() }}
+  {% if options %}
+    {% if edited_theme.userOptions() %}
+      <p class="appearance-legend"><span class="appearance-personal">{{ sprite_icon('user') }}</span> {{ l('text_theme_option_personal') }}</p>
+    {% endif %}
+    {%- set groups = [] -%}
+    {%- for option in options %}{% if option.group not in groups %}{% set groups = groups|merge([option.group]) %}{% endif %}{% endfor -%}
+    {% for group in groups %}
+      <fieldset class="box tabular">
+        <legend>{{ group ?: l('label_options') }}</legend>
+        {% for option in options %}{% if option.group == group %}
+          {% include 'common/_theme_option_field.html.twig' with {option: option, value: values[option.name], theme: edited_theme, personal_mark: option.user, image_url: option.type == 'image' ? theme_context().imageUrl(edited_theme, option, values[option.name]) : null} %}
+        {% endif %}{% endfor %}
+      </fieldset>
+    {% endfor %}
+  {% elseif edited_theme.legacy %}
+    <p class="nodata">{{ l('text_theme_no_options') }}</p>
+  {% endif %}
+
+  {% if not edited_theme.legacy %}
+  <fieldset class="box">
+    <legend>{{ l('label_theme_custom_css') }}</legend>
+    <textarea name="custom_css" id="custom_css" rows="12" cols="80" spellcheck="false" class="appearance-css" aria-label="{{ l('label_theme_custom_css') }}">{{ custom_css }}</textarea>
+    <em class="info">{{ l('text_theme_custom_css') }}</em>
+  </fieldset>
+  {% endif %}
+
+  {% if options or not edited_theme.legacy %}
+  <p>
+    <input type="submit" name="commit" value="{{ l('button_save') }}" />
+    <input type="submit" name="reset" value="{{ l('button_theme_reset') }}" data-confirm="{{ l('text_are_you_sure') }}" />
+  </p>
+  {% endif %}
+</form>
+{% endblock %}

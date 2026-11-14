@@ -20,6 +20,16 @@ Goal: functional parity with Redmine, same URLs, same HTML markup/CSS, same REST
 - **i18n**: use Redmine translation keys only: `l('label_issue')` in Twig, `$this->l('notice_successful_create')` in
   controllers, params without wrapper: `l('label_x_issues', {count: 3})`. `translations/*.yaml` are GENERATED
   (`bin/console symine:locales:import`) - do not edit them.
+  Strings that Redmine does not have (themes, appearance) live in `translations/symine/messages.<locale>.yaml`,
+  which is maintained by hand.
+- **Controllers are thin**: a controller has its constructor and its public route actions, nothing else. An action
+  checks access, reads the request, calls a service and chooses the response. Lookups go to finder services or
+  argument value resolvers, request handling and validation to `*Form` services (`submit()`, `view()`), API output
+  to presenters in `src/Api`, rules and queries to the domain services. Services that need the access checks use
+  `App\Security\AccessGuard`. No private methods in controllers.
+- **Themes**: the default theme is Redmine's markup and stylesheets, untouched. Other themes live in `themes/`
+  (`src/Theme`, [THEMES.md](THEMES.md)): they add stylesheets, options exposed as attributes and custom properties
+  of `<html>`, and may override any template; the layout is split into blocks for that purpose.
 - **CSRF**: every non-GET browser request is checked globally (`CsrfSubscriber`). Forms: `{{ csrf_field() }}`.
   Links with `data-method="post|delete"` and `data-confirm` work via rails-ujs (meta csrf-token is in the layout).
   `_method` override (PATCH/PUT/DELETE) is enabled.
@@ -33,6 +43,24 @@ Goal: functional parity with Redmine, same URLs, same HTML markup/CSS, same REST
   `api` firewall; respond 401/403/404/422 like Redmine (ExceptionSubscriber already maps HttpExceptions to JSON).
 - **Events**: dispatch `App\Event\IssueEvent` / `App\Event\ContentEvent` after changes; notifications & webhooks
   subscribe to them.
+
+## Performance conventions
+Every query is a network round trip in production: a page should not ask twice for the same thing, nor once per row.
+- **Asked several times per request** (custom fields, versions of a project, watchers...): the service that owns the
+  data remembers the result with `Doctrine\QueryMemo::get('<owner>:<what>', [tables read], fn () => ...)`. The memo
+  forgets an entry as soon as one of its tables is written (`WriteLog`, fed by a DBAL middleware: unit of work, DQL
+  and plain SQL alike), when the entity manager is cleared and between requests. Do not keep query results in
+  private properties: they outlive the request in workers and in tests, and nothing invalidates them.
+- **Asked once per row** (N+1): before a loop reads a lazy collection or a reference of each row, load them
+  together with `Doctrine\BatchLoader` (`collections($rows, 'children')`, `collection($row, ...)` for the row and
+  the other entities of its class in memory, `descendants()`, `references()`, `principals()`). Associations to
+  `Principal`/`User`/`CustomField` cannot be lazy (single table inheritance): load the principals of a list before
+  hydrating it (`IssueQuery::loadIssues()` shows how).
+- **Across requests**: `cache.app` pools, only for what is the same for every reader (`cache.formatted_text`,
+  `cache.plugin_schema`); both are in-memory pools in the test environment, where every test starts on a fresh
+  database.
+- **Decoration**: cross-cutting behaviour around a service goes in a decorator of an interface (`#[AsDecorator]`),
+  not in the service; see docs/PLUGINS.md, section 13, for the interfaces that are extension points.
 
 ## Layout contract (templates/base.html.twig)
 Variables: `project` (Project|null, enables project menu & header), `main_menu_selected` (menu item name, e.g.
@@ -61,7 +89,10 @@ Twig helpers (src/Twig/AppExtension.php): `l()`, `current_user()`, `setting()`, 
 | `Service\AttachmentService` | file storage (Redmine layout), uploads tokens, download responses |
 | `Service\WatcherService` | generic watchers |
 | `Service\TextFormatter` | textilizable (CommonMark/Textile + Redmine links + macros) |
-| `Api\ApiRenderer` | JSON/XML API rendering |
+| `Service\Text\MarkupConverterInterface` | the markup → HTML conversion alone (pure); decorated by `CachedMarkupConverter` (setting "Cache formatted text") and by plugins |
+| `Service\Avatar\AvatarRendererInterface` | avatar() of the templates; decorated by plugins |
+| `Doctrine\QueryMemo`, `Doctrine\WriteLog` | reads remembered for the request, dropped when one of their tables is written |
+| `Doctrine\BatchLoader` | loads the lazy collections / references / principals of a list in one query instead of one per row || `Api\ApiRenderer` | JSON/XML API rendering |
 | `Menu\MenuBuilder` | top/account/application/project/admin menus (items appear when their route exists) |
 | `Plugin\PluginRegistry`, `Plugin\Hook\Hooks`, `Menu\MenuRegistry`, `Security\AccessControlRegistry` | plugin API (Redmine::Plugin, hooks, menus, permissions) - see docs/PLUGINS.md |
 

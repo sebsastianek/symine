@@ -1,0 +1,41 @@
+{#- Name, sharing and scope of a board (new and edit forms). Variables: BoardForm::view(). -#}
+<div class="box tabular">
+  <p><label for="board_name">{{ l('field_name') }} <span class="required">*</span></label>
+    <input type="text" name="board[name]" id="board_name" value="{{ board.name }}" size="60" maxlength="255" required /></p>
+  <p><label for="board_description">{{ l('field_description') }}</label>
+    <textarea name="board[description]" id="board_description" rows="2" cols="60">{{ board.description }}</textarea></p>
+
+  {% if can_share %}
+  <p><label>{{ l('field_visible') }}</label>
+    <label class="block"><input type="radio" name="board[visibility]" value="0"{% if board.visibility == 0 %} checked{% endif %} /> {{ l('label_visibility_private') }}</label>
+    <label class="block"><input type="radio" name="board[visibility]" value="2"{% if board.visibility == 2 %} checked{% endif %} /> {{ l('label_visibility_public') }}</label>
+    <label class="block"><input type="radio" name="board[visibility]" value="1"{% if board.visibility == 1 %} checked{% endif %} /> {{ l('label_visibility_roles') }}:</label>
+    {% for role in roles %}
+      <label class="block role-visibility"><input type="checkbox" name="board[role_ids][]" value="{{ role.id }}"{% if role.id in (board.roleIds ?? []) %} checked{% endif %} /> {{ role.name }}</label>
+    {% endfor %}
+  </p>
+  {% endif %}
+</div>
+
+<fieldset class="box tabular">
+  <legend>{{ l('label_kanban_scope') }}</legend>
+  <input type="hidden" name="board_projects_submitted" value="1" />
+  <p><label for="board_project_ids">{{ l('label_project_plural') }}</label>
+    <select name="board[project_ids][]" id="board_project_ids" multiple size="{{ min(10, max(4, project_options|length)) }}">
+      {% for option in project_options %}
+        <option value="{{ option.project.id }}"{% if option.project.id in selected_project_ids %} selected{% endif %}>{% for i in range(1, option.level)|filter(i => option.level > 0) %}» {% endfor %}{{ option.project.name }}</option>
+      {% endfor %}
+    </select>
+    <em class="info">{{ project ? l('text_kanban_projects_project', {name: project.name}) : l('text_kanban_projects_global') }}</em>
+  </p>
+  <p><label for="board_include_subprojects">{{ l('label_subproject_plural') }}</label>
+    <input type="hidden" name="board[include_subprojects]" value="" />
+    <input type="checkbox" name="board[include_subprojects]" id="board_include_subprojects" value="1"{% if board.includeSubprojects %} checked{% endif %} />
+    <em class="info">{{ l('text_kanban_include_subprojects') }}</em></p>
+  <p><label>{{ l('label_tracker_plural') }}</label>
+    {% for tracker in trackers %}
+      <label class="inline"><input type="checkbox" name="board[tracker_ids][]" value="{{ tracker.id }}"{% if tracker.id in (board.trackerIds ?? []) %} checked{% endif %} /> {{ tracker.name }}</label>
+    {% endfor %}
+    <em class="info">{{ l('text_kanban_trackers') }}</em>
+  </p>
+</fieldset>

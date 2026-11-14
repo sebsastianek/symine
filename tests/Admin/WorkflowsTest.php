@@ -34,6 +34,29 @@ final class WorkflowsTest extends AdminWebTestCase
         self::assertSame('13', trim($link->text()));
     }
 
+    public function testEditorOpensOnTheFirstRoleAndTrackerWithoutAnyClick(): void
+    {
+        $this->loginAs('admin');
+        // Symine: no selection yet -> what the selectors show (first role, first tracker) is what the page displays
+        foreach (['/workflows/edit' => '#workflow_form table.transitions', '/workflows/permissions' => '#workflow_form table.fields_permissions'] as $url => $table) {
+            $crawler = $this->get($url);
+            $this->assertStatus(200);
+            self::assertGreaterThan(0, $crawler->filter($table)->count(), $url);
+            self::assertSame($crawler->filter('#role_id option[selected]')->attr('value'), $crawler->filter('#workflow_form input[name="role_id[]"]')->attr('value'), 'the table is the one of the selected role');
+            self::assertSame($crawler->filter('#tracker_id option[selected]')->attr('value'), $crawler->filter('#workflow_form input[name="tracker_id[]"]')->attr('value'));
+            self::assertCount(1, $crawler->filter('#workflow_selection_form'));
+        }
+        // an explicit selection is respected
+        $crawler = $this->get('/workflows/edit?role_id[]=4&tracker_id[]=2');
+        self::assertSame('4', $crawler->filter('#workflow_form input[name="role_id[]"]')->attr('value'));
+        self::assertSame('2', $crawler->filter('#workflow_form input[name="tracker_id[]"]')->attr('value'));
+
+        // saving never falls back to a default selection
+        $before = (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM workflows');
+        $this->post('/workflows/update', ['transitions' => ['1' => ['2' => ['always' => '0']]]], 'PATCH');
+        self::assertSame($before, (int) $this->em->getConnection()->fetchOne('SELECT COUNT(*) FROM workflows'));
+    }
+
     public function testEditMatrix(): void
     {
         $this->loginAs('admin');

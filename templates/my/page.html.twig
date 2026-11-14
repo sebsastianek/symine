@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 {% block header_tags %}<script src="/assets/context_menu.js"></script>
-<link rel="stylesheet" href="/assets/context_menu.css" media="all" />{% endblock %}
+<link rel="stylesheet" href="{{ stylesheet_path('context_menu') }}" media="all" />{% endblock %}
 {% block content %}
 <div class="contextual">
   <form id="block-form" action="{{ path('my_add_block') }}" accept-charset="UTF-8" data-remote="true" method="post">{{ csrf_field() }}

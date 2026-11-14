@@ -1,0 +1,6 @@
+{#- email_addresses/index.js.erb: the list in the modal of My account -#}
+{% autoescape false %}
+$('#ajax-modal').html('{{ include('email_addresses/_index.html.twig', {user: user, addresses: addresses, address: address, errors: errors}, with_context = false)|account_js }}');
+showModal('ajax-modal', '600px', '{{ l('label_email_address_plural')|account_js }}');
+$('#email_address_address').focus();
+{% endautoescape %}

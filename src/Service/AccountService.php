@@ -469,11 +469,11 @@ final class AccountService
      *
      * @return list<string>
      */
-    public function customFieldErrors(array $fields, array $values): array
+    public function customFieldErrors(array $fields, array $values, array $current = []): array
     {
         $errors = [];
         foreach ($fields as $f) {
-            $errors = array_merge($errors, $this->customFields->validate($f, $values[$f->id] ?? $values[(string) $f->id] ?? null));
+            $errors = array_merge($errors, $this->customFields->validate($f, $values[$f->id] ?? $values[(string) $f->id] ?? null, null, $current[$f->id] ?? null));
         }
 
         return $errors;

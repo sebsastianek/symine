@@ -13,7 +13,7 @@
       </ul>
       {% endif %}
       <div class="wiki">
-        {% if journal.hasNotes() %}{{ textilizable(journal.notes, issue.project) }}{% endif %}
+        {% if journal.hasNotes() %}{{ textilizable(journal.notes, issue.project, {object: journal}) }}{% endif %}
       </div>
       </div>
     {% endfor %}

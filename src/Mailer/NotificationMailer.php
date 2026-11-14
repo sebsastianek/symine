@@ -214,7 +214,8 @@ final class NotificationMailer
             $qb->andWhere('IDENTITY(i.tracker) = :tracker')->setParameter('tracker', $trackerId);
         }
         if (null !== $version) {
-            $ids = $this->em->getConnection()->fetchFirstColumn('SELECT id FROM versions WHERE name = ?', [$version]);
+            // Version.named: case-insensitive, surrounding spaces ignored
+            $ids = $this->em->getConnection()->fetchFirstColumn('SELECT id FROM versions WHERE LOWER(name) = LOWER(?)', [trim($version)]);
             if ([] === $ids) {
                 throw new \InvalidArgumentException(\sprintf("Couldn't find Version named %s", $version));
             }

@@ -1,0 +1,338 @@
+/* Strata pages: rules that belong to one kind of page. */
+
+/* ----- Issue -------------------------------------------------------------------------------- */
+div.issue {
+  background: var(--st-canvas);
+  border: 1px solid var(--st-line);
+  border-radius: calc(var(--st-radius) + 2px);
+  padding: 20px 22px;
+  margin-block-end: 12px;
+}
+div.issue div.subject h3 { font-size: 1.1875rem; line-height: 1.3; margin-block-end: 4px; }
+div.issue div.subject p, div.issue p.author { color: var(--st-text-muted); font-size: 0.8125rem; }
+div.issue .attributes { margin-block-start: 20px; row-gap: 2px; }
+div.issue .attributes .attribute { min-block-size: 2em; padding-inline-start: 150px; }
+div.issue .attributes .attribute .label { inline-size: 140px; margin-inline-start: -150px; font-weight: 500; color: var(--st-text-muted); font-size: 0.8125rem; }
+div.issue.overdue .due-date .value { color: var(--st-danger); }
+div.issue hr, div.issue.details > hr { background: var(--st-line); margin-block: 18px; }
+div.issue .next-prev-links { color: var(--st-text-muted); font-size: 0.8125rem; }
+div.issue .contextual > a.icon-add, #issue_tree .contextual > a, #relations .contextual > a {
+  background: transparent;
+  color: var(--st-text-muted);
+  font-weight: 500;
+  padding: 4px 8px;
+}
+div.issue .contextual > a.icon-add:hover, #issue_tree .contextual > a:hover, #relations .contextual > a:hover { background: var(--st-hover); color: var(--st-text); }
+div.issue div.description > p > strong, div.issue .description > p:first-child > strong,
+#issue_tree > p > strong, #relations > p > strong, div.attachments + p > strong { font-size: 0.875rem; }
+#issue_tree table.issues td, #relations table.issues td { padding-block: 5px; }
+/* (not the cells of the progress bar nested in the row) */
+#issue_tree table.issues table.progress td, #relations table.issues table.progress td { padding: 0; }
+/* the legend follows the bar from the start of the cell: bars stay aligned whether a row has a legend or not */
+#issue_tree td.done_ratio, #relations td.done_ratio { text-align: start; }
+@media screen and (max-width: 899px) {
+  /* responsive.css gives each cell of a subtask / relation row 20% of the width, less than the 80px of the bar */
+  #issue_tree .issue > td.done_ratio table.progress, #relations .issue > td.done_ratio table.progress { inline-size: 100%; }
+  #issue_tree .issue > td.done_ratio p.percent, #relations .issue > td.done_ratio p.percent { display: none; }
+}
+/* between 900 and 1200px the rail and the sidebar leave the two attribute columns little room: a narrower label */
+@media screen and (min-width: 900px) and (max-width: 1199px) {
+  div.issue .attributes .attribute { padding-inline-start: 118px; }
+  div.issue .attributes .attribute .label { inline-size: 110px; margin-inline-start: -118px; }
+}
+#issue_tree .issues-stat, #relations .issues-stat { color: var(--st-text-muted); }
+
+body.controller-issues.action-show h2, body.controller-issues h2.inline-flex { display: inline-flex; align-items: center; gap: 6px; }
+/* status chips beside a title: centred on the title's line instead of sitting on its baseline, with room to breathe */
+h2.inline-block ~ .badge, h2.inline-flex ~ .badge, h3.inline-block ~ .badge {
+  inset-block-end: 0;
+  vertical-align: 0.32rem;
+  margin-inline: 8px 0;
+}
+h3.inline-block ~ .badge { vertical-align: 0.12rem; }
+
+/* history */
+.journals h4.journal-header, #history h4 {
+  background-color: transparent;
+  border-block-start: 1px solid var(--st-line);
+  padding: 14px 0 6px;
+  font-weight: 500;
+  font-size: 0.8125rem;
+  color: var(--st-text-muted);
+}
+.journals h4.journal-header .update-info { color: var(--st-text-muted); font-size: 1em; }
+.journals h4.journal-header a.user { color: var(--st-text); font-weight: 600; }
+.journals div:target h4.journal-header { background-color: var(--st-accent-softer); box-shadow: -8px 0 0 var(--st-accent-softer), 8px 0 0 var(--st-accent-softer); }
+.journals .journal-content { padding-inline-start: 0; }
+.journals .journal .journal-content .wiki { margin-inline-start: 0; }
+.journals .journal-details, ul.revision-info, ul.details { color: var(--st-text-muted); font-size: 0.8125rem; }
+.journals .journal-details a, ul.revision-info a { color: var(--st-accent-strong); }
+.journals .journal-details a:hover, ul.revision-info a:hover { color: var(--st-accent-strong); }
+.journals .private-notes { border-inline-start: 2px solid var(--st-danger); padding-inline-start: 12px; }
+.journals .journal-meta .journal-link { color: var(--st-text-faint); }
+
+/* editing */
+#issue-form fieldset, #bulk_edit_form fieldset { border-radius: 0; }
+#update > h3, #update form > h3 { margin-block-start: 8px; }
+div.conflict-details { color: var(--st-text-muted); }
+
+/* ----- Query form --------------------------------------------------------------------------- */
+#query_form_content { font-size: 0.8125rem; }
+#query_form_with_buttons fieldset { margin-block-end: 2px; }
+#query_form_with_buttons > p.buttons { margin-block: 14px 18px; }
+fieldset#filters table td { padding-block: 3px; }
+.query-totals { color: var(--st-text-muted); }
+.query-totals .value { color: var(--st-text); }
+/* "Add filter": label and select on one line, and the select never wider than the room the content leaves it */
+.add-filter { display: flex; justify-content: flex-end; align-items: center; gap: 6px; }
+.add-filter label { white-space: nowrap; }
+.add-filter select { flex: 0 1 auto; min-inline-size: 0; max-inline-size: 100%; }
+#filters-table .values select { max-inline-size: 100%; }
+/* The rail and the sidebar can leave the query form about 500px on a desktop. Below 680px of its own width it stacks:
+   filters over the full width with "Add filter" under them, option labels above their controls; from 421px the label
+   and operator columns are narrowed so that the values stay on the row (below that, Redmine's phone layout). */
+#query_form_with_buttons, form#query-form { container: st-query-form / inline-size; }
+@container st-query-form (max-width: 680px) {
+  #filters-table { float: none; inline-size: 100%; }
+  fieldset#filters .add-filter { float: none; inline-size: auto; margin-block-start: 8px; }
+  #list-definition > div .field, body.controller-projects fieldset#options > div > div:not(#list-definition) > .field { inline-size: 100%; }
+  #list-definition, body.controller-projects fieldset#options > div > div:not(#list-definition) { margin-inline: 4px 0; }
+}
+@container st-query-form (min-width: 421px) and (max-width: 680px) {
+  #filters-table .filter { flex-wrap: nowrap; }
+  #filters-table .filter .field { inline-size: 130px; flex: none; }
+  #filters-table .filter .operator { flex: none; }
+  #filters-table .filter .operator select { inline-size: 110px; }
+  #filters-table .filter .values { flex: 1 1 0; min-inline-size: 0; }
+  #filters-table .filter .values input[type="text"], #filters-table .filter .values select { max-inline-size: 100%; }
+}
+/* the "Display results as" row of the projects list, in line with the other option rows */
+body.controller-projects fieldset#options > div > div:not(#list-definition) { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 10px; margin: 6px 15px; }
+body.controller-projects fieldset#options > div > div:not(#list-definition) > .field { inline-size: 160px; }
+body.controller-projects fieldset#options > div > div:not(#list-definition) > label.inline { margin-inline: -6px 6px; }
+
+/* ----- Sign in and account ------------------------------------------------------------------ */
+#login-form {
+  background-color: var(--st-raised);
+  border: 1px solid var(--st-line);
+  border-radius: calc(var(--st-radius) + 4px);
+  box-shadow: var(--st-shadow-menu);
+  padding: 28px;
+  inline-size: 360px;
+  margin-block: 12vh 2em;
+}
+#login-form label { font-weight: 600; font-size: 0.8125rem; margin-block-end: 6px; }
+#login-form input { block-size: 36px; }
+#login-form input[type="checkbox"] { block-size: auto; }
+#login-form input[type="text"], #login-form input[type="password"] { margin-block-end: 16px; }
+#login-form input[type="submit"] { margin-block-start: 8px; }
+/* my account: the API key shown in the sidebar wraps instead of running out of it */
+#sidebar pre#api-access-key { white-space: pre-wrap; overflow-wrap: anywhere; overflow: visible; }
+
+/* ----- Projects ----------------------------------------------------------------------------- */
+/* The projects are a grid of cards: every card of a row is as tall as the tallest, also the ones that only carry a
+   title. (Redmine flows them in newspaper columns, which leaves the cards ragged.) */
+#projects-index { column-count: initial; column-width: initial; columns: initial; }
+#projects-index > ul.projects.root {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  gap: 12px;
+  align-items: stretch;
+  padding: 0;
+}
+#projects-index ul.projects li.root {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--st-line);
+  border-radius: var(--st-radius);
+  background: var(--st-raised);
+  box-shadow: none;
+  min-block-size: 5.5rem;
+  transition: border-color 0.12s ease;
+}
+#projects-index ul.projects li.root:hover { border-color: var(--st-line-strong); }
+#projects-index ul.projects div.root a.project { margin-block-end: 4px; display: inline-block; }
+#projects-index ul.projects div.description { padding-block-start: 2px; }
+/* subprojects sit at the bottom of the card, so they line up across a row */
+#projects-index li.root > ul.projects {
+  margin-block-start: auto;
+  padding: 10px 0 0;
+  border-inline-start: 0;
+  border-block-start: 1px solid var(--st-line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+#projects-index li.root > div.root { margin-block-end: 10px; }
+#projects-index li.root > ul.projects li.child { margin: 0; }
+#projects-index li.root > ul.projects ul.projects { padding-inline-start: 0; display: contents; }
+#projects-index ul.projects div.root a.project, ul.projects div.root a.project { font-size: 1rem; font-weight: 600; }
+ul.projects .description, #projects-index .wiki.description { color: var(--st-text-muted); }
+div.projects.overview .box, div.splitcontent .box, .mypage-box { background: var(--st-canvas); }
+.box h3, .mypage-box h3, div.news h3 { font-size: 0.9375rem; }
+.box h3.icon, .box > h3 { margin-block-end: 10px; }
+.mypage-box { border: 1px solid var(--st-line); border-radius: var(--st-radius); padding: var(--st-space); }
+/* the floated actions of a block are no taller than its title: the lists below must not shrink to avoid the float */
+.mypage-box > .contextual { margin-block: -3px 0; }
+.thumbnails img, div.thumbnails img { border-radius: var(--st-radius-small); border: 1px solid var(--st-line); }
+/* thumbnails of attached images side by side (each one is wrapped in a <div>) */
+div.thumbnails { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
+div.thumbnails > div { line-height: 0; }
+/* project settings (members, versions): the floated action must not squeeze the filters that follow */
+#tab-content-members > form, #tab-content-versions > form { clear: both; }
+#tab-content-members > .contextual, #tab-content-versions > .contextual, #tab-content-activities > .contextual { margin-block: 0 4px; }
+
+/* ----- Activity and search ------------------------------------------------------------------ */
+div#activity h3 { color: var(--st-text); font-size: 0.9375rem; border-block-end: 1px solid var(--st-line); padding-block-end: 6px; background-color: transparent; padding-inline: 0; margin-block-start: 18px; }
+div#activity h3:first-child { margin-block-start: 0; }
+/* an entry is a flex row: beside a title of two lines the time stays whole and everything sits on the first line */
+div#activity dt { align-items: baseline; }
+div#activity dt .time, div#activity dt .project { white-space: nowrap; flex: none; }
+div#activity dt > svg.icon-svg { align-self: flex-start; margin-block-start: 3px; flex: none; }
+div#activity dt > .avatar { align-self: flex-start; margin-block-start: -2px; flex: none; }
+#search-form label { white-space: nowrap; }
+div#activity dt .time { color: var(--st-text-faint); }
+div#activity dd span.description, #search-results dd span.description { color: var(--st-text-muted); }
+div#activity dd .description, #search-results dd .description { font-style: normal; }
+div#activity dt.me .time { border-block-end-color: var(--st-accent); }
+#search-results dt a { font-weight: 600; }
+#search-form fieldset, #search-form .box { margin-block-end: 12px; }
+
+/* ----- Roadmap and versions ----------------------------------------------------------------- */
+div#roadmap article.version-article { border-block-start: 1px solid var(--st-line); padding-block: 16px 8px; }
+div#roadmap article.version-article:first-of-type { border-block-start: 0; padding-block-start: 0; }
+div#roadmap header:target { background-color: var(--st-accent-softer); }
+.version-overview p, div#roadmap p.progress-info { color: var(--st-text-muted); }
+#version-summary fieldset, div#roadmap fieldset.related-issues { background: transparent; }
+/* a version without issues: the export links go under the floated summary box, not beside it */
+body.controller-versions #content > p.other-formats { clear: both; }
+
+/* ----- Calendar and Gantt ------------------------------------------------------------------- */
+ul.cal { border-color: var(--st-line); border-radius: var(--st-radius); box-shadow: none; overflow: hidden; }
+.cal .calhead { background-color: var(--st-inset); color: var(--st-text-muted); font-size: 0.75rem; font-weight: 600; padding: 8px 4px; }
+.cal .week-number { background-color: var(--st-inset); color: var(--st-text-faint); font-size: 0.75rem; }
+.cal .calbody { border-color: var(--st-line); box-shadow: none; padding: 4px; }
+.cal .calbody.this-month { background-color: var(--st-canvas); }
+.cal .calbody.other-month, .cal .calbody.nwday { background-color: var(--st-inset); }
+.cal .calbody.today .day-value { color: var(--st-on-accent); }
+.cal .calbody div.issue, .cal .calbody .tooltip {
+  border: 0;
+  border-inline-start: 2px solid var(--st-accent);
+  border-radius: 3px;
+  background: var(--st-accent-softer);
+  padding: 3px 6px;
+  margin-block-end: 3px;
+}
+table.gantt-table td.gantt_subjects_column, .gantt_hdr, .gantt_subjects_container, .gantt_selected_column_container { background-color: var(--st-canvas); }
+/* the month switcher of the calendar, on the row of controls it belongs to */
+@media screen and (min-width: 900px) {
+  #query_form_with_buttons > span.contextual.pagination { margin-block-start: 14px; }
+  #query_form_with_buttons > span.contextual.pagination ul.pages { margin-inline-end: 0; }
+}
+/* selected Gantt bars use Open Color's blue as an "r, g, b" triplet, which the accent cannot reach */
+.gantt-timeline .context-menu-selection, .gantt-timeline .context-menu-selection:hover { background-color: color-mix(in oklch, var(--st-accent) 32%, transparent) !important; }
+.gantt-timeline .context-menu-selection a { color: var(--st-accent-strong) !important; }
+/* late and behind-schedule subjects: Open Color's orange is too pale on the light canvas */
+/* (gantt.css is loaded after the theme: "#content" makes these win) */
+#content .version-behind-schedule a, #content .issue-behind-schedule a { color: var(--st-warning); }
+#content .version-overdue a, #content .issue-overdue a, #content .project-overdue a { color: var(--st-danger); }
+
+/* ----- News, forums, documents, wiki -------------------------------------------------------- */
+div.news article, article.news-article { border-block-end: 1px solid var(--st-line); padding-block: 12px; }
+p.author, span.author, .message p.author { color: var(--st-text-muted); font-size: 0.8125rem; }
+div.message, #replies div.message { border-radius: var(--st-radius); }
+div.message h4, #replies h4, #comments h4 { border-block-end: 0; }
+div.wiki-page .contextual a { opacity: 0.7; }
+.wiki-page .wiki, .controller-wiki #content > .wiki { max-inline-size: 86ch; }
+div.attachments { color: var(--st-text-muted); }
+div.attachments p { margin-block: 4px; }
+/* document groups: the heading of activity days instead of Redmine's grey band */
+#document-list .document-group h3 { background-color: transparent; padding: 0 0 6px; margin-block: 18px 12px; font-size: 0.9375rem; border-block-end: 1px solid var(--st-line); }
+#document-list .document-group:first-child h3 { margin-block-start: 0; }
+/* files list: the version rows are <th> inside the body, shown as group headings */
+table.list.files tbody th { padding-block: 16px 6px; border-block-end: 1px solid var(--st-line-strong); font-size: 0.8125rem; }
+table.list.files tbody th a.icon { color: var(--st-text); font-weight: 600; }
+table.list.files tbody tr:has(> th) + tr > td { border-block-start: 0; }
+@media screen and (min-width: 900px) {
+  table.list.messages td.author, table.list.messages td.created_on, table.list.messages td.reply-count { white-space: nowrap; }
+}
+div.news article:last-of-type, article.news-article:last-of-type { border-block-end: 0; }
+
+/* ----- Repository --------------------------------------------------------------------------- */
+table.filecontent { border-color: var(--st-line); border-radius: var(--st-radius); }
+table.filecontent th { background-color: var(--st-inset); border-color: var(--st-line); color: var(--st-text-faint); }
+table.filecontent th.filename { background-color: var(--st-inset); color: var(--st-text); border-block-end: 1px solid var(--st-line); }
+table.filecontent td.line-code pre, .line-code pre, .autoscroll pre { font-family: var(--st-font-mono); }
+div.changeset { border-block-end-color: var(--st-line); }
+table.revision-info td, .changeset-changes { color: var(--st-text-muted); }
+.autoscroll > table.filecontent { inline-size: 100%; }
+/* phones: the branch / tag / revision form takes a row of its own instead of running off the screen */
+@media screen and (max-width: 899px) {
+  #content > .contextual:has(> form) { row-gap: 6px; }
+  #content > .contextual > form#revision_selector { flex: 1 1 100%; margin-inline-start: 0; }
+}
+
+/* ----- Administration ----------------------------------------------------------------------- */
+table.permissions tr.group > td, table.tracker-summary tr.group > td { background: var(--st-inset); }
+.controller-workflows table.transitions td.enabled { background: var(--st-accent-soft); }
+div.roles-and-permissions .box { background: var(--st-inset); }
+/* role form: the "issue tracking" table is not a box, it only needs room above it */
+#content #role-permissions-trackers { background: transparent; margin-block: 20px 12px; }
+#admin-index p.icon22, .controller-admin .box { line-height: 1.6; }
+table.plugins span.description, table.plugins span.url { color: var(--st-text-muted); }
+
+/* workflow field permissions: compact selects so that the "copy" link (») stays beside each of them */
+table.fields_permissions td { white-space: nowrap; padding-inline: 6px; }
+table.fields_permissions td:first-child, table.fields_permissions th:first-child { padding-inline-start: 10px; }
+table.fields_permissions select { padding-inline: 6px 22px; background-position: calc(100% - 5px) 50%; }
+[dir="rtl"] table.fields_permissions select { background-position: 5px 50%; }
+table.fields_permissions a.repeat-value { color: var(--st-text-muted); padding-inline: 2px; }
+table.fields_permissions a.repeat-value:hover { color: var(--st-accent-strong); text-decoration: none; }
+table.fields_permissions td.readonly { background: var(--oc-gray-2); }
+table.fields_permissions td.required { background: var(--st-danger-soft); }
+table.fields_permissions td.required select { border-color: var(--st-danger-line); }
+
+/* custom field form: with the rail and the sidebar its two columns do not always fit side by side; when they do not,
+   it stacks the way Redmine does on small screens (Save at the end) instead of wrapping around the Save button */
+body.controller-custom_fields #content { container: st-content / inline-size; }
+@container st-content (max-width: 1090px) {
+  body.controller-custom_fields .splitcontent > .splitcontentleft, body.controller-custom_fields .splitcontent > .splitcontentright { flex: 1 1 100%; }
+  body.controller-custom_fields .splitcontent p.mobile-hide { display: none; }
+  body.controller-custom_fields #content form > p.mobile-show { display: block; }
+}
+
+/* settings forms keep a 300px label column: narrower where the rail and the sidebar leave them little room */
+@media screen and (min-width: 900px) and (max-width: 1279px) {
+  :root[data-theme-navigation="rail"] .tabular.settings p, :root[data-theme-navigation="rail"] .tabular.settings div.form-field { padding-inline-start: 210px; }
+  :root[data-theme-navigation="rail"] .tabular.settings label { margin-inline-start: -210px; inline-size: 205px; }
+}
+
+/* ----- Time ---------------------------------------------------------------------------------- */
+table.time-entries td.hours { font-weight: 600; }
+.time-report td.hours, table#time-report td.hours { color: var(--st-text); }
+table#time-report tr.total td, table#time-report tr.total th, table.issue-report tr.total, table.issue-report-detailed tr.total { border-block-start: 1px solid var(--st-line-strong); font-weight: 600; }
+
+/* ----- Preview bar of an administrator trying a theme ---------------------------------------- */
+#theme-preview-bar button { block-size: 26px; background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.3); color: #fff; font-size: 0.8125rem; }
+#theme-preview-bar button:hover { background: rgba(255, 255, 255, 0.22); border-color: rgba(255, 255, 255, 0.5); }
+
+/* ----- Print: the content only --------------------------------------------------------------- */
+@media print {
+  :root { color-scheme: light !important; }
+  #wrapper { display: block !important; }
+  #header, nav.top-menu, #sidebar, #footer { display: none !important; }
+  #content { padding: 0; max-inline-size: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+
+/* ---------- Kanban (plugin): columns are wells, cards sit on top of them, in both schemes ---------- */
+#content .kanban {
+  --kanban-well: var(--st-sunken);
+  --kanban-card: var(--st-raised);
+  --kanban-line: var(--st-line);
+}

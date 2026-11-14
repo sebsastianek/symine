@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Tests\Projects;
 
-use App\Controller\ActivitiesController;
 use App\Entity\User;
 use App\Service\Activity\ActivityEvent;
 use App\Service\Activity\ActivityFetcher;
@@ -103,7 +102,7 @@ final class ActivityTest extends ProjectsWebTestCase
     {
         $d = new \DateTimeImmutable('2026-01-01 10:00');
         $mk = static fn (string $group, string $time, int $id) => new ActivityEvent('issue', $d->modify($time), 't', '/', null, null, null, $group, $id);
-        $sorted = ActivitiesController::sortEvents([$mk('a', '+1 hour', 1), $mk('b', '+2 hours', 2), $mk('a', '+3 hours', 3)]);
+        $sorted = ActivityFetcher::sortEvents([$mk('a', '+1 hour', 1), $mk('b', '+2 hours', 2), $mk('a', '+3 hours', 3)]);
         self::assertSame([3, 1, 2], array_map(static fn ($i) => $i['event']->id, $sorted));
         self::assertSame([false, true, false], array_map(static fn ($i) => $i['grouped'], $sorted));
     }

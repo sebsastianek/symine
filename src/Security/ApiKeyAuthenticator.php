@@ -26,9 +26,10 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 
 /**
  * Redmine REST API authentication: "key" parameter, "X-Redmine-API-Key" header, OAuth2 Bearer token
- * (Doorkeeper) or HTTP Basic (login/password or api key as username). Atom/ICS feeds accept the user's
- * feeds key. Users with two-factor authentication cannot use login/password (HTTP 401).
- * Bearer token users are restricted to the token scopes (User#oauth_scope).
+ * (Doorkeeper) or HTTP Basic (login/password or api key as username), accepted only by the actions that
+ * declare accept_api_auth. Atom feeds accept the user's feeds key on GET requests of the actions that
+ * declare accept_atom_auth (see KeyAuthScope). Users with two-factor authentication cannot use
+ * login/password (HTTP 401). Bearer token users are restricted to the token scopes (User#oauth_scope).
  */
 final class ApiKeyAuthenticator extends AbstractAuthenticator
 {
@@ -42,28 +43,36 @@ final class ApiKeyAuthenticator extends AbstractAuthenticator
         private readonly ?\App\Service\LdapService $ldap = null,
         private readonly ?OAuthServer $oauth = null,
         private readonly ?Authorization $authorization = null,
+        private readonly ?ApiRequestMatcher $matcher = null,
     ) {
+    }
+
+    /** The matcher decided that the request may be authenticated by the feeds key (no session user, no autologin) */
+    private static function feedsKeyRequest(Request $request): bool
+    {
+        return 'atom' === $request->attributes->get(ApiRequestMatcher::MODE_ATTRIBUTE) && KeyAuthScope::hasFeedsKey($request);
     }
 
     public function supports(Request $request): ?bool
     {
-        if (!(new ApiRequestMatcher())->matches($request)) {
+        if (!($this->matcher ?? new ApiRequestMatcher($this->settings))->matches($request)) {
             return false;
         }
-        $format = ApiRequestMatcher::format($request);
-        if (('json' === $format || 'xml' === $format) && !$this->settings->restApiEnabled()) {
-            // REST API disabled: credentials are ignored, the request is anonymous (403 on protected resources)
+        if (self::feedsKeyRequest($request)) {
+            // accept_atom_auth: GET request answered as Atom by an action that accepts the feeds key
+            return true;
+        }
+        if (!$this->settings->restApiEnabled() || !KeyAuthScope::acceptsApiAuth($request)) {
+            // REST API disabled, or action without accept_api_auth: credentials are ignored, the request is
+            // anonymous (401/403 on protected resources)
             return false;
         }
-        if (null !== $this->apiKey($request) || str_starts_with((string) $request->headers->get('Authorization'), 'Basic ')) {
+        if (null !== KeyAuthScope::apiKey($request) || KeyAuthScope::hasBasicCredentials($request)) {
             return true;
         }
         $bearer = OAuthServer::bearerToken($request);
-        if (null !== $bearer && null !== $this->oauth && \in_array(ApiRequestMatcher::format($request), ['json', 'xml'], true)) {
+        if (null !== $bearer && null !== $this->oauth && KeyAuthScope::isApiRequest($request)) {
             // Doorkeeper.authenticate: unknown tokens (or inactive owners) leave the request anonymous
-            if (!$this->settings->restApiEnabled()) {
-                return false;
-            }
             $token = $this->oauth->authenticate($bearer);
             if (null === $token) {
                 return false;
@@ -75,30 +84,36 @@ final class ApiKeyAuthenticator extends AbstractAuthenticator
                 }
             }
             $request->attributes->set(self::OAUTH_TOKEN_ATTRIBUTE, $token);
+
+            return true;
         }
 
-        return true;
-    }
-
-    private function apiKey(Request $request): ?string
-    {
-        $key = $request->query->get('key') ?? $request->headers->get('X-Redmine-API-Key');
-
-        return null === $key || '' === $key ? null : (string) $key;
+        return false;
     }
 
     public function authenticate(Request $request): Passport
     {
-        $format = ApiRequestMatcher::format($request);
-        if ('atom' === $format || 'ics' === $format) {
+        if (self::feedsKeyRequest($request)) {
             $key = (string) $request->query->get('key');
+            // find_current_user: the feeds key first, then the API key when the action accepts it too
+            $apiKeyAccepted = $this->settings->restApiEnabled() && KeyAuthScope::acceptsApiAuth($request);
 
-            return new SelfValidatingPassport(new UserBadge('feeds:'.$key, fn () => $this->userByToken('feeds', $key)));
+            return new SelfValidatingPassport(new UserBadge('feeds:'.$key, function () use ($key, $apiKeyAccepted): User {
+                try {
+                    return $this->userByToken('feeds', $key);
+                } catch (CustomUserMessageAuthenticationException $e) {
+                    if (!$apiKeyAccepted) {
+                        throw $e;
+                    }
+
+                    return $this->userByToken('api', $key);
+                }
+            }));
         }
-        if (!$this->settings->restApiEnabled()) {
+        if (!$this->settings->restApiEnabled() || !KeyAuthScope::acceptsApiAuth($request)) {
             throw new CustomUserMessageAuthenticationException('REST API is disabled');
         }
-        $key = $this->apiKey($request);
+        $key = KeyAuthScope::apiKey($request);
         if (null !== $key) {
             return new SelfValidatingPassport(new UserBadge('api:'.$key, fn () => $this->userByToken('api', $key)));
         }

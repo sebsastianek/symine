@@ -30,7 +30,10 @@ The Symfony web debug toolbar is stubbed out (requests to `/_wdt/*` return an em
 
 ## Writing a spec
 - Put specs under `e2e/tests/<area>/<topic>.spec.ts` (areas: `account`, `issues`, `issue-list`, `projects`, `admin`,
-  `content`, `timelog`, `cross-cutting`, `parity`; new areas welcome: `twofa`, `pdf`, `scm`, `plugins`, …).
+  `content`, `timelog`, `imports`, `plugins`, `cross-cutting`, `parity`; new areas welcome: `twofa`, `pdf`, `scm`, …).
+  `scenarios` holds the long stories: several people working on the same data across modules (an issue from report to
+  closure, visibility changing mid-session, bulk moves, a project from creation to archive), each checked from every
+  seat and in the database, the e-mails, the API and the feeds.
 - Always import from the fixtures, never directly from `@playwright/test`:
   ```ts
   import { test, expect, uid } from '../../support/fixtures';

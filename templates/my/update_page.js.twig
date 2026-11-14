@@ -1,0 +1,6 @@
+{#- my/update_page.js.erb: blocks = block => MyPageService::blockData() (null: not a block) -#}
+{% autoescape false %}
+{% for block, b in blocks %}
+$("#block-{{ block|account_js }}").replaceWith("{{ (b is null ? '' : include('my/_block.html.twig', {b: b}, with_context = false))|account_js }}");
+{% endfor %}
+{% endautoescape %}

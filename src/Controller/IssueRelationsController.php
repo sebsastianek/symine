@@ -6,8 +6,10 @@ namespace App\Controller;
 
 use App\Api\ApiRenderer;
 use App\Api\IssueApiPresenter;
-use App\Entity\Issue;
-use App\Entity\IssueRelation;
+use App\Service\Issue\IssueFinder;
+use App\Service\Issue\IssueRelationFinder;
+use App\Service\Issue\IssueRelationForm;
+use App\Service\Issue\IssueRelationJs;
 use App\Service\IssueService;
 use App\Twig\IssuesExtension;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,6 +21,9 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 final class IssueRelationsController extends AbstractController
 {
     public function __construct(
+        private readonly IssueFinder $finder,
+        private readonly IssueRelationFinder $relations,
+        private readonly IssueRelationForm $form,
         private readonly IssueService $issues,
         private readonly ApiRenderer $api,
         private readonly IssueApiPresenter $presenter,
@@ -26,23 +31,10 @@ final class IssueRelationsController extends AbstractController
     ) {
     }
 
-    private function findIssue(int $id): Issue
-    {
-        $issue = $this->em->find(Issue::class, $id);
-        if (null === $issue) {
-            throw $this->createNotFoundException();
-        }
-        if (!$this->issues->isVisible($issue)) {
-            $this->deny();
-        }
-
-        return $issue;
-    }
-
     #[Route('/issues/{issue_id}/relations.{_format}', name: 'issue_relations_index', requirements: ['issue_id' => '\d+', '_format' => 'json|xml|html'], defaults: ['_format' => 'html'], methods: ['GET'])]
     public function index(Request $request, int $issue_id): Response
     {
-        $issue = $this->findIssue($issue_id);
+        $issue = $this->finder->find($issue_id);
         // permission map: issue_relations#index belongs to manage_issue_relations
         $this->authorize('manage_issue_relations', $issue->project);
         if (!$this->isApi($request)) {
@@ -55,10 +47,7 @@ final class IssueRelationsController extends AbstractController
     #[Route('/relations/{id}.{_format}', name: 'relation_show', requirements: ['id' => '\d+', '_format' => 'json|xml|html'], defaults: ['_format' => 'html'], methods: ['GET'])]
     public function show(Request $request, int $id): Response
     {
-        $relation = $this->em->find(IssueRelation::class, $id) ?? throw $this->createNotFoundException();
-        if (!$this->issues->isVisible($relation->issueFrom) || !$this->issues->isVisible($relation->issueTo)) {
-            $this->deny();
-        }
+        $relation = $this->relations->find($id);
         if (!$this->isApi($request)) {
             return new Response('');
         }
@@ -69,60 +58,31 @@ final class IssueRelationsController extends AbstractController
     #[Route('/issues/{issue_id}/relations.{_format}', name: 'issue_relations_create', requirements: ['issue_id' => '\d+', '_format' => 'json|xml|js|html'], defaults: ['_format' => 'html'], methods: ['POST'])]
     public function create(Request $request, int $issue_id, string $_format = 'html'): Response
     {
-        $issue = $this->findIssue($issue_id);
+        $issue = $this->finder->find($issue_id);
         $this->authorize('manage_issue_relations', $issue->project);
-        $isApi = $this->isApi($request);
-        $params = $isApi ? (array) (ApiRenderer::payload($request)['relation'] ?? []) : $request->request->all('relation');
-        $toIds = $params['issue_to_id'] ?? '';
-        $toIds = \is_array($toIds) ? $toIds : (is_numeric($toIds) && !\is_string($toIds) ? [$toIds] : array_values(array_filter(array_map('trim', explode(',', (string) $toIds)), static fn ($v) => '' !== $v)));
-        if ([] === $toIds) {
-            $toIds = [''];
-        }
-        $type = (string) ($params['relation_type'] ?? IssueRelation::TYPE_RELATES);
-        $delay = isset($params['delay']) && '' !== (string) $params['delay'] ? (int) $params['delay'] : null;
-        $unsaved = [];
-        $relation = null;
-        $lastErrors = [];
-        foreach ($toIds as $toId) {
-            $toId = trim((string) $toId, " #\t");
-            $to = ctype_digit($toId) ? (int) $toId : null;
-            [$relation, $errors] = $this->issues->createRelation($issue, $to, $type, $delay);
-            if (null === $relation) {
-                if (null === $to) {
-                    $errors = [$this->l('field_issue_to').' '.$this->l('activerecord.errors.messages.blank')];
-                }
-                $unsaved[] = ['issue_to_id' => $to, 'errors' => $errors];
-                $lastErrors = $errors;
-            }
-        }
-        if ($isApi) {
-            if (null !== $relation && [] === $unsaved) {
-                $response = $this->api->render($request, ['relation' => $this->presenter->relation($relation)], 201);
-                $response->headers->set('Location', $this->generateUrl('relation_show', ['id' => $relation->id], UrlGeneratorInterface::ABSOLUTE_URL));
+        $submission = $this->form->submit($request, $issue);
+        if ($this->isApi($request)) {
+            if (null !== $submission->relation && $submission->isSaved()) {
+                $response = $this->api->render($request, ['relation' => $this->presenter->relation($submission->relation)], 201);
+                $response->headers->set('Location', $this->generateUrl('relation_show', ['id' => $submission->relation->id], UrlGeneratorInterface::ABSOLUTE_URL));
 
                 return $response;
             }
 
-            return $this->api->errors($request, $lastErrors);
+            return $this->api->errors($request, $submission->errors);
         }
         if ('js' === $_format || $request->isXmlHttpRequest()) {
-            $this->em->refresh($issue);
             $html = $this->renderView('issues/_relations.html.twig', [
                 'issue' => $issue,
                 'project' => $issue->project,
-                'relations' => $this->presenter->visibleRelations($issue),
-                'unsaved_relations' => $unsaved,
+                'relations' => $this->form->relationsOf($issue),
+                'unsaved_relations' => $submission->unsaved,
             ]);
-            $js = '$("#relations").html('.json_encode($html, \JSON_HEX_TAG | \JSON_UNESCAPED_UNICODE).');';
-            if ([] === $unsaved) {
-                $js .= "$('#relation_delay').val('');$('#relation_issue_to_id').val('');";
-            }
-            $js .= "$('#new-relation-form').show();$('#relation_issue_to_id').focus();";
 
-            return $this->js($js);
+            return new Response(IssueRelationJs::created($html, $submission->isSaved()), 200, ['Content-Type' => IssueRelationJs::CONTENT_TYPE]);
         }
-        if ([] !== $unsaved) {
-            $this->flashError(implode(', ', $lastErrors));
+        if (!$submission->isSaved()) {
+            $this->flashError(implode(', ', $submission->errors));
         }
 
         return $this->redirectToRoute('issue_show', ['id' => $issue->id]);
@@ -131,31 +91,19 @@ final class IssueRelationsController extends AbstractController
     #[Route('/relations/{id}.{_format}', name: 'relation_destroy', requirements: ['id' => '\d+', '_format' => 'json|xml|js|html'], defaults: ['_format' => 'html'], methods: ['DELETE'])]
     public function destroy(Request $request, int $id, string $_format = 'html'): Response
     {
-        $relation = $this->em->find(IssueRelation::class, $id) ?? throw $this->createNotFoundException();
+        $relation = $this->relations->findDeletable($id);
         $from = $relation->issueFrom;
-        $to = $relation->issueTo;
-        if (!$this->issues->isVisible($from) || !$this->issues->isVisible($to)
-            || (!$this->auth->allowedTo('manage_issue_relations', $from->project) && !$this->auth->allowedTo('manage_issue_relations', $to->project))) {
-            $this->deny();
-        }
         $this->issues->deleteRelation($relation);
         if ($this->isApi($request)) {
             return $this->api->noContent();
         }
         $issueId = (int) ($request->query->get('issue_id') ?: $from->id);
         if ('js' === $_format || $request->isXmlHttpRequest()) {
-            $issue = $this->findIssue($issueId);
-            $this->em->refresh($issue);
-            $relations = $this->presenter->visibleRelations($issue);
+            $issue = $this->finder->find($issueId);
 
-            return $this->js('$("#relation-'.$id.'").remove();$(".issues-stat").replaceWith('.json_encode($this->helpers->renderRelationsStats($issue, $relations), \JSON_HEX_TAG | \JSON_UNESCAPED_UNICODE).');');
+            return new Response(IssueRelationJs::destroyed($id, $this->helpers->renderRelationsStats($issue, $this->form->relationsOf($issue))), 200, ['Content-Type' => IssueRelationJs::CONTENT_TYPE]);
         }
 
         return $this->redirectToRoute('issue_show', ['id' => $from->id]);
-    }
-
-    private function js(string $js): Response
-    {
-        return new Response($js, 200, ['Content-Type' => 'text/javascript; charset=utf-8']);
     }
 }

@@ -29,6 +29,7 @@ final class MenuBuilder
         private readonly Localizer $i18n,
         private readonly ProjectService $projects,
         private readonly ?MenuRegistry $registry = null,
+        private readonly ?\App\Theme\ThemeContext $themes = null,
     ) {
     }
 
@@ -79,6 +80,10 @@ final class MenuBuilder
         } else {
             $this->push($items, 'my_profile', 'user_show', ['id' => $user->id], 'label_profile');
             $this->push($items, 'my_account', 'my_account', [], 'label_my_account');
+            // Symine: personal appearance, when the theme in use or the administrators leave something to choose
+            if ($this->themes?->customisable()) {
+                $this->push($items, 'my_appearance', 'my_appearance', [], 'label_appearance');
+            }
             $this->push($items, 'logout', 'signout', [], 'label_logout', ['data-method' => 'post']);
         }
 
@@ -175,7 +180,8 @@ final class MenuBuilder
         if ($allowed('view_files')) {
             $this->push($items, 'files', 'project_files', $p, 'label_file_plural');
         }
-        if ($allowed('browse_repository') && $this->projects->hasRepository($project)) {
+        // repositories#show is allowed by browse_repository or view_changesets
+        if (($allowed('browse_repository') || $allowed('view_changesets')) && $this->projects->hasRepository($project)) {
             $this->push($items, 'repository', 'repository_show', ['id' => $project->identifier], 'label_repository');
         }
         if ($this->projects->canSeeSettings($project)) {
@@ -200,6 +206,7 @@ final class MenuBuilder
             ['custom_fields', 'custom_fields_index', 'label_custom_field_plural', 'custom-fields'],
             ['enumerations', 'enumerations_index', 'label_enumerations', 'list'],
             ['settings', 'settings_index', 'label_settings', 'settings'],
+            ['themes', 'admin_themes', 'label_theme_plural', 'photo'],
             ['ldap_authentication', 'auth_sources_index', 'label_ldap_authentication', 'server-authentication'],
             ['applications', 'oauth_applications', 'doorkeeper.layouts.admin.nav.applications', 'apps'],
             ['webhooks', 'admin_webhooks', 'label_webhook_plural', 'webhook'],

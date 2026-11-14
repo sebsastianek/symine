@@ -61,7 +61,12 @@ final class TimelogExtension extends AbstractExtension
     {
         $value = $query->columnValue($column, $entry);
         if ($column->isCustomField() && null !== $column->customField) {
-            return self::h($this->customFields->formatValue($column->customField, $value));
+            // values of fields with a URL pattern and link fields are links; the customized object is the
+            // time entry, or its issue / project for "issue.cf_N" / "project.cf_N" columns
+            $customized = str_starts_with($column->name, 'issue.') ? $entry->issue : (str_starts_with($column->name, 'project.') ? $entry->project : $entry);
+
+            return $this->customFields->linkedValueHtml($column->customField, $value, $customized)
+                ?? self::h($this->customFields->formatValue($column->customField, $value));
         }
 
         return match ($column->name) {

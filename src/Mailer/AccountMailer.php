@@ -136,16 +136,32 @@ final class AccountMailer
         try {
             $context += ['emails_header' => $this->settings->string('emails_header'), 'emails_footer' => $this->settings->string('emails_footer')];
             $text = $this->twig->render('mailer/account/'.$template.'.txt.twig', $context);
+            // Mailer#mail: the emission address may already carry a display name ("Name <addr>");
+            // the application title is only added when it has none
+            $mailFrom = trim($this->settings->string('mail_from')) ?: 'redmine@example.net';
+            try {
+                $from = Address::create($mailFrom);
+                if ('' === $from->getName()) {
+                    $from = new Address($from->getAddress(), $this->settings->appTitle());
+                }
+                $fromAddr = $from->getAddress();
+            } catch (\Throwable) {
+                // not RFC compliant: used as it is
+                $from = null;
+                $fromAddr = $mailFrom;
+            }
             $email = (new Email())
-                ->from(new Address($this->settings->string('mail_from') ?: 'redmine@example.net', $this->settings->appTitle()))
                 ->to($to)
                 ->subject($subject)
                 ->text($text);
+            null !== $from ? $email->from($from) : $email->getHeaders()->addTextHeader('From', $fromAddr);
             if (!$this->settings->bool('plain_text_mail')) {
                 $email->html($this->twig->render('mailer/account/'.$template.'.html.twig', $context));
             }
             $email->getHeaders()->addTextHeader('X-Mailer', 'Redmine');
             $email->getHeaders()->addTextHeader('X-Redmine-Host', $this->settings->string('host_name'));
+            $email->getHeaders()->addTextHeader('X-Redmine-Site', $this->settings->appTitle());
+            $email->getHeaders()->addTextHeader('List-Id', '<'.str_replace('@', '.', $fromAddr).'>');
             $email->getHeaders()->addTextHeader('X-Auto-Response-Suppress', 'All');
             $email->getHeaders()->addTextHeader('Auto-Submitted', 'auto-generated');
             $this->mailer->send($email);

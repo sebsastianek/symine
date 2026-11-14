@@ -1,0 +1,10 @@
+{#- my/show_api_key.js.erb -#}
+{% autoescape false %}
+$('#api-access-key').html('{{ api_key|e('html')|account_js }}').toggle();
+
+if ($('#api-access-key').is(':visible')) {
+  $('.api-key-actions .copy-api-key-link').show();
+} else {
+  $('.api-key-actions .copy-api-key-link').hide();
+}
+{% endautoescape %}

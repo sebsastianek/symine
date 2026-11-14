@@ -2,14 +2,23 @@ import { test, expect } from '../../support/fixtures';
 import { sqlValue } from '../../support/db';
 import type { Page } from '@playwright/test';
 
-/** Opens the workflow editor (status transitions or field permissions) for a role and a tracker via the form. */
+/**
+ * Opens the workflow editor (status transitions or field permissions) for a role and a tracker via the form.
+ * Symine shows the editor as soon as the page opens and reloads it when a selector changes (no "Edit" click).
+ */
 async function openEditor(page: Page, tab: 'edit' | 'permissions', role: string, tracker: string): Promise<void> {
   await page.goto(`/workflows/${tab}`);
-  await page.locator('#role_id').selectOption({ label: role });
-  await page.locator('#tracker_id').selectOption({ label: tracker });
-  await page.locator('#content form[method=get] input[type=submit][value="Edit"]').click();
   await expect(page.locator('#workflow_form')).toBeVisible();
-  await expect(page.locator('#workflow_form input[name="role_id[]"]')).toHaveValue(/\d+/);
+  for (const [select, label] of [['role_id', role], ['tracker_id', tracker]] as const) {
+    const value = await page.locator(`#${select} option`, { hasText: new RegExp(`^${label}$`) }).getAttribute('value');
+    if ((await page.locator(`#workflow_form input[name="${select}[]"]`).inputValue()) !== value) {
+      await Promise.all([
+        page.waitForURL((url) => url.searchParams.getAll(`${select}[]`).includes(value!)),
+        page.locator(`#${select}`).selectOption(value!),
+      ]);
+    }
+    await expect(page.locator(`#workflow_form input[name="${select}[]"]`)).toHaveValue(value!);
+  }
 }
 
 function statusOptions(page: Page) {
@@ -47,6 +56,42 @@ test.describe('workflow editor', () => {
     await dev.ui.expectNotice('Successful update.');
     await expect(dev.page.locator('.issue .status.attribute .value')).toHaveText('Rejected');
     expect(Number(sqlValue('SELECT status_id FROM issues WHERE id = 13'))).toBe(6);
+  });
+
+  test('the editor shows what the selectors say: opened at once, reloaded on change, unsaved changes guarded', async ({ page }) => {
+    await page.goto('/workflows/edit');
+    // no click needed: the first role and tracker are selected and their table is displayed
+    const role = page.locator('#role_id');
+    const shownRole = page.locator('#workflow_form input[name="role_id[]"]');
+    await expect(page.locator('#workflow_form table.transitions-always')).toBeVisible();
+    await expect(shownRole).toHaveValue(await role.inputValue());
+
+    // choosing another role reloads the table for it
+    const developer = await page.locator('#role_id option', { hasText: /^Developer$/ }).getAttribute('value');
+    await role.selectOption(developer!);
+    await expect(page).toHaveURL(/role_id/);
+    await expect(shownRole).toHaveValue(developer!);
+    await expect(page.locator('#transitions_2_6_always')).not.toBeChecked();
+
+    // with unsaved changes in the table, the page asks first; declining keeps the table and puts the selector back
+    await page.locator('#transitions_2_6_always').check();
+    // (the fixtures accept every dialog: the page's confirm is replaced to answer "no")
+    await page.evaluate(() => {
+      (window as any).asked = 0;
+      window.confirm = () => { (window as any).asked++; return false; };
+    });
+    const manager = await page.locator('#role_id option', { hasText: /^Manager$/ }).getAttribute('value');
+    await role.selectOption(manager!);
+    await expect.poll(() => page.evaluate(() => (window as any).asked)).toBe(1);
+    await expect(role).toHaveValue(developer!);
+    await expect(shownRole).toHaveValue(developer!);
+    await expect(page.locator('#transitions_2_6_always')).toBeChecked();
+
+    // "used statuses only" reloads too
+    await page.evaluate(() => { window.confirm = () => true; });
+    await page.locator('#used_statuses_only').uncheck();
+    await expect(page).toHaveURL(/used_statuses_only=0(?!.*used_statuses_only=1)/);
+    await expect(shownRole).toHaveValue(developer!);
   });
 
   test('column "check all" toggle in the transitions table', async ({ page, ui }) => {

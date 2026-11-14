@@ -545,7 +545,7 @@ final class RedmineMigrator
                 if (\is_resource($value)) {
                     $value = stream_get_contents($value);
                 }
-                if (null !== $value && \in_array($col, $serialized, true)) {
+                if (null !== $value && \in_array($col, $serialized, true) && !('settings' === $table && self::isPlainSetting($row['name'] ?? null))) {
                     $value = $this->convertSerialized((string) $value, $table, $col, $row['id'] ?? null, $warnings);
                 }
                 if (\is_string($value) && \in_array($col, $ciphered, true) && str_starts_with($value, 'aes-256-cbc:')) {
@@ -711,6 +711,15 @@ final class RedmineMigrator
         $s = trim((string) $value);
 
         return '' === $s ? null : (preg_match('/^(\d{4}-\d{2}-\d{2})/', $s, $m) ? $m[1] : $s);
+    }
+
+    /** Setting#value: settings not declared "serialized" are plain strings, kept as-is even when they start with "---" */
+    private static function isPlainSetting(mixed $name): bool
+    {
+        static $definitions = null;
+        $definitions ??= require \dirname(__DIR__, 2).'/config/redmine/settings.php';
+
+        return \is_string($name) && isset($definitions[$name]) && !$definitions[$name]['serialized'];
     }
 
     /** @param list<string> $warnings */

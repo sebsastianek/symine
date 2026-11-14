@@ -146,6 +146,41 @@ final class TimeEntryService
         return $qb->getQuery()->getResult();
     }
 
+    /**
+     * The activities available in every one of the projects (bulk edit and context menu of a selection of entries)
+     *
+     * @param list<Project> $projects
+     *
+     * @return list<TimeEntryActivity>
+     */
+    public function commonActivities(array $projects): array
+    {
+        $activities = null;
+        foreach ($projects as $p) {
+            $acts = $this->activities($p);
+            $activities = null === $activities ? $acts : array_values(array_filter($activities, static fn ($a) => \in_array($a->id, array_map(static fn ($b) => $b->id, $acts), true)));
+        }
+
+        return $activities ?? [];
+    }
+
+    /**
+     * The projects of the entries, each once
+     *
+     * @param list<TimeEntry> $entries
+     *
+     * @return list<Project>
+     */
+    public static function projectsOf(array $entries): array
+    {
+        $out = [];
+        foreach ($entries as $e) {
+            $out[$e->project->id] = $e->project;
+        }
+
+        return array_values($out);
+    }
+
     /** @return list<TimeEntryActivity> TimeEntryActivity.shared (all, project_id NULL) */
     public function sharedActivities(): array
     {
@@ -609,14 +644,16 @@ final class TimeEntryService
             && $entry->spentOn > $this->i18n->today($entry->user)) {
             $errors[] = $this->i18n->l('error_spent_on_future_date');
         }
-        if (!$this->settings->bool('timelog_accept_closed_issues') && null !== $entry->issue && $entry->issue->isClosed()) {
+        // issue&.closed? && issue.was_closed?: time can be logged while the issue is being closed
+        if (!$this->settings->bool('timelog_accept_closed_issues') && null !== $entry->issue && $entry->issue->isClosed() && $this->issues->wasClosed($entry->issue)) {
             $errors[] = $this->i18n->l('error_spent_on_closed_issue');
         }
         // custom fields (only editable ones, on creation or when changed)
         if (isset($entry->project) && (($st['new'] ?? false) || ($st['cf_changed'] ?? false))) {
             $values = $st['cf'] ?? $this->customValues($entry);
+            $stored = ($st['new'] ?? false) || null === ($entry->id ?? null) ? [] : $this->customFields->values('TimeEntry', (int) $entry->id);
             foreach ($this->editableCustomFields($entry, $user) as $field) {
-                $errors = array_merge($errors, $this->customFields->validate($field, $values[$field->id] ?? null, $entry->project));
+                $errors = array_merge($errors, $this->customFields->validate($field, $values[$field->id] ?? null, $entry->project, $stored[$field->id] ?? null));
             }
         }
 
@@ -699,30 +736,5 @@ final class TimeEntryService
 
         return $this->em->createQuery('SELECT te, p, u, a FROM App\Entity\TimeEntry te JOIN te.project p JOIN te.user u JOIN te.activity a WHERE te.id IN (:ids) ORDER BY te.id')
             ->setParameter('ids', $ids)->getResult();
-    }
-
-    /** API representation (timelog/show.api.rsb) */
-    public function toApi(TimeEntry $e, ?User $user = null): array
-    {
-        $user = $this->auth->user($user);
-        $data = ['id' => $e->id];
-        $data['project'] = ['id' => $e->project->id, 'name' => $e->project->name];
-        if (null !== $e->issue) {
-            $data['issue'] = ['id' => $e->issue->id];
-        }
-        $data['user'] = ['id' => $e->user->id, 'name' => $e->user->getName()];
-        $data['activity'] = ['id' => $e->activity->id, 'name' => $e->activity->name];
-        $data['hours'] = round($e->hours, 2);
-        $data['comments'] = $e->comments;
-        $data['spent_on'] = $e->spentOn->format('Y-m-d');
-        $data['created_on'] = \App\Api\ApiRenderer::time($e->createdOn);
-        $data['updated_on'] = \App\Api\ApiRenderer::time($e->updatedOn);
-        $fields = $this->editableCustomFields($e, $user);
-        if ([] !== $fields) {
-            $values = $this->customValues($e);
-            $data['custom_fields'] = array_map(static fn ($f) => ['id' => $f->id, 'name' => $f->name] + ($f->isMultiple() ? ['multiple' => true] : []) + ['value' => $values[$f->id] ?? ($f->isMultiple() ? [] : null)], $fields);
-        }
-
-        return $data;
     }
 }

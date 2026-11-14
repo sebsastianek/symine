@@ -1,7 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block content %}
 <h2>{{ l('label_confirmation') }}</h2>
-{% if error %}<div class="flash error" id="flash_error">{{ error }}</div>{% endif %}
+{% if error %}<div class="flash error" id="flash_error">{{ sprite_icon('warning') }}{{ error }}</div>{% endif %}
 
 <form action="{{ path('issues_destroy') }}" accept-charset="UTF-8" method="post">
 <input type="hidden" name="_method" value="delete" autocomplete="off" />{{ csrf_field() }}

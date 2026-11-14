@@ -33,6 +33,7 @@ final class EventBuilder
         private readonly EntityManagerInterface $em,
         private readonly Localizer $i18n,
         private readonly IssueService $issues,
+        private readonly ?\App\Doctrine\BatchLoader $batch = null,
     ) {
     }
 
@@ -73,6 +74,7 @@ final class EventBuilder
     /** Journal#new_status */
     public function journalNewStatus(Journal $journal): ?IssueStatus
     {
+        $this->batch?->collection($journal, 'details');
         foreach ($journal->details as $d) {
             if ('attr' === $d->property && 'status_id' === $d->propKey && null !== $d->value && '' !== $d->value) {
                 return $this->status((int) $d->value);

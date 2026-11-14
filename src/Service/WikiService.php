@@ -533,6 +533,14 @@ final class WikiService
         $this->em->flush();
     }
 
+    /** WikisController#destroy: deletes the wiki of the project with all its pages; a new empty wiki takes its place */
+    public function recreate(Wiki $wiki, Project $project): void
+    {
+        $this->destroyWiki($wiki);
+        $this->createDefault($project);
+        $this->em->flush();
+    }
+
     // ---- diff / annotate ----
 
     public function diff(WikiPage $page, ?int $versionTo = null, ?int $versionFrom = null): ?WikiDiff

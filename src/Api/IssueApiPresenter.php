@@ -11,12 +11,14 @@ use App\Entity\IssueRelation;
 use App\Entity\IssueStatus;
 use App\Entity\Journal;
 use App\Entity\User;
+use App\Query\IssueQuery;
 use App\Security\Authorization;
 use App\Service\CustomFieldService;
 use App\Service\IssueService;
 use App\Service\WatcherService;
 use App\Twig\IssuesExtension;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 /**
@@ -44,6 +46,7 @@ final class IssueApiPresenter
         private readonly EntityManagerInterface $em,
         private readonly IssuesExtension $helpers,
         private readonly \App\Service\ReactionService $reactions,
+        private readonly ?\App\Doctrine\BatchLoader $batch = null,
     ) {
     }
 
@@ -135,6 +138,43 @@ final class IssueApiPresenter
         return $out;
     }
 
+    /**
+     * issues/index.api.rsb: the page of issues the query finds (limit, offset or page parameters), each with
+     * the attachments and relations asked with ?include=.
+     *
+     * @return array{issues: list<array<string, mixed>>, total_count: int, offset: int, limit: int}
+     */
+    public function issues(Request $request, IssueQuery $query): array
+    {
+        $limit = max(1, min(100, (int) ($request->query->get('limit') ?: 25)));
+        $offset = max(0, (int) $request->query->get('offset', 0));
+        if ($request->query->has('page') && !$request->query->has('offset')) {
+            $offset = max(0, ((int) $request->query->get('page') - 1) * $limit);
+        }
+        $query->setColumnNames(['author']);
+        $count = $query->issueCount();
+        $issues = $query->issues($offset, $limit);
+        $include = array_filter(array_map('trim', explode(',', (string) $request->query->get('include', ''))));
+        $include = array_values(array_intersect($include, ['attachments', 'relations']));
+        $list = [];
+        $ids = array_map(static fn (Issue $i) => (int) $i->id, $issues);
+        $this->customFields->preloadValues('Issue', $ids);
+        $this->spentHours = $this->visibleSpentHoursByIssue($ids);
+        try {
+            foreach ($issues as $issue) {
+                $data = $this->issue($issue, $include);
+                if (\in_array('relations', $include, true) && !isset($data['relations'])) {
+                    $data['relations'] = [];
+                }
+                $list[] = $data;
+            }
+        } finally {
+            $this->spentHours = null;
+        }
+
+        return ['issues' => $list, 'total_count' => $count, 'offset' => $offset, 'limit' => $limit];
+    }
+
     /** @return list<array<string, mixed>> */
     public function customValues(Issue $issue): array
     {
@@ -176,7 +216,10 @@ final class IssueApiPresenter
     /** @return list<IssueRelation> */
     public function visibleRelations(Issue $issue): array
     {
-        $rels = array_values(array_filter($issue->getRelations(), fn (IssueRelation $r) => $this->issues->isVisible($r->otherIssue($issue))));
+        $all = $issue->getRelations();
+        // the related issues are only known by their id: one query for all of them
+        $this->batch?->references(array_map(static fn (IssueRelation $r) => $r->otherIssue($issue), $all));
+        $rels = array_values(array_filter($all, fn (IssueRelation $r) => $this->issues->isVisible($r->otherIssue($issue))));
         // IssueRelation#<=>: type order, then id
         usort($rels, static fn (IssueRelation $a, IssueRelation $b) => [IssueRelation::TYPES[$a->relationType][2] ?? 99, $a->id] <=> [IssueRelation::TYPES[$b->relationType][2] ?? 99, $b->id]);
 
@@ -190,6 +233,10 @@ final class IssueApiPresenter
         $user = $this->auth->user();
         $out = [];
         $i = 0;
+        if (null !== $this->batch && null !== $issue->id && $issue->journals instanceof \Doctrine\ORM\PersistentCollection && !$issue->journals->isInitialized()) {
+            // the authors of the notes cannot be lazy (see BatchLoader::principals)
+            $this->batch->principals($this->em->getConnection()->fetchFirstColumn('SELECT DISTINCT user_id FROM journals WHERE journalized_id = ?', [$issue->id]));
+        }
         $journals = $issue->journals->toArray();
         usort($journals, static fn (Journal $a, Journal $b) => [$a->createdOn, $a->id] <=> [$b->createdOn, $b->id]);
         foreach ($journals as $j) {
@@ -235,6 +282,9 @@ final class IssueApiPresenter
     /** @param list<int|null> $issueIds */
     private function visibleSpentHours(array $issueIds): float
     {
+        if (1 === \count($issueIds) && isset($this->spentHours[(int) $issueIds[0]])) {
+            return $this->spentHours[(int) $issueIds[0]];
+        }
         $cond = $this->auth->allowedToCondition('view_time_entries', 'IDENTITY(t.project)', null, static function ($role, User $u) {
             if ('all' === $role->timeEntriesVisibility) {
                 return null;
@@ -245,6 +295,38 @@ final class IssueApiPresenter
 
         return (float) $this->em->createQuery("SELECT COALESCE(SUM(t.hours), 0) FROM App\\Entity\\TimeEntry t WHERE IDENTITY(t.issue) IN (:ids) AND $cond")
             ->setParameter('ids', $issueIds)->getSingleScalarResult();
+    }
+
+    /** @var array<int, float>|null spent hours of the issues of the list being rendered (issues()) */
+    private ?array $spentHours = null;
+
+    /**
+     * visibleSpentHours() of each issue of a list, in one query.
+     *
+     * @param list<int> $issueIds
+     *
+     * @return array<int, float>|null
+     */
+    private function visibleSpentHoursByIssue(array $issueIds): ?array
+    {
+        if (\count($issueIds) < 2) {
+            return null;
+        }
+        $cond = $this->auth->allowedToCondition('view_time_entries', 'IDENTITY(t.project)', null, static function ($role, User $u) {
+            if ('all' === $role->timeEntriesVisibility) {
+                return null;
+            }
+
+            return 'own' === $role->timeEntriesVisibility && $u->id && $u->isLogged() ? 'IDENTITY(t.user) = '.(int) $u->id : '1=0';
+        });
+        $out = array_fill_keys($issueIds, 0.0);
+        $rows = $this->em->createQuery("SELECT IDENTITY(t.issue) AS issue_id, COALESCE(SUM(t.hours), 0) AS hours FROM App\\Entity\\TimeEntry t WHERE IDENTITY(t.issue) IN (:ids) AND $cond GROUP BY t.issue")
+            ->setParameter('ids', $issueIds)->getArrayResult();
+        foreach ($rows as $row) {
+            $out[(int) $row['issue_id']] = (float) $row['hours'];
+        }
+
+        return $out;
     }
 
     public function relation(IssueRelation $r): array

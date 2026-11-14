@@ -21,21 +21,9 @@ $(function() { $('#version_effective_date').addClass('date').datepickerFallback(
 <p><label for="version_default_project_version">{{ l('field_default_version') }}</label><input name="version[default_project_version]" type="hidden" value="0" autocomplete="off" /><input type="checkbox" value="1" name="version[default_project_version]" id="version_default_project_version"{% if extra.default_project_version ?? false %} checked="checked"{% endif %} /></p>
 {% endif %}
 
+{#- custom_field_tag_with_label: same widgets as every other form (key/value lists, users, versions, check boxes...) -#}
 {% for field in version_custom_fields(version) %}
-  {% set fid = 'version_custom_field_values_' ~ field.id %}
-  {% set fname = 'version[custom_field_values][' ~ field.id ~ ']' %}
-  {% set value = cf_values[field.id] ?? null %}
-  <p><label for="{{ fid }}"><span>{{ field.name }}</span>{% if field.isRequired %}<span class="required"> *</span>{% endif %}</label>
-  {%- if field.fieldFormat == 'text' -%}
-    <textarea rows="3" class="text_cf" name="{{ fname }}" id="{{ fid }}">{{ value }}</textarea>
-  {%- elseif field.fieldFormat == 'bool' -%}
-    <select class="bool_cf" name="{{ fname }}" id="{{ fid }}"><option value="">{{ l('label_none') }}</option><option value="1"{% if value == '1' %} selected="selected"{% endif %}>{{ l('general_text_Yes') }}</option><option value="0"{% if value == '0' %} selected="selected"{% endif %}>{{ l('general_text_No') }}</option></select>
-  {%- elseif field.fieldFormat == 'list' -%}
-    <select class="list_cf" name="{{ fname }}{% if field.isMultiple() %}[]{% endif %}" id="{{ fid }}"{% if field.isMultiple() %} multiple="multiple"{% endif %}>{% if not field.isMultiple() %}<option value=""></option>{% endif %}{% for pv in field.getPossibleValues() %}<option value="{{ pv }}"{% if pv in (value is iterable ? value : [value]) %} selected="selected"{% endif %}>{{ pv }}</option>{% endfor %}</select>
-  {%- else -%}
-    <input type="{{ field.fieldFormat == 'date' ? 'date' : 'text' }}" class="{{ field.fieldFormat }}_cf" value="{{ value is iterable ? value|join(', ') : value }}" name="{{ fname }}" id="{{ fid }}" />
-  {%- endif -%}
-  </p>
+  <p>{{ issue_cf_tag('version', field, cf_values[field.id] ?? null, version.project ?? null) }}</p>
 {% endfor %}
 
 </div>

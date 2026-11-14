@@ -130,6 +130,8 @@ final class SyntaxHighlighting
     {
         if (null === $this->languages) {
             $this->languages = [];
+            // the languages are registered by the first Highlighter instance
+            $this->highlighter();
             foreach (Highlighter::listRegisteredLanguages(true) as $l) {
                 $this->languages[strtolower((string) $l)] = true;
             }

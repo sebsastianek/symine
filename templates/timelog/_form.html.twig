@@ -40,7 +40,7 @@ $(function() { $('#time_entry_spent_on').addClass('date').datepickerFallback(dat
 {% endfor %}</select></p>
   {% for field in custom_fields %}
     <div class="form-field">
-      <p>{{ m.cf_label('time_entry', field) }}{{ m.cf_tag('time_entry', field, custom_values[field.id] ?? null, cf_options(field, entry.project ?? project)) }}</p>
+      <p>{{ issue_cf_tag('time_entry', field, custom_values[field.id] ?? null, entry.project ?? project) }}</p>
     </div>
   {% endfor %}
   {{ call_hook('view_timelog_edit_form_bottom', {time_entry: entry, form: null}) }}

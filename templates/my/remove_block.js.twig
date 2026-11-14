@@ -1,0 +1,5 @@
+{#- my/remove_block.js.erb -#}
+{% autoescape false %}
+$("#block-{{ block|account_js }}").remove();
+$("#block-select").replaceWith("{{ include('my/_block_select.html.twig', {block_options: block_options}, with_context = false)|account_js }}");
+{% endautoescape %}

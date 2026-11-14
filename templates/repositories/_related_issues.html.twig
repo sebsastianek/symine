@@ -26,3 +26,5 @@
 </form>
 {% endif %}
 </div>
+
+<script>observeAutocompleteField('issue_id', '{{ path('issues_auto_complete', {project_id: project.identifier, scope: 'all'})|e('js') }}')</script>

@@ -34,6 +34,10 @@ final class HtmlToText
 
     public static function convert(string $html, string $formatting = ''): string
     {
+        // a leading UTF-8 byte order mark is not content (dropped by Redmine's HTML parser)
+        if (str_starts_with($html, "\xEF\xBB\xBF")) {
+            $html = substr($html, 3);
+        }
         $html = str_replace(["\r", "\n"], ' ', $html);
         $doc = new \DOMDocument();
         $prev = libxml_use_internal_errors(true);

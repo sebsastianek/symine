@@ -19,6 +19,7 @@ use App\Entity\User;
 use App\Entity\Version;
 use App\Service\IssueService;
 use App\Service\ProjectService;
+use App\Service\TimeEntryService;
 
 /**
  * Port of app/models/issue_import.rb. Issues are created through IssueService (safe attributes,
@@ -56,6 +57,7 @@ final class IssueImporter extends AbstractImporter
     public function __construct(
         private readonly IssueService $issues,
         private readonly ProjectService $projects,
+        private readonly ImportNotificationSuppressor $suppressor,
     ) {
     }
 
@@ -187,14 +189,15 @@ final class IssueImporter extends AbstractImporter
     protected function beforeRun(Import $import): void
     {
         if (!$this->notificationsEnabled($import)) {
-            ImportNotificationSuppressor::begin();
+            // issue.notify = false: no "issue added" e-mail for the imported issues
+            $this->suppressor->beginSilentCreations();
         }
     }
 
     protected function afterRun(Import $import): void
     {
         if (!$this->notificationsEnabled($import)) {
-            ImportNotificationSuppressor::end();
+            $this->suppressor->endSilentCreations();
         }
     }
 
@@ -348,10 +351,12 @@ final class IssueImporter extends AbstractImporter
             }
         }
         if (null !== ($h = $this->rowValue($import, $row, 'estimated_hours'))) {
-            if (null === IssueService::parseHours($h)) {
+            // Issue#estimated_hours=: String#to_hours ("2h30", "1:30", "90m", "1,5"...)
+            $hours = TimeEntryService::toHours($h);
+            if (null === $hours) {
                 $errors[] = $this->error('field_estimated_hours', 'invalid');
             } else {
-                $attributes['estimated_hours'] = $h;
+                $attributes['estimated_hours'] = $hours;
             }
         }
         if (null !== ($ratio = $this->rowValue($import, $row, 'done_ratio'))) {
@@ -373,10 +378,6 @@ final class IssueImporter extends AbstractImporter
         if ([] !== $errors) {
             return [null, $errors];
         }
-        if (!$this->notificationsEnabled($import)) {
-            ImportNotificationSuppressor::suppress((int) $issue->id);
-        }
-
         return [$issue, []];
     }
 
@@ -419,7 +420,7 @@ final class IssueImporter extends AbstractImporter
                     }
                 }
                 if (null !== $toId) {
-                    $this->issues->createRelation($object, $toId, $type, null !== $decl['delay'] ? (int) $decl['delay'] : null, $import->user);
+                    $this->issues->createRelation($object, $toId, $type, null !== $decl['delay'] ? (int) $decl['delay'] : null, $import->user, false);
                 }
             }
         }
@@ -473,7 +474,8 @@ final class IssueImporter extends AbstractImporter
                 return;
             }
             $child->parent = $object;
-            $this->issues->save($child, $import->user);
+            // set_as_parent_callback: child.save! without a journal (no history entry, no "issue updated" e-mail)
+            $this->issues->saveWithoutJournal($child, $import->user);
             $this->em->refresh($object);
         } elseif ('set_relation' === $name) {
             $fromId = $this->itemObjId($import, 'position', (int) $args[0]);
@@ -482,7 +484,7 @@ final class IssueImporter extends AbstractImporter
                 return;
             }
             $delay = $args[2] ?? null;
-            $this->issues->createRelation($from, $object, (string) $args[1], null !== $delay && '' !== $delay ? (int) $delay : null, $import->user);
+            $this->issues->createRelation($from, $object, (string) $args[1], null !== $delay && '' !== $delay ? (int) $delay : null, $import->user, false);
         }
     }
 }

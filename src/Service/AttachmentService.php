@@ -25,6 +25,7 @@ final class AttachmentService
         private readonly EntityManagerInterface $em,
         private readonly Settings $settings,
         #[Autowire('%symine.files_path%')] private readonly string $filesPath,
+        private readonly ?\App\Doctrine\QueryMemo $memo = null,
     ) {
     }
 
@@ -171,7 +172,9 @@ final class AttachmentService
             return [];
         }
 
-        return $this->em->getRepository(Attachment::class)->findBy(['containerType' => $containerType, 'containerId' => $containerId], ['createdOn' => 'ASC', 'id' => 'ASC']);
+        $load = fn (): array => $this->em->getRepository(Attachment::class)->findBy(['containerType' => $containerType, 'containerId' => $containerId], ['createdOn' => 'ASC', 'id' => 'ASC']);
+
+        return null === $this->memo ? $load() : $this->memo->get('attachments:'.$containerType.':'.$containerId, ['attachments'], $load);
     }
 
     public function delete(Attachment $a): void

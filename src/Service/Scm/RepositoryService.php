@@ -25,6 +25,7 @@ use App\Service\Scm\Model\GitModel;
 use App\Service\Scm\Model\MercurialModel;
 use App\Service\Scm\Model\SubversionModel;
 use App\Service\Settings;
+use App\Service\TimeEntryService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -53,6 +54,7 @@ class RepositoryService
         private readonly CurrentUser $currentUser,
         private readonly IssueService $issues,
         private readonly ScmConfiguration $config,
+        private readonly TimeEntryService $timeEntries,
         private readonly ?LoggerInterface $logger = null,
     ) {
     }
@@ -275,12 +277,16 @@ class RepositoryService
             if ((int) $qb->getSingleScalarResult() > 0) {
                 $errors[] = $f('field_identifier', 'taken');
             }
-        } elseif ($isNew && !$repository->isDefault) {
-            // uniqueness of the blank identifier within the project
-            $hasOther = (int) $this->em->createQuery('SELECT COUNT(r.id) FROM App\Entity\Repository r WHERE r.project = :p AND (r.identifier IS NULL OR r.identifier = \'\')')
-                ->setParameter('p', $repository->project)->getSingleScalarResult();
-            if ($hasOther > 0) {
-                $errors[] = $f('field_identifier', 'blank');
+        } else {
+            // validates_uniqueness_of :identifier, :scope => :project_id also applies to the blank identifier
+            // (normalize_identifier turns nil into ''), whether the repository is the main one or not
+            $qb = $this->em->createQuery('SELECT COUNT(r.id) FROM App\Entity\Repository r WHERE r.project = :p AND (r.identifier IS NULL OR r.identifier = \'\')'.($repository->id ? ' AND r.id <> :id' : ''))
+                ->setParameter('p', $repository->project);
+            if ($repository->id) {
+                $qb->setParameter('id', $repository->id);
+            }
+            if ((int) $qb->getSingleScalarResult() > 0) {
+                $errors[] = $f('field_identifier', 'taken');
             }
         }
         if ($isNew && !$this->adapterEnabled($repository)) {
@@ -525,6 +531,13 @@ class RepositoryService
         return $ch;
     }
 
+    /** changeset.filechanges.any? */
+    public function hasFilechanges(Changeset $changeset): bool
+    {
+        return null !== $changeset->id
+            && false !== $this->em->getConnection()->fetchOne('SELECT 1 FROM changes WHERE changeset_id = ? LIMIT 1', [(int) $changeset->id]);
+    }
+
     /** Repository#find_committer_user */
     public function findCommitterUser(Repository $repository, ?string $committer): ?User
     {
@@ -549,7 +562,12 @@ class RepositoryService
         } elseif (preg_match('/^([^<]+)(<(.*)>)?$/', trim($committer), $m)) {
             $username = trim($m[1]);
             $email = $m[3] ?? '';
+            // User.find_by_login: exact match first, then case-insensitive
             $user = $this->em->getRepository(User::class)->findOneBy(['login' => $username]);
+            if (!$user instanceof User && '' !== $username) {
+                $uid = $this->em->getConnection()->fetchOne("SELECT id FROM users WHERE type = 'User' AND LOWER(login) = ? ORDER BY id", [mb_strtolower($username)]);
+                $user = false !== $uid && null !== $uid ? $this->em->find(User::class, (int) $uid) : null;
+            }
             if (null === $user && '' !== $email) {
                 $uid = $this->em->getConnection()->fetchOne('SELECT user_id FROM email_addresses WHERE LOWER(address) = LOWER(?)', [$email]);
                 $user = $uid ? $this->em->find(User::class, (int) $uid) : null;
@@ -771,7 +789,7 @@ class RepositoryService
         if (!$changed) {
             return;
         }
-        $user = $c->user ?? $this->currentUser->anonymous();
+        $user = $this->managed($c->user ?? $this->currentUser->anonymous());
         $lang = $this->settings->string('default_language') ?: 'en';
         $this->issues->setNotes($issue, $this->i18n->l('text_status_changed_by_changeset', ['value' => self::textTag($c, $issue->project)], $lang));
         try {
@@ -783,6 +801,17 @@ class RepositoryService
         } catch (\Throwable $e) {
             $this->logger?->warning(\sprintf('Issue #%d could not be saved by changeset %d: %s', $issue->id, $c->id, $e->getMessage()));
         }
+    }
+
+    /** The user as an entity of the current unit of work (the entity manager may have been cleared between repositories) */
+    private function managed(User $user): User
+    {
+        if (null === $user->id || $this->em->contains($user)) {
+            return $user;
+        }
+        $found = $this->em->find(User::class, $user->id);
+
+        return $found instanceof User ? $found : $user;
     }
 
     private ?\App\Plugin\Hook\Hooks $hooks = null;
@@ -809,35 +838,55 @@ class RepositoryService
         return serialize($out);
     }
 
-    /** Changeset#log_time */
+    /**
+     * Changeset#log_time: the time entry goes through the TimeEntry validations (user allowed to log time on the
+     * project, activity of the project, closed issues, maximum hours per day, required fields...) and is only
+     * saved when valid.
+     */
     private function logTime(Changeset $c, Issue $issue, string $hours): void
     {
-        if (null === $c->user) {
-            return;
+        $author = $this->managed($this->currentUser->get());
+        $te = new TimeEntry();
+        // TimeEntry#initialize: default activity (the project is not known yet), no entry for 0 hours
+        $activityId = $this->timeEntries->defaultActivityId($author, null);
+        // Project#commit_logtime_activity
+        $configured = $this->settings->int('commit_logtime_activity_id');
+        if ($configured > 0) {
+            foreach ($this->timeEntries->activities($issue->project) as $a) {
+                if ($a->id === $configured || $a->parent?->id === $configured) {
+                    $activityId = $a->id;
+                    break;
+                }
+            }
+        }
+        if (null !== $activityId && null !== ($activity = $this->em->find(TimeEntryActivity::class, $activityId))) {
+            $te->activity = $activity;
         }
         $h = self::parseHours($hours);
-        if (null === $h || $h <= 0) {
-            return;
-        }
-        $activityId = $this->settings->int('commit_logtime_activity_id');
-        $activity = $activityId > 0 ? $this->em->find(TimeEntryActivity::class, $activityId) : null;
-        $activity ??= $this->em->getRepository(TimeEntryActivity::class)->findOneBy(['isDefault' => true, 'project' => null])
-            ?? $this->em->getRepository(TimeEntryActivity::class)->findOneBy(['project' => null], ['position' => 'ASC']);
-        if (null === $activity) {
-            return;
-        }
         $lang = $this->settings->string('default_language') ?: 'en';
-        $te = new TimeEntry();
         $te->project = $issue->project;
         $te->issue = $issue;
-        $te->user = $c->user;
-        $te->author = $c->user;
-        $te->hours = $h;
-        $te->activity = $activity;
-        $te->comments = mb_substr($this->i18n->l('text_time_logged_by_changeset', ['value' => self::textTag($c, $issue->project)], $lang), 0, 1024);
+        if (null !== $c->user) {
+            $te->user = $c->user;
+        }
+        $te->author = $author;
+        $te->hours = $h ?? 0.0;
+        $te->comments = $this->i18n->l('text_time_logged_by_changeset', ['value' => self::textTag($c, $issue->project)], $lang);
         $te->setSpentOn($c->commitDate ?? new \DateTimeImmutable('today'));
-        $this->em->persist($te);
-        $this->em->flush();
+        $errors = [];
+        if (null === $c->user) {
+            $errors[] = $this->i18n->l('field_user').' '.$this->i18n->l('activerecord.errors.messages.blank');
+        }
+        if (null === $h || 0.0 === $h) {
+            $errors[] = $this->i18n->l('field_hours').' '.$this->i18n->l('activerecord.errors.messages.blank');
+        }
+        if ([] === $errors) {
+            $this->timeEntries->snapshot($te);
+            $errors = $this->timeEntries->save($te, $author);
+        }
+        if ([] !== $errors) {
+            $this->logger?->warning(\sprintf('TimeEntry could not be created by changeset %s: %s', (string) $c->id, implode(', ', $errors)));
+        }
     }
 
     /** Redmine's String#to_hours for the formats of TIMELOG_RE */

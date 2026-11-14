@@ -11,9 +11,12 @@
         {% if changeset.repository.project.id != issue.project.id %}{{ changeset.repository.project.name }} - {% endif %}
         {% set rev_label = l('label_revision') ~ ' ' ~ (changeset.revision|length > 12 and changeset.scmid ? changeset.revision[:8] : changeset.revision) %}
         {% if path_exists('repository_revision') %}<a title="{{ l('label_revision') }} {{ changeset.revision }}" href="{{ path('repository_revision', {id: changeset.repository.project.identifier, repository_id: changeset.repository.identifier ?: changeset.repository.id, rev: changeset.revision}) }}">{{ rev_label }}</a>{% else %}{{ rev_label }}{% endif %}
+        {% if changeset_has_filechanges(changeset) and allowed_to('browse_repository', changeset.repository.project) %}
+          (<a href="{{ repo_url('diff', changeset.repository, {rev: changeset_identifier(changeset)}) }}">{{ l('label_diff') }}</a>)
+        {% endif %}
       </p>
       <div class="wiki changeset-comments">
-        {{ textilizable(changeset.comments, changeset.repository.project) }}
+        {{ format_changeset_comments(changeset) }}
       </div>
     </div>
   </div>

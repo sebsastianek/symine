@@ -1,4 +1,4 @@
-<form class="edit_membership" id="edit_membership_{{ member.id }}" action="{{ path('member_update', {id: member.id}) }}"{% if xhr %} data-remote="true"{% endif %} method="post"><input type="hidden" name="_method" value="put" autocomplete="off" />{{ csrf_field() }}
+<form class="edit_membership" id="edit_membership_{{ member.id }}" action="{{ path('member_update', {id: member.id}|merge(member_list_params|default({}))) }}"{% if xhr %} data-remote="true"{% endif %} method="post"><input type="hidden" name="_method" value="put" autocomplete="off" />{{ csrf_field() }}
   <p>
     {% for role in roles %}
     <label class="block">

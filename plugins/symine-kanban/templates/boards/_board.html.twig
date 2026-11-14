@@ -1,0 +1,98 @@
+{#- The board: columns, swimlanes and cards. Redrawn as a whole when the cards changed (kanban.js). -#}
+{%- set column_count = columns|length -%}
+<div class="kanban{% if lanes is not null %} kanban-with-lanes{% endif %}" id="kanban" style="--kanban-columns: {{ column_count }}"
+  data-board-id="{{ board.id }}" data-version="{{ version }}" data-refresh="{{ board.option('refresh') }}"
+  data-move-url="{{ path('kanban_card_move', {id: board.id, issue_id: 0}) }}" data-cards-url="{{ path('kanban_board_cards', {id: board.id}) }}"
+  data-version-url="{{ path('kanban_board_version', {id: board.id}) }}" data-create-url="{{ path('kanban_card_create', {id: board.id}) }}"
+  data-manual-order="{{ manual_order ? 1 : 0 }}" data-lane-movable="{{ lane_movable ? 1 : 0 }}"
+  data-text-not-allowed="{{ l('error_kanban_drop_not_allowed') }}" data-text-choose-status="{{ l('label_kanban_choose_status') }}"
+  data-text-failed="{{ l('error_kanban_request_failed') }}" data-text-cancel="{{ l('button_cancel') }}">
+  {% if unmapped_statuses %}
+    <p class="warning kanban-unmapped-note" id="kanban-unmapped-note">
+      {{ l('text_kanban_unmapped_statuses', {statuses: unmapped_statuses|map(s => s.name)|join(', ')}) }}
+    </p>
+  {% endif %}
+  {% if total == 0 %}
+    <p class="nodata">{{ filter.isActive() ? l('text_kanban_no_cards_filtered') : l('text_kanban_no_cards') }}</p>
+  {% endif %}
+
+  <div class="kanban-scroll">
+    <div class="kanban-row kanban-head">
+      {% for column in columns %}
+        <div class="kanban-column-head{% if column.over_limit %} kanban-over-limit{% endif %}{% if column.unmapped %} kanban-column-unmapped{% endif %}" data-column="{{ column.id }}"
+          {% if column.wip_limit %}data-wip-limit="{{ column.wip_limit }}"{% endif %} title="{{ column.statuses|map(s => s.name)|join(', ') }}">
+          <span class="kanban-column-name">{{ column.name }}</span>
+          <span class="kanban-count"><span class="kanban-count-value">{{ column.count }}</span>{% if column.wip_limit %}<span class="kanban-count-limit"> / {{ column.wip_limit }}</span>{% endif %}</span>
+          {% if add_targets and not column.unmapped %}
+            <button type="button" class="kanban-add-button icon-only" data-column="{{ column.id }}" title="{{ l('label_kanban_add_card') }}" aria-label="{{ l('label_kanban_add_card') }}: {{ column.name }}">{{ sprite_icon('add') }}</button>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if lanes is null %}
+      <div class="kanban-row kanban-body">
+        {% for column in columns %}
+          <div class="kanban-cell{% if column.unmapped %} kanban-cell-unmapped{% endif %}" data-column="{{ column.id }}" data-lane="">
+            <div class="kanban-cards" data-column="{{ column.id }}" data-lane="">
+              {%- for card in column.cards %}{% include '@KanbanPlugin/boards/_card.html.twig' %}{% endfor -%}
+            </div>
+            {% if add_targets and not column.unmapped %}
+              <button type="button" class="kanban-add-link" data-column="{{ column.id }}">{{ sprite_icon('add') }} {{ l('label_kanban_add_card') }}</button>
+            {% endif %}
+            {% if column.more %}
+              <button type="button" class="kanban-more" data-column="{{ column.id }}" data-offset="{{ column.cards|length }}" data-total="{{ column.count }}">{{ l('label_kanban_show_more', {count: column.count - column.cards|length}) }}</button>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      {% for lane in lanes %}
+        <section class="kanban-lane" data-lane="{{ lane.key }}">
+          <h3 class="kanban-lane-head">
+            <button type="button" class="kanban-lane-toggle" aria-expanded="true">{{ sprite_icon('angle-down') }}<span class="kanban-lane-name">{{ lane.label }}</span></button>
+            <span class="kanban-count">{{ lane.count }}</span>
+          </h3>
+          <div class="kanban-row kanban-body">
+            {% for column in columns %}
+              <div class="kanban-cell{% if column.unmapped %} kanban-cell-unmapped{% endif %}" data-column="{{ column.id }}" data-lane="{{ lane.key }}">
+                <div class="kanban-cards" data-column="{{ column.id }}" data-lane="{{ lane.key }}">
+                  {%- for card in lane.cells[column.id] ?? [] %}{% include '@KanbanPlugin/boards/_card.html.twig' %}{% endfor -%}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+      {% endfor %}
+      {% set truncated = columns|filter(c => c.more) %}
+      {% if truncated %}
+        <p class="kanban-truncated"><em class="info">{{ l('text_kanban_truncated', {columns: truncated|map(c => c.name)|join(', ')}) }}</em></p>
+      {% endif %}
+    {% endif %}
+  </div>
+
+  {#- the dialog of a card: filled by kanban.js when a card is opened -#}
+  <dialog class="kanban-dialog" id="kanban-dialog" aria-labelledby="kanban-dialog-title" data-text-loading="{{ l('label_loading') }}"></dialog>
+
+  {% if add_targets %}
+  <template id="kanban-add-template">
+    <form class="kanban-add" action="{{ path('kanban_card_create', {id: board.id}) }}" method="post">
+      <label class="kanban-add-subject"><span class="hidden">{{ l('field_subject') }}</span>
+        <input type="text" name="subject" maxlength="255" required placeholder="{{ l('field_subject') }}" autocomplete="off" /></label>
+      <span class="kanban-add-target">
+        <select name="project_id" aria-label="{{ l('field_project') }}"{% if add_targets|length == 1 %} hidden{% endif %}>
+          {% for target in add_targets %}<option value="{{ target.project.id }}">{{ target.project.name }}</option>{% endfor %}
+        </select>
+        <select name="tracker_id" aria-label="{{ l('field_tracker') }}">
+          {% for target in add_targets %}{% for tracker in target.trackers %}<option value="{{ tracker.id }}" data-project="{{ target.project.id }}">{{ tracker.name }}</option>{% endfor %}{% endfor %}
+        </select>
+      </span>
+      <span class="kanban-add-actions">
+        <input type="submit" name="commit" value="{{ l('button_add') }}" />
+        <button type="button" class="kanban-add-cancel">{{ l('button_cancel') }}</button>
+      </span>
+      <p class="kanban-add-errors" role="alert" hidden></p>
+    </form>
+  </template>
+  {% endif %}
+</div>

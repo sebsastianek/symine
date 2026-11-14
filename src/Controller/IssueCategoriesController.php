@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Api\ApiRenderer;
-use App\Entity\IssueCategory;
-use App\Entity\Project;
-use App\Service\VersionService;
+use App\Api\IssueCategoryApiPresenter;
+use App\Service\Tracking\Categories\CategorySettingsUrl;
+use App\Service\Tracking\Categories\IssueCategoryFinder;
+use App\Service\Tracking\Categories\IssueCategoryForm;
+use App\Service\Tracking\Categories\IssueCategoryRemoval;
+use App\Service\Tracking\Categories\IssueCategoryScript;
+use App\Service\Tracking\Http\JavascriptResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -17,7 +21,12 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 final class IssueCategoriesController extends AbstractController
 {
     public function __construct(
-        private readonly VersionService $service,
+        private readonly IssueCategoryFinder $finder,
+        private readonly IssueCategoryForm $form,
+        private readonly IssueCategoryRemoval $removal,
+        private readonly IssueCategoryScript $script,
+        private readonly CategorySettingsUrl $settingsUrl,
+        private readonly IssueCategoryApiPresenter $presenter,
         private readonly ApiRenderer $api,
     ) {
     }
@@ -27,30 +36,29 @@ final class IssueCategoriesController extends AbstractController
     public function index(Request $request, string $project_id): Response
     {
         $project = $this->findProject($project_id);
-        $this->authorizeAny(['view_issues', 'manage_categories'], $project);
-        if (!$this->isApi($request)) {
-            return $this->redirect($this->settingsUrl($project));
+        if (!$this->auth->allowedTo('view_issues', $project) && !$this->auth->allowedTo('manage_categories', $project)) {
+            $this->deny();
         }
-        $categories = $project->issueCategories->toArray();
-        usort($categories, static fn (IssueCategory $a, IssueCategory $b) => strcmp($a->name, $b->name));
+        if (!$this->isApi($request)) {
+            return $this->redirect($this->settingsUrl->of($project));
+        }
 
-        return $this->api->render($request, [
-            'issue_categories' => array_map($this->apiCategory(...), $categories),
-            'total_count' => \count($categories),
-        ]);
+        return $this->api->render($request, $this->presenter->index($project));
     }
 
     #[Route('/issue_categories/{id}', name: 'issue_category_show', requirements: ['id' => '\d+'], methods: ['GET'])]
     #[Route('/issue_categories/{id}.{_format}', name: 'issue_category_show_api', requirements: ['id' => '\d+', '_format' => 'json|xml'], methods: ['GET'])]
     public function show(Request $request, int $id): Response
     {
-        [$category, $project] = $this->findCategory($id);
-        $this->authorizeAny(['view_issues', 'manage_categories'], $project);
+        $category = $this->finder->find($id);
+        if (!$this->auth->allowedTo('view_issues', $category->project) && !$this->auth->allowedTo('manage_categories', $category->project)) {
+            $this->deny();
+        }
         if (!$this->isApi($request)) {
-            return $this->redirect($this->settingsUrl($project));
+            return $this->redirect($this->settingsUrl->of($category->project));
         }
 
-        return $this->api->render($request, ['issue_category' => $this->apiCategory($category)]);
+        return $this->api->render($request, ['issue_category' => $this->presenter->category($category)]);
     }
 
     #[Route('/projects/{project_id}/issue_categories/new', name: 'issue_category_new', methods: ['GET'])]
@@ -58,14 +66,17 @@ final class IssueCategoriesController extends AbstractController
     {
         $project = $this->findProject($project_id);
         $this->authorize('manage_categories', $project);
-        $category = new IssueCategory();
-        $category->project = $project;
-        $this->service->assignCategory($category, $request->query->all('issue_category'));
-        if ($this->wantsJs($request)) {
-            return $this->modal($project, $category, []);
+        $category = $this->form->blank($project);
+        $this->form->prefill($category, $request);
+        if ($this->script->isRequested($request)) {
+            return new JavascriptResponse($this->script->modal($this->renderView('issue_categories/_new_modal.html.twig', $this->form->view($category))));
         }
 
-        return $this->renderForm('issue_categories/new.html.twig', $project, $category, []);
+        return $this->render('issue_categories/new.html.twig', $this->form->view($category) + [
+            'main_menu_selected' => 'settings',
+            'page_title' => $this->l('label_issue_category_new'),
+            'body_css' => 'controller-issue_categories action-new',
+        ]);
     }
 
     #[Route('/projects/{project_id}/issue_categories', name: 'issue_category_create', methods: ['POST'])]
@@ -75,181 +86,89 @@ final class IssueCategoriesController extends AbstractController
         $project = $this->findProject($project_id);
         $this->authorize('manage_categories', $project);
         $isApi = $this->isApi($request);
-        $category = new IssueCategory();
-        $category->project = $project;
-        $attrs = $isApi ? (array) (ApiRenderer::payload($request)['issue_category'] ?? []) : $request->request->all('issue_category');
-        $this->service->assignCategory($category, $attrs);
-        $errors = $this->service->saveCategory($category);
+        $category = $this->form->blank($project);
+        $errors = $this->form->submit($category, $request, $isApi);
         if ($isApi) {
             if ([] !== $errors) {
                 return $this->api->errors($request, $errors);
             }
-            $response = $this->api->render($request, ['issue_category' => $this->apiCategory($category)], 201);
+            $response = $this->api->render($request, ['issue_category' => $this->presenter->category($category)], 201);
             $response->headers->set('Location', $this->generateUrl('issue_category_show', ['id' => $category->id], UrlGeneratorInterface::ABSOLUTE_URL));
 
             return $response;
         }
-        $js = $this->wantsJs($request);
+        $js = $this->script->isRequested($request);
+        if ([] !== $errors && $js) {
+            return new JavascriptResponse($this->script->modal($this->renderView('issue_categories/_new_modal.html.twig', $this->form->view($category, $errors))));
+        }
         if ([] !== $errors) {
-            return $js ? $this->modal($project, $category, $errors) : $this->renderForm('issue_categories/new.html.twig', $project, $category, $errors, 422);
+            return $this->render('issue_categories/new.html.twig', $this->form->view($category, $errors) + [
+                'main_menu_selected' => 'settings',
+                'page_title' => $this->l('label_issue_category_new'),
+                'body_css' => 'controller-issue_categories action-new',
+            ], new Response(null, 422));
         }
         if ($js) {
-            $options = '<option></option>';
-            $categories = $project->issueCategories->toArray();
-            usort($categories, static fn (IssueCategory $a, IssueCategory $b) => strcmp($a->name, $b->name));
-            foreach ($categories as $c) {
-                $options .= '<option value="'.$c->id.'"'.($c->id === $category->id ? ' selected="selected"' : '').'>'.htmlspecialchars($c->name).'</option>';
-            }
-            $select = '<select id="issue_category_id" name="issue[category_id]">'.$options.'</select>';
-
-            return new Response("hideModal();\n$('#issue_category_id').replaceWith(".$this->jsString($select).');', 200, ['Content-Type' => 'text/javascript; charset=utf-8']);
+            return new JavascriptResponse($this->script->created($category));
         }
         $this->flashNotice('notice_successful_create');
 
-        return $this->redirect($this->settingsUrl($project));
+        return $this->redirect($this->settingsUrl->of($project));
     }
 
     #[Route('/issue_categories/{id}/edit', name: 'issue_category_edit', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function edit(int $id): Response
     {
-        [$category, $project] = $this->findCategory($id);
-        $this->authorize('manage_categories', $project);
+        $category = $this->finder->find($id);
+        $this->authorize('manage_categories', $category->project);
 
-        return $this->renderForm('issue_categories/edit.html.twig', $project, $category, []);
+        return $this->render('issue_categories/edit.html.twig', $this->form->view($category) + [
+            'main_menu_selected' => 'settings',
+            'page_title' => $this->l('label_issue_category'),
+            'body_css' => 'controller-issue_categories action-edit',
+        ]);
     }
 
     #[Route('/issue_categories/{id}', name: 'issue_category_update', requirements: ['id' => '\d+'], methods: ['PUT', 'PATCH'])]
     #[Route('/issue_categories/{id}.{_format}', name: 'issue_category_update_api', requirements: ['id' => '\d+', '_format' => 'json|xml'], methods: ['PUT', 'PATCH'])]
     public function update(Request $request, int $id): Response
     {
-        [$category, $project] = $this->findCategory($id);
-        $this->authorize('manage_categories', $project);
+        $category = $this->finder->find($id);
+        $this->authorize('manage_categories', $category->project);
         $isApi = $this->isApi($request);
-        $attrs = $isApi ? (array) (ApiRenderer::payload($request)['issue_category'] ?? []) : $request->request->all('issue_category');
-        $this->service->assignCategory($category, $attrs);
-        $errors = $this->service->saveCategory($category);
+        $errors = $this->form->submit($category, $request, $isApi);
         if ($isApi) {
             return [] === $errors ? $this->api->noContent() : $this->api->errors($request, $errors);
         }
         if ([] !== $errors) {
-            return $this->renderForm('issue_categories/edit.html.twig', $project, $category, $errors, 422);
+            return $this->render('issue_categories/edit.html.twig', $this->form->view($category, $errors) + [
+                'main_menu_selected' => 'settings',
+                'page_title' => $this->l('label_issue_category'),
+                'body_css' => 'controller-issue_categories action-edit',
+            ], new Response(null, 422));
         }
         $this->flashNotice('notice_successful_update');
 
-        return $this->redirect($this->settingsUrl($project));
+        return $this->redirect($this->settingsUrl->of($category->project));
     }
 
     #[Route('/issue_categories/{id}', name: 'issue_category_destroy', requirements: ['id' => '\d+'], methods: ['DELETE'])]
     #[Route('/issue_categories/{id}.{_format}', name: 'issue_category_destroy_api', requirements: ['id' => '\d+', '_format' => 'json|xml'], methods: ['DELETE'])]
     public function destroy(Request $request, int $id): Response
     {
-        [$category, $project] = $this->findCategory($id);
+        $category = $this->finder->find($id);
+        $project = $category->project;
         $this->authorize('manage_categories', $project);
         $isApi = $this->isApi($request);
-        $issueCount = $this->service->categoryIssuesCount($category);
-        $todo = (string) ($request->request->get('todo') ?? $request->query->get('todo', ''));
-        if (0 === $issueCount || '' !== $todo || $isApi) {
-            $reassignTo = null;
-            $reassignId = $request->request->get('reassign_to_id') ?? $request->query->get('reassign_to_id');
-            if (null !== $reassignId && ('reassign' === $todo || '' === $todo)) {
-                $reassignTo = $this->em->getRepository(IssueCategory::class)->findOneBy(['id' => (int) $reassignId, 'project' => $project]);
-            }
-            $this->service->destroyCategory($category, $reassignTo);
-
-            return $isApi ? $this->api->noContent() : $this->redirect($this->settingsUrl($project));
+        $confirmation = $this->removal->attempt($category, $request, $isApi);
+        if (null === $confirmation) {
+            return $isApi ? $this->api->noContent() : $this->redirect($this->settingsUrl->of($project));
         }
-        $categories = array_values(array_filter($project->issueCategories->toArray(), static fn (IssueCategory $c) => $c->id !== $category->id));
 
-        return $this->render('issue_categories/destroy.html.twig', [
-            'project' => $project,
-            'category' => $category,
-            'issue_count' => $issueCount,
-            'categories' => $categories,
+        return $this->render('issue_categories/destroy.html.twig', $confirmation + [
             'main_menu_selected' => 'settings',
             'page_title' => $this->l('label_issue_category'),
             'body_css' => 'controller-issue_categories action-destroy',
         ]);
-    }
-
-    // ------------------------------------------------------------------------------------------
-
-    /** @return array{0: IssueCategory, 1: Project} */
-    private function findCategory(int $id): array
-    {
-        $category = $this->em->find(IssueCategory::class, $id);
-        if (null === $category) {
-            throw $this->createNotFoundException();
-        }
-
-        return [$category, $this->findProject((int) $category->project->id)];
-    }
-
-    /** @param list<string> $permissions */
-    private function authorizeAny(array $permissions, Project $project): void
-    {
-        foreach ($permissions as $p) {
-            if ($this->auth->allowedTo($p, $project)) {
-                return;
-            }
-        }
-        $this->deny();
-    }
-
-    /** @param list<string> $errors */
-    private function renderForm(string $template, Project $project, IssueCategory $category, array $errors, int $status = 200): Response
-    {
-        return $this->render($template, [
-            'project' => $project,
-            'category' => $category,
-            'errors' => $errors,
-            'assignable_users' => $this->projects->assignableUsers($project),
-            'main_menu_selected' => 'settings',
-            'page_title' => $this->l(null === $category->id ? 'label_issue_category_new' : 'label_issue_category'),
-            'body_css' => 'controller-issue_categories action-'.(null === $category->id ? 'new' : 'edit'),
-        ], new Response(null, $status));
-    }
-
-    private function modal(Project $project, IssueCategory $category, array $errors): Response
-    {
-        $html = $this->renderView('issue_categories/_new_modal.html.twig', [
-            'project' => $project, 'category' => $category, 'errors' => $errors,
-            'assignable_users' => $this->projects->assignableUsers($project),
-        ]);
-
-        return new Response("$('#ajax-modal').html(".$this->jsString($html).");\nshowModal('ajax-modal', '600px');", 200, ['Content-Type' => 'text/javascript; charset=utf-8']);
-    }
-
-    private function settingsUrl(Project $project): string
-    {
-        if (null !== $this->container->get('router')->getRouteCollection()->get('project_settings')) {
-            return $this->generateUrl('project_settings', ['id' => $project->identifier, 'tab' => 'categories']);
-        }
-
-        return '/projects/'.$project->identifier.'/settings/categories';
-    }
-
-    private function wantsJs(Request $request): bool
-    {
-        return str_contains((string) $request->headers->get('Accept'), 'javascript') || 'js' === $request->query->get('format');
-    }
-
-    private function jsString(string $s): string
-    {
-        return (string) json_encode($s, \JSON_HEX_TAG | \JSON_HEX_APOS | \JSON_HEX_QUOT | \JSON_HEX_AMP | \JSON_UNESCAPED_UNICODE);
-    }
-
-    /** issue_categories/show.api.rsb */
-    private function apiCategory(IssueCategory $category): array
-    {
-        $data = [
-            'id' => $category->id,
-            'project' => ['id' => $category->project->id, 'name' => $category->project->name],
-            'name' => $category->name,
-        ];
-        if (null !== $category->assignedTo) {
-            $data['assigned_to'] = ['id' => $category->assignedTo->id, 'name' => $category->assignedTo->getName()];
-        }
-
-        return $data;
     }
 }

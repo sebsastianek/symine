@@ -21,8 +21,8 @@
     {% if project and path_exists('issues_report') %}
       <a class="icon icon-stats" href="{{ path('issues_report', {id: project.identifier}) }}">{{ sprite_icon('summary', l('field_summary')) }}</a>
     {% endif %}
-    {% if can_import and path_exists('issues_import_new') %}
-      <a class="icon icon-import" href="{{ path('issues_import_new', project ? {project_id: project.identifier} : {}) }}">{{ sprite_icon('import', l('button_import')) }}</a>
+    {% if can_import %}
+      <a class="icon icon-import" href="{{ path('new_issues_import', project ? {project_id: project.identifier} : {}) }}">{{ sprite_icon('import', l('button_import')) }}</a>
     {% endif %}
     {% if project and allowed_to('edit_project', project) and path_exists('project_settings') %}
     <a class="icon icon-settings" href="{{ path('project_settings', {id: project.identifier, tab: 'issues'}) }}">{{ sprite_icon('settings', l('label_settings')) }}</a>

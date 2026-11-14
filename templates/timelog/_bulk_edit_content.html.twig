@@ -64,20 +64,9 @@ $(function() { $('#time_entry_spent_on').addClass('date').datepickerFallback(dat
       <input size="100" type="text" value="{{ params.comments ?? '' }}" name="time_entry[comments]" id="time_entry_comments" />
     </p>
 
+    {#- custom_field_tag_for_bulk_edit('time_entry', custom_field, @time_entries): same widget as the issue bulk edit -#}
     {% for field in custom_fields %}
-      <div class="form-field">
-        <label>{{ field.name }}</label>
-        {% set opts = cf_options(field, project) %}
-        {% set cur = (params.custom_field_values ?? {})[field.id] ?? '' %}
-        {% if field.fieldFormat in ['list', 'enumeration', 'user', 'version', 'bool'] %}
-        <select name="time_entry[custom_field_values][{{ field.id }}]{{ field.isMultiple() ? '[]' : '' }}" id="time_entry_custom_field_values_{{ field.id }}" class="{{ field.fieldFormat }}_cf cf_{{ field.id }}"{% if field.isMultiple() %} multiple="multiple"{% endif %}><option value="">{{ l('label_no_change_option') }}</option>
-        {% if not field.isRequired %}<option value="__none__">{{ l('label_none') }}</option>{% endif %}
-        {% for o in opts %}<option value="{{ o[0] }}">{{ o[1] }}</option>{% endfor %}</select>
-        {% else %}
-        <input type="text" name="time_entry[custom_field_values][{{ field.id }}]" id="time_entry_custom_field_values_{{ field.id }}" class="{{ field.fieldFormat }}_cf cf_{{ field.id }}" value="{{ cur is iterable ? '' : cur }}" />
-        {% if not field.isRequired %}<label class="inline"><input type="checkbox" name="time_entry[custom_field_values][{{ field.id }}]" value="__none__" data-disables="#time_entry_custom_field_values_{{ field.id }}" />{{ l('button_clear') }}</label>{% endif %}
-        {% endif %}
-      </div>
+      <p>{{ issue_cf_bulk_tag(field, (params.custom_field_values ?? {})[field.id] ?? null, project, 'time_entry') }}</p>
     {% endfor %}
   </div>
 </div>

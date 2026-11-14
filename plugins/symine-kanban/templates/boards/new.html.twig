@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+{% block header_tags %}{{ plugin_stylesheet('symine_kanban', 'kanban') }}{% endblock %}
+{% block content %}
+<h2>{{ l('label_kanban_board_new') }}</h2>
+{% if errors %}<div id="errorExplanation">{{ sprite_icon('warning') }}<ul>{% for error in errors %}<li>{{ error }}</li>{% endfor %}</ul></div>{% endif %}
+
+<form action="{{ path('kanban_board_create') }}" method="post" id="kanban-board-form">{{ csrf_field() }}
+  {% if project %}<input type="hidden" name="project_id" value="{{ project.identifier }}" />{% endif %}
+  {% include '@KanbanPlugin/boards/_form_general.html.twig' %}
+
+  <fieldset class="box tabular">
+    <legend>{{ l('label_kanban_column_plural') }}</legend>
+    <p><label>{{ l('label_kanban_start_with') }}</label>
+      {% for name in templates %}
+        <label class="block"><input type="radio" name="template" value="{{ name }}"{% if template == name %} checked{% endif %} /> {{ l('label_kanban_template_' ~ name) }}</label>
+      {% endfor %}
+      <em class="info">{{ l('text_kanban_template') }}</em>
+    </p>
+  </fieldset>
+
+  <p><input type="submit" name="commit" value="{{ l('button_create') }}" />
+    <a href="{{ project ? path('project_kanban', {project_id: project.identifier, all: 1}) : path('kanban_index') }}">{{ l('button_cancel') }}</a></p>
+</form>
+{% endblock %}

@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Api\ApiRenderer;
-use App\Entity\Group;
-use App\Entity\Member;
-use App\Entity\Project;
+use App\Api\MembershipApiPresenter;
+use App\Service\CsvExport;
 use App\Service\MembersManager;
-use App\Service\MembershipService;
+use App\Service\Project\MemberAccess;
+use App\Service\Project\MemberFinder;
+use App\Service\Project\MembersJs;
+use App\Service\Project\MembersRequest;
+use App\Service\Project\MembersView;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -19,68 +22,43 @@ final class MembersController extends AbstractController
 {
     public function __construct(
         private readonly MembersManager $members,
-        private readonly MembershipService $memberships,
+        private readonly MemberFinder $finder,
+        private readonly MemberAccess $access,
+        private readonly MembersView $view,
+        private readonly MembershipApiPresenter $presenter,
         private readonly ApiRenderer $api,
+        private readonly CsvExport $csv,
     ) {
     }
 
-    private function wantsJs(Request $request): bool
+    /**
+     * MembersController#index (HTML): the members of the project, for every user allowed to view them.
+     * Users who manage the members get the same list (with its actions) in the project settings.
+     */
+    #[Route('/projects/{project_id}/members', name: 'project_members', methods: ['GET'])]
+    public function members(Request $request, string $project_id): Response
     {
-        return str_ends_with($request->getPathInfo(), '.js')
-            || ($request->isXmlHttpRequest() && str_contains((string) $request->headers->get('Accept'), 'javascript'));
+        $project = $this->findProject($project_id);
+        $this->access->authorizeRead($project);
+
+        return $this->render('members/index.html.twig', $this->view->list($project, $request, true) + [
+            'main_menu_selected' => 'overview',
+            'page_title' => $this->l('label_member_plural'),
+            'body_css' => 'controller-members action-index',
+        ]);
     }
 
-    private function authorizeMembers(Project $project, bool $read = false): void
+    /** MembersController#index (CSV): every membership of the project, for the users who manage the members */
+    #[Route('/projects/{project_id}/memberships.csv', name: 'project_memberships_csv', methods: ['GET'], priority: 5)]
+    public function exportCsv(Request $request, string $project_id): Response
     {
-        if ($read && $this->auth->allowedTo('view_members', $project)) {
-            return;
+        $project = $this->findProject($project_id);
+        $this->access->authorizeRead($project);
+        if (!$this->access->canManage($project)) {
+            return new Response('', 403);
         }
-        $this->authorize('manage_members', $project);
-    }
 
-    private function findMember(string $id): Member
-    {
-        $member = $this->em->find(Member::class, (int) $id);
-        if (null === $member) {
-            throw $this->createNotFoundException();
-        }
-        $this->findProject((string) $member->project->id);
-
-        return $member;
-    }
-
-    /** @return array<string, mixed> membership API payload (members/show.api.rsb) */
-    private function payload(Member $m): array
-    {
-        $data = [
-            'id' => $m->id,
-            'project' => ['id' => $m->project->id, 'name' => $m->project->name],
-        ];
-        $data[$m->principal instanceof Group ? 'group' : 'user'] = ['id' => $m->principal->id, 'name' => $m->principal->getName()];
-        $roles = [];
-        foreach ($m->memberRoles as $mr) {
-            $r = ['id' => $mr->role->id, 'name' => $mr->role->name];
-            if (null !== $mr->inheritedFrom) {
-                $r['inherited'] = true;
-            }
-            $roles[] = $r;
-        }
-        $data['roles'] = $roles;
-
-        return $data;
-    }
-
-    private function settingsRedirect(Project $project): Response
-    {
-        return $this->redirectToRoute('project_settings', ['id' => $project->identifier, 'tab' => 'members']);
-    }
-
-    /** Re-renders the members tab (create/update/destroy .js responses) */
-    private function membersTabJs(Project $project, string $extra = ''): Response
-    {
-        $html = $this->renderView('members/_members.html.twig', ['project' => $project, 'members' => $this->members->projectMembers($project), 'members_manager' => $this->members]);
-
-        return new Response("$('#tab-content-members').html(".json_encode($html, \JSON_HEX_TAG).");\nhideOnLoad();\n".$extra, 200, ['Content-Type' => 'text/javascript; charset=utf-8']);
+        return $this->csv->response($request, $this->members->csvRows($project, $this->l(...)), $project->identifier.'-members.csv');
     }
 
     #[Route('/projects/{project_id}/memberships', name: 'project_memberships', methods: ['GET'])]
@@ -88,45 +66,36 @@ final class MembersController extends AbstractController
     public function index(Request $request, string $project_id, string $_format = 'html'): Response
     {
         $project = $this->findProject($project_id);
-        $this->authorizeMembers($project, true);
+        $this->access->authorizeRead($project);
         if ('html' === $_format) {
-            return $this->settingsRedirect($project);
+            return $this->render('members/index.html.twig', $this->view->list($project, $request, true) + [
+                'main_menu_selected' => 'overview',
+                'page_title' => $this->l('label_member_plural'),
+                'body_css' => 'controller-members action-index',
+            ]);
         }
-        $all = $this->em->createQuery('SELECT m FROM App\Entity\Member m WHERE m.project = :p ORDER BY m.id')->setParameter('p', $project)->getResult();
-        $pager = $this->paginate($request, \count($all));
-        $list = \array_slice($all, $pager['offset'], $pager['limit']);
+        $all = $this->members->memberships($project);
 
-        return $this->api->render($request, [
-            'memberships' => array_map($this->payload(...), $list),
-            'total_count' => \count($all), 'offset' => $pager['offset'], 'limit' => $pager['limit'],
-        ]);
+        return $this->api->render($request, $this->presenter->memberships($all, $this->paginate($request, \count($all))));
     }
 
     #[Route('/memberships/{id}.{_format}', name: 'membership_show', requirements: ['id' => '\d+', '_format' => 'json|xml'], methods: ['GET'])]
     public function show(Request $request, string $id): Response
     {
-        $member = $this->findMember($id);
-        $this->authorizeMembers($member->project, true);
+        $member = $this->finder->find($id);
+        $this->access->authorizeRead($member->project);
 
-        return $this->api->render($request, ['membership' => $this->payload($member)]);
+        return $this->api->render($request, ['membership' => $this->presenter->membership($member)]);
     }
 
     #[Route('/projects/{project_id}/memberships/new', name: 'member_new', methods: ['GET'])]
     public function new(Request $request, string $project_id): Response
     {
         $project = $this->findProject($project_id);
-        $this->authorizeMembers($project);
-        [$principals, $count] = $this->members->principalsForNewMembers($project, null);
-        $vars = [
-            'project' => $project,
-            'principals' => $principals,
-            'principal_count' => $count,
-            'roles' => $this->members->managedRoles($project),
-        ];
-        if ($this->wantsJs($request)) {
-            $html = $this->renderView('members/_new_modal.html.twig', $vars);
-
-            return new Response("$('#ajax-modal').html(".json_encode($html, \JSON_HEX_TAG).");\nshowModal('ajax-modal', '90%');", 200, ['Content-Type' => 'text/javascript; charset=utf-8']);
+        $this->access->authorizeManage($project);
+        $vars = $this->view->newForm($project, $request);
+        if (MembersRequest::wantsJs($request)) {
+            return new Response(MembersJs::newModal($this->renderView('members/_new_modal.html.twig', $vars)), 200, ['Content-Type' => 'text/javascript; charset=utf-8']);
         }
 
         return $this->render('members/new.html.twig', $vars + [
@@ -139,12 +108,10 @@ final class MembersController extends AbstractController
     public function autocomplete(Request $request, string $project_id): Response
     {
         $project = $this->findProject($project_id);
-        $this->authorizeMembers($project);
-        $page = max(1, (int) $request->query->get('page', 1));
-        [$principals, $count] = $this->members->principalsForNewMembers($project, (string) $request->query->get('q', ''), ($page - 1) * 100, 100);
-        $html = $this->renderView('members/_principals.html.twig', ['project' => $project, 'principals' => $principals, 'principal_count' => $count, 'page' => $page, 'q' => (string) $request->query->get('q', '')]);
+        $this->access->authorizeManage($project);
+        $html = $this->renderView('members/_principals.html.twig', $this->view->principals($project, $request));
 
-        return new Response("$('#principals_for_new_member').html(".json_encode($html, \JSON_HEX_TAG).');', 200, ['Content-Type' => 'text/javascript; charset=utf-8']);
+        return new Response(MembersJs::principals($html), 200, ['Content-Type' => 'text/javascript; charset=utf-8']);
     }
 
     #[Route('/projects/{project_id}/memberships', name: 'member_create', methods: ['POST'])]
@@ -152,56 +119,41 @@ final class MembersController extends AbstractController
     public function create(Request $request, string $project_id): Response
     {
         $project = $this->findProject($project_id);
-        $this->authorizeMembers($project);
+        $this->access->authorizeManage($project);
         $api = $this->isApi($request);
-        $data = $api ? (array) (ApiRenderer::payload($request)['membership'] ?? []) : (array) ($request->request->all()['membership'] ?? []);
-        $userIds = $data['user_ids'] ?? $data['user_id'] ?? [];
-        $userIds = \is_array($userIds) ? array_values(array_filter($userIds, static fn ($v) => '' !== (string) $v)) : [$userIds];
-        $roleIds = (array) ($data['role_ids'] ?? []);
-        $result = ['members' => [], 'errors' => []];
-        if ($api || [] !== $data) {
-            $result = $this->members->create($project, $userIds, $roleIds, null, $this->l(...));
-        }
+        $result = $this->members->createFromParams($project, MembersRequest::membership($request), $api, $this->l(...));
         if ($api) {
-            if ([] !== $result['errors'] || [] === $result['members']) {
-                return $this->api->errors($request, $result['errors'] ?: [$this->l('field_principal').' '.$this->l('activerecord.errors.messages.blank')]);
+            if ([] !== ($errors = $this->presenter->creationErrors($result))) {
+                return $this->api->errors($request, $errors);
             }
             $member = $result['members'][0];
-            $response = $this->api->render($request, ['membership' => $this->payload($member)], 201);
+            $response = $this->api->render($request, ['membership' => $this->presenter->membership($member)], 201);
             $response->headers->set('Location', $this->generateUrl('membership_show', ['id' => $member->id, '_format' => ApiRenderer::format($request)], 0));
 
             return $response;
         }
-        if ($this->wantsJs($request)) {
-            $extra = '';
-            if ([] !== $result['errors']) {
-                $extra = 'alert('.json_encode($this->l('notice_failed_to_save_members', ['errors' => implode(', ', $result['errors'])]), \JSON_HEX_TAG).');';
-            } elseif ([] !== $result['members']) {
-                $extra = "hideModal();\n";
-                foreach ($result['members'] as $m) {
-                    $extra .= '$("#member-'.$m->id.'").effect("highlight");'."\n";
-                }
-            }
+        $failure = [] === $result['errors'] ? '' : $this->l('notice_failed_to_save_members', ['errors' => implode(', ', $result['errors'])]);
+        if (MembersRequest::wantsJs($request)) {
+            $html = $this->renderView('members/_members.html.twig', $this->view->list($project, $request));
 
-            return $this->membersTabJs($project, $extra);
+            return new Response(MembersJs::tab($html, MembersJs::created($result['members'], $result['errors'], $failure)), 200, ['Content-Type' => 'text/javascript; charset=utf-8']);
         }
         if ([] !== $result['errors']) {
-            $this->flashError($this->l('notice_failed_to_save_members', ['errors' => implode(', ', $result['errors'])]));
+            $this->flashError($failure);
         }
 
-        return $this->settingsRedirect($project);
+        // MembersController#redirect_to_settings_in_projects: the list keeps its page and filters
+        return $this->redirectToRoute('project_settings', ['id' => $project->identifier, 'tab' => 'members'] + MembersRequest::listParams($request));
     }
 
     #[Route('/memberships/{id}/edit', name: 'member_edit', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function edit(Request $request, string $id): Response
     {
-        $member = $this->findMember($id);
-        $this->authorizeMembers($member->project);
-        $vars = ['member' => $member, 'roles' => $this->members->givableRoles(), 'members_manager' => $this->members, 'xhr' => $this->wantsJs($request)];
-        if ($this->wantsJs($request)) {
-            $html = $this->renderView('members/_edit.html.twig', $vars);
-
-            return new Response('$("#member-'.$member->id.'-roles").hide();'."\n".'$("#member-'.$member->id.'-form").html('.json_encode($html, \JSON_HEX_TAG).');', 200, ['Content-Type' => 'text/javascript; charset=utf-8']);
+        $member = $this->finder->find($id);
+        $this->access->authorizeManage($member->project);
+        $vars = $this->view->editForm($member, $request);
+        if (MembersRequest::wantsJs($request)) {
+            return new Response(MembersJs::editForm($member, $this->renderView('members/_edit.html.twig', $vars)), 200, ['Content-Type' => 'text/javascript; charset=utf-8']);
         }
 
         return $this->render('members/edit.html.twig', $vars + [
@@ -214,53 +166,39 @@ final class MembersController extends AbstractController
     #[Route('/memberships/{id}.{_format}', name: 'member_update_format', requirements: ['id' => '\d+', '_format' => 'json|xml|js'], methods: ['PUT', 'PATCH'])]
     public function update(Request $request, string $id): Response
     {
-        $member = $this->findMember($id);
+        $member = $this->finder->find($id);
         $project = $member->project;
-        $this->authorizeMembers($project);
-        $api = $this->isApi($request);
-        $data = $api ? (array) (ApiRenderer::payload($request)['membership'] ?? []) : (array) ($request->request->all()['membership'] ?? []);
-        $saved = true;
-        if (\array_key_exists('role_ids', $data)) {
-            $roles = $this->members->editableRoleIds($member, $project, (array) $data['role_ids']);
-            $hasInherited = false;
-            foreach ($member->memberRoles as $mr) {
-                $hasInherited = $hasInherited || null !== $mr->inheritedFrom;
-            }
-            if ([] === $roles && !$hasInherited) {
-                $saved = false;
-            } else {
-                $this->memberships->setRoles($member, $roles);
-            }
+        $this->access->authorizeManage($project);
+        $errors = $this->members->updateRoles($member, MembersRequest::membership($request), $this->l(...));
+        if ($this->isApi($request)) {
+            return [] === $errors ? $this->api->noContent() : $this->api->errors($request, $errors);
         }
-        if ($api) {
-            return $saved ? $this->api->noContent() : $this->api->errors($request, [$this->l('field_role').' '.$this->l('activerecord.errors.messages.empty')]);
-        }
-        if ($this->wantsJs($request)) {
-            return $this->membersTabJs($project, '$("#member-'.(int) $id.'").effect("highlight");');
+        if (MembersRequest::wantsJs($request)) {
+            $html = $this->renderView('members/_members.html.twig', $this->view->list($project, $request));
+
+            return new Response(MembersJs::tab($html, MembersJs::highlight((int) $id)), 200, ['Content-Type' => 'text/javascript; charset=utf-8']);
         }
 
-        return $this->settingsRedirect($project);
+        return $this->redirectToRoute('project_settings', ['id' => $project->identifier, 'tab' => 'members'] + MembersRequest::listParams($request));
     }
 
     #[Route('/memberships/{id}', name: 'member_destroy', requirements: ['id' => '\d+'], methods: ['DELETE'])]
     #[Route('/memberships/{id}.{_format}', name: 'member_destroy_format', requirements: ['id' => '\d+', '_format' => 'json|xml|js'], methods: ['DELETE'])]
     public function destroy(Request $request, string $id): Response
     {
-        $member = $this->findMember($id);
+        $member = $this->finder->find($id);
         $project = $member->project;
-        $this->authorizeMembers($project);
-        $destroyed = false;
-        if ($this->members->isDeletable($member)) {
-            $this->members->destroy($member);
-            $destroyed = true;
-        }
+        $this->access->authorizeManage($project);
+        $destroyed = $this->members->destroyIfDeletable($member);
         if ($this->isApi($request)) {
             return $destroyed ? $this->api->noContent() : new Response('', 422);
         }
-        if ($this->wantsJs($request)) {
-            return $this->membersTabJs($project);
+        if (MembersRequest::wantsJs($request)) {
+            $html = $this->renderView('members/_members.html.twig', $this->view->list($project, $request));
+
+            return new Response(MembersJs::tab($html), 200, ['Content-Type' => 'text/javascript; charset=utf-8']);
         }
 
-        return $this->settingsRedirect($project);
+        return $this->redirectToRoute('project_settings', ['id' => $project->identifier, 'tab' => 'members'] + MembersRequest::listParams($request));
     }
 }

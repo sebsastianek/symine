@@ -1,6 +1,8 @@
 {%- set links = [] -%}
 {%- set dropdown -%}
 {{ copy_object_url_link(url('issue_show', {id: issue.id}) ~ '#note-' ~ journal.indice) }}
+{%- set journal_attachment_ids = (attachments ?? [])|map(a => a.id ~ '') -%}
+{%- if journal.details|filter(d => d.property == 'attachment' and d.value is not empty and d.propKey in journal_attachment_ids)|length > 1 %} <a title="{{ l('label_download_all_attachments') }}" class="icon icon-download" href="{{ path('journal_attachments_download', {object_id: journal.id}) }}">{{ sprite_icon('download', l('label_download_all_attachments')) }}</a>{% endif -%}
 {%- if journal.hasNotes() and issue_journal_editable(journal) %} <a data-confirm="{{ l('text_are_you_sure') }}" class="icon icon-del" data-remote="true" rel="nofollow" data-method="put" href="{{ path('journal_update', {id: journal.id, 'journal[notes]': ''}) }}">{{ sprite_icon('del', l('button_delete')) }}</a>{% endif -%}
 {%- endset -%}
 {{ reaction_button(journal) }}{% if journal.hasNotes() and setting('reactions_enabled') %} {% endif %}

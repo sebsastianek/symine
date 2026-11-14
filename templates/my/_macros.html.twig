@@ -1,29 +1,14 @@
 {#- Helpers shared by the My account / account / timelog templates (Redmine's error_messages_for, custom_field_tag_with_label) -#}
-{% macro errors(errors) %}{% if errors is not empty %}<div id="errorExplanation"><ul>
+{% macro errors(errors) %}{% if errors is not empty %}<div id="errorExplanation">{{ sprite_icon('warning') }}<ul>
 {% for e in errors %}<li>{{ e }}</li>
 {% endfor %}</ul></div>{% endif %}{% endmacro %}
 
 
-{#- Renders the input of a custom field. object_name: "user", "time_entry"; options: list of [value, label] for list formats -#}
-{% macro cf_tag(object_name, field, value, options = [], name_override = null) %}
-{%- set name = name_override ?? (object_name ~ '[custom_field_values][' ~ field.id ~ ']') -%}
-{%- set id = object_name ~ '_custom_field_values_' ~ field.id -%}
-{%- set css = field.fieldFormat ~ '_cf cf_' ~ field.id -%}
-{%- set multiple = field.isMultiple() -%}
-{%- set values = value is iterable ? value : (value is null ? [] : [value]) -%}
-{%- if field.fieldFormat in ['list', 'enumeration', 'user', 'version'] -%}
-<select name="{{ name }}{{ multiple ? '[]' : '' }}" id="{{ id }}" class="{{ css }}"{% if multiple %} multiple="multiple"{% endif %}>{% if not multiple %}<option value="">{% if field.isRequired %}--- {{ l('actionview_instancetag_blank_option') }} ---{% endif %}</option>{% endif %}
-{% for o in options %}<option value="{{ o[0] }}"{% if (o[0] ~ '') in values|map(v => v ~ '') %} selected="selected"{% endif %}>{{ o[1] }}</option>
-{% endfor %}</select>{% if multiple %}<input type="hidden" name="{{ name }}[]" value="" />{% endif %}
-{%- elseif field.fieldFormat == 'bool' -%}
-<select name="{{ name }}" id="{{ id }}" class="{{ css }}"><option value=""></option><option value="1"{% if values|first == '1' %} selected="selected"{% endif %}>{{ l('general_text_Yes') }}</option><option value="0"{% if values|first == '0' %} selected="selected"{% endif %}>{{ l('general_text_No') }}</option></select>
-{%- elseif field.fieldFormat == 'text' -%}
-<textarea rows="3" class="{{ css }}" name="{{ name }}" id="{{ id }}">{{ values|first }}</textarea>
-{%- elseif field.fieldFormat == 'date' -%}
-<input type="date" value="{{ values|first }}" name="{{ name }}" id="{{ id }}" class="{{ css }}" size="10" />
-{%- else -%}
-<input type="text" value="{{ values|first }}" name="{{ name }}" id="{{ id }}" class="{{ css }}" />
-{%- endif -%}
+{#- Renders the input of a custom field with the widget shared by every form (CustomFieldsHelper#custom_field_tag).
+    object_name: "user", "time_entry"; project: project of the customized object (user / version fields).
+    options and name_override are kept for compatibility and ignored: the widget computes the possible values itself -#}
+{% macro cf_tag(object_name, field, value, options = [], name_override = null, project = null) %}
+{{- issue_cf_tag(object_name, field, value, project, false, false) -}}
 {% endmacro %}
 
 {% macro cf_label(object_name, field) %}<label for="{{ object_name }}_custom_field_values_{{ field.id }}"{% if field.description %} title="{{ field.description }}"{% endif %}><span>{{ field.name }}</span>{% if field.isRequired %}<span class="required"> *</span>{% endif %}</label>{% endmacro %}

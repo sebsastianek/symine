@@ -39,6 +39,9 @@ final class AppExtension extends AbstractExtension implements GlobalsInterface
         private readonly MenuBuilder $menus,
         private readonly TextFormatter $formatter,
         private readonly CsrfTokenManagerInterface $csrf,
+        private readonly ?\App\Theme\ThemeContext $theme = null,
+        private readonly ?\App\Doctrine\BatchLoader $batch = null,
+        private ?\App\Service\Avatar\AvatarRendererInterface $avatars = null,
     ) {
     }
 
@@ -115,7 +118,7 @@ final class AppExtension extends AbstractExtension implements GlobalsInterface
     public function spriteIcon(string $name, ?string $label = null, int $size = 18, bool $iconOnly = false, ?string $cssClass = null, bool $filled = false): string
     {
         $classes = 's'.$size.' icon-svg'.($filled ? ' icon-svg-filled' : '').($cssClass ? ' '.$cssClass : '');
-        $svg = '<svg class="'.$classes.'" aria-hidden="true"><use href="/assets/icons.svg#icon--'.htmlspecialchars($name).'"></use></svg>';
+        $svg = '<svg class="'.$classes.'" aria-hidden="true"><use href="'.($this->theme?->spriteUrl($name) ?? '/assets/icons.svg').'#icon--'.htmlspecialchars($name).'"></use></svg>';
         if (null !== $label) {
             $svg .= '<span class="icon-label'.($iconOnly ? ' hidden' : '').'">'.htmlspecialchars($label).'</span>';
         }
@@ -125,25 +128,7 @@ final class AppExtension extends AbstractExtension implements GlobalsInterface
 
     public function avatar(?Principal $user, int $size = 24, ?string $class = null): string
     {
-        if (null === $user) {
-            return '';
-        }
-        $cls = trim('avatar '.($class ?? '').' s'.$size);
-        if ($user instanceof AnonymousUser) {
-            return '<img class="'.$cls.' anonymous-avatar" src="/assets/anonymous.png" width="'.$size.'" height="'.$size.'" alt="">';
-        }
-        if ($user instanceof Group) {
-            return '<img class="'.$cls.' group-avatar" src="/assets/group.svg" width="'.$size.'" height="'.$size.'" alt="">';
-        }
-        if ($user instanceof User && $this->settings->bool('gravatar_enabled') && $user->getMail()) {
-            $hash = md5(strtolower(trim((string) $user->getMail())));
-            $default = $this->settings->string('gravatar_default') ?: 'identicon';
-
-            return '<img class="'.$cls.' gravatar" title="'.htmlspecialchars($user->getName()).'" src="https://www.gravatar.com/avatar/'.$hash.'?rating=PG&size='.($size * 2).'&default='.rawurlencode($default).'" width="'.$size.'" height="'.$size.'" alt="">';
-        }
-        $initials = mb_strtoupper(mb_substr($user->firstname, 0, 1).mb_substr($user->lastname, 0, 1));
-
-        return '<span role="img" class="'.$cls.' avatar-color-'.((int) $user->id % 8).'" title="'.htmlspecialchars($user->getName()).'">'.htmlspecialchars($initials).'</span>';
+        return ($this->avatars ??= new \App\Service\Avatar\AvatarRenderer($this->settings))->html($user, $size, $class);
     }
 
     public function linkToUser(?Principal $user, ?string $class = null): string
@@ -229,6 +214,8 @@ final class AppExtension extends AbstractExtension implements GlobalsInterface
         if ($issue->isOverdue()) {
             $s .= ' overdue';
         }
+        // every row of a list, a calendar or a version asks whether it has subtasks: one query for all of them
+        $this->batch?->collection($issue, 'children');
         if (!$issue->isLeaf()) {
             $s .= ' parent';
         }

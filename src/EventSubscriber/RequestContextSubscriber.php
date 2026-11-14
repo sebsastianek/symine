@@ -12,9 +12,11 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 
 /**
  * Per request setup (ApplicationController before_actions): locale, login_required,
@@ -22,7 +24,9 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
  */
 final class RequestContextSubscriber implements EventSubscriberInterface
 {
-    private const array PUBLIC_ROUTES = ['signin', 'signout', 'register', 'lost_password', 'account_activate', 'account_activation_email', 'mail_handler', 'my_password', 'twofa_login', 'twofa_confirm', 'twofa_resend', 'oauth_token', 'oauth_revoke', 'oauth_token_info', 'sys_projects', 'sys_create_project_repository', 'sys_fetch_changesets', 'robots', 'rails_health_check', '_wdt', '_profiler'];
+    private const array PUBLIC_ROUTES = ['signin', 'signout', 'register', 'lost_password', 'account_activate', 'account_activation_email', 'mail_handler', 'my_password', 'twofa_login', 'twofa_confirm', 'twofa_resend', 'oauth_token', 'oauth_revoke', 'oauth_token_info', 'sys_projects', 'sys_create_project_repository', 'sys_fetch_changesets', 'robots', 'rails_health_check', '_wdt', '_profiler',
+        // theme files are assets: the login page needs them too
+        'theme_asset', 'theme_generated_css', 'theme_upload'];
 
     public function __construct(
         private readonly CurrentUser $currentUser,
@@ -33,10 +37,74 @@ final class RequestContextSubscriber implements EventSubscriberInterface
     ) {
     }
 
+    /** session[:pwd]: set at login when the password must be changed (flag or expired password) */
+    public const string SESSION_PASSWORD_CHANGE = 'pwd';
+
     public static function getSubscribedEvents(): array
     {
         // after the firewall (8)
-        return [KernelEvents::REQUEST => ['onRequest', 6]];
+        return [
+            KernelEvents::REQUEST => ['onRequest', 6],
+            LoginSuccessEvent::class => 'onLoginSuccess',
+        ];
+    }
+
+    /** ApplicationController#start_user_session: session[:pwd] = '1' if user.must_change_password? */
+    public function onLoginSuccess(LoginSuccessEvent $event): void
+    {
+        $request = $event->getRequest();
+        $user = $event->getUser();
+        if ('main' !== $event->getFirewallName() || !$user instanceof \App\Entity\User || !$request->hasSession()) {
+            return;
+        }
+        if (self::userMustChangePassword($user, $this->settings->int('password_max_age'))) {
+            $request->getSession()->set(self::SESSION_PASSWORD_CHANGE, '1');
+        } else {
+            $request->getSession()->remove(self::SESSION_PASSWORD_CHANGE);
+        }
+    }
+
+    /**
+     * User#must_change_password?: (must_change_passwd? || password_expired?) && change_password_allowed?.
+     * The expiry of the password (password_max_age) is evaluated at login, like Redmine (session[:pwd]).
+     */
+    private function mustChangePassword(Request $request, \App\Entity\User $user): bool
+    {
+        if (null !== $user->authSourceId) {
+            return false;
+        }
+        if ($user->mustChangePasswd) {
+            return true;
+        }
+        if (!$request->hasSession() || !$request->hasPreviousSession()) {
+            return false;
+        }
+        $session = $request->getSession();
+        if (!$session->has(self::SESSION_PASSWORD_CHANGE)) {
+            return false;
+        }
+        if (self::userMustChangePassword($user, $this->settings->int('password_max_age'))) {
+            return true;
+        }
+        $session->remove(self::SESSION_PASSWORD_CHANGE);
+
+        return false;
+    }
+
+    public static function userMustChangePassword(\App\Entity\User $user, int $maxAgeDays): bool
+    {
+        if (null !== $user->authSourceId) {
+            return false;
+        }
+        if ($user->mustChangePasswd) {
+            return true;
+        }
+        if ($maxAgeDays <= 0) {
+            return false;
+        }
+        $changedOn = $user->passwdChangedOn ?? new \DateTimeImmutable('@0');
+
+        return $changedOn < new \DateTimeImmutable('-'.$maxAgeDays.' days');
     }
 
     public function onRequest(RequestEvent $event): void
@@ -72,7 +140,15 @@ final class RequestContextSubscriber implements EventSubscriberInterface
 
             return;
         }
-        if ($user->isLogged() && $user->mustChangePasswd && !ApiRequestMatcher::isApiRequest($request)) {
+        if ($user->isLogged() && !ApiRequestMatcher::isApiRequest($request) && $this->mustChangePassword($request, $user)) {
+            // ApplicationController#check_password_change
+            if ($request->hasSession()) {
+                $flashes = $request->getSession()->getFlashBag();
+                $message = $this->i18n->l('error_password_expired');
+                if (!\in_array($message, $flashes->peek('error'), true)) {
+                    $flashes->add('error', $message);
+                }
+            }
             $event->setResponse(new RedirectResponse($this->urls->generate('my_password')));
 
             return;

@@ -1,0 +1,145 @@
+# Strata: the modern Symine interface.
+# The format of this file is documented in docs/themes.md.
+name: Strata
+description: 'Modern interface: side navigation, light and dark modes, and options each person can set.'
+version: 1.0.0
+author: Symine
+swatch: ['#16181d', '#0e7566', '#ffffff', '#eef1ef']
+
+stylesheets:
+  - stylesheets/fonts.css
+  - stylesheets/tokens.css
+  - stylesheets/layout.css
+  - stylesheets/components.css
+  - stylesheets/pages.css
+javascripts:
+  - javascripts/theme.js
+
+# Colours are written once in stylesheets/tokens.css with light-dark(); a scheme only has to say whether it is dark.
+# The few values that cannot use light-dark() ("r, g, b" triplets used inside rgba()) are set per scheme here.
+color_schemes:
+  light:
+    label: {en: Light, pl: Jasny, de: Hell, fr: Clair, es: Claro}
+  dark:
+    label: {en: Dark, pl: Ciemny, de: Dunkel, fr: Sombre, es: Oscuro}
+    dark: true
+    tokens:
+      oc-gray-9-rgb: '231, 233, 236'
+      oc-black-rgb: '0, 0, 0'
+      oc-white-rgb: '22, 24, 29'
+      oc-yellow-1-rgb: '74, 60, 12'
+default_color_scheme: auto
+
+options:
+  accent:
+    type: color
+    label: {en: Accent color, pl: Kolor akcentu}
+    description: {en: 'Used for links, the selected item and primary buttons.', pl: 'Używany w odnośnikach, zaznaczonych elementach i głównych przyciskach.'}
+    group: Colors
+    token: st-accent-source
+    default: malachite
+    user: true
+    presets:
+      malachite: {label: Malachite, value: '#0e7566'}
+      azurite: {label: Azurite, value: '#2456c9'}
+      amethyst: {label: Amethyst, value: '#6d4bc3'}
+      cinnabar: {label: Cinnabar, value: '#bf3a1e'}
+      amber: {label: Amber, value: '#a05e00'}
+      graphite: {label: Graphite, value: '#3d4a52'}
+
+  navigation:
+    type: choice
+    label: {en: Navigation, pl: Nawigacja}
+    description: {en: 'Where the project menu is shown.', pl: 'Gdzie wyświetlane jest menu projektu.'}
+    group: Layout
+    default: rail
+    user: true
+    choices:
+      rail: {label: {en: Side rail, pl: Panel boczny}}
+      tabs: {label: {en: Top tabs, pl: Zakładki u góry}}
+
+  density:
+    type: choice
+    label: {en: Density, pl: Gęstość}
+    group: Layout
+    default: comfortable
+    user: true
+    quick: true
+    choices:
+      comfortable:
+        label: {en: Comfortable, pl: Wygodna}
+      compact:
+        label: {en: Compact, pl: Zwarta}
+        tokens:
+          st-row-pad: 3px
+          st-control-height: 26px
+          st-space: 12px
+          st-rail-item-pad: 4px
+
+  width:
+    type: choice
+    label: {en: Content width, pl: Szerokość treści}
+    group: Layout
+    default: full
+    user: true
+    choices:
+      full: {label: {en: Full width, pl: Pełna szerokość}}
+      centered:
+        label: {en: Centered, pl: Wyśrodkowana}
+        tokens:
+          st-content-max: 1280px
+
+  font:
+    type: choice
+    label: {en: Typeface, pl: Krój pisma}
+    group: Typography
+    default: plex
+    user: true
+    choices:
+      plex: {label: IBM Plex Sans}
+      noto:
+        label: Noto Sans
+        tokens:
+          st-font-sans: '"Noto Sans", sans-serif'
+          st-font-title-stretch: 100%
+      system:
+        label: {en: System font, pl: Czcionka systemowa}
+        tokens:
+          st-font-sans: 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif'
+          st-font-mono: 'ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace'
+          st-font-title-stretch: 100%
+
+  font_size:
+    type: length
+    label: {en: Text size, pl: Rozmiar tekstu}
+    group: Typography
+    token: st-font-size
+    default: 14px
+    min: 12
+    max: 17
+    step: 1
+    units: [px]
+    user: true
+
+  radius:
+    type: length
+    label: {en: Corner radius, pl: Zaokrąglenie narożników}
+    group: Layout
+    token: st-radius
+    default: 6px
+    min: 0
+    max: 14
+    step: 1
+    units: [px]
+
+  logo:
+    type: image
+    label: {en: Logo, pl: Logo}
+    description: {en: 'Shown at the top of the navigation, in place of the Strata mark.', pl: 'Wyświetlane u góry nawigacji zamiast znaku Strata.'}
+    group: Branding
+
+  brand_name:
+    type: text
+    label: {en: Name beside the logo, pl: Nazwa obok logo}
+    description: {en: 'Leave empty to use the application title.', pl: 'Puste pole oznacza tytuł aplikacji.'}
+    group: Branding
